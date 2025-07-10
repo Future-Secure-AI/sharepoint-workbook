@@ -90,6 +90,8 @@ export default async function createWorkbook(parentRef: DriveRef | DriveItemRef,
             throw new InvalidArgumentError(`Unsupported file extension: ${extension}. Supported extensions are .csv and .xlsx.`);
         }
 
+        progressUpdated(true);
+
         const { size } = await fs.stat(tempFile);
         const stream = createReadStream(tempFile, { highWaterMark: 1024 * 1024 });
         const item = await createDriveItemContent(parentRef, itemPath, stream, size, {

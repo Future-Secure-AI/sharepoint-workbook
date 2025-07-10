@@ -47,7 +47,7 @@
 	"dependencies": {
 		"exceljs": "^4.4.0",
 		"fast-csv": "^5.0.2",
-		"microsoft-graph": "^3.9.2"
+		"microsoft-graph": "^3.9.3"
 	},
 	"exports": {
 		".": {

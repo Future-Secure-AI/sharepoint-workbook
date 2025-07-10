@@ -19,6 +19,7 @@ import { getLargeSet, getMemoryLimitMB } from "./shared";
     const item = await createWorkbook(driveRef, itemPath, rows, {
         progress: (preparedCount, writtenCount, preparedPerSecond, writtenPerSecond) => {
             console.log(
+                `[${new Date().toLocaleTimeString()}] ` +
                 `Prepared: ${preparedCount.toLocaleString()} (${preparedPerSecond.toLocaleString()}/sec)\t ` +
                 `Written: ${writtenCount.toLocaleString()} (${writtenPerSecond.toLocaleString()}/sec)`);
         },
