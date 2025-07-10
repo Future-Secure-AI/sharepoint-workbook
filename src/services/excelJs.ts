@@ -1,56 +1,8 @@
-import { type CsvFormatterStream, format, type Row } from "@fast-csv/format";
-import type { DriveItem } from "@microsoft/microsoft-graph-types";
-import ExcelJS from "exceljs";
-import type { UsedAddress } from "microsoft-graph/Address";
-import type { Cell, CellScope } from "microsoft-graph/Cell";
-import createDriveItemContent from "microsoft-graph/createDriveItemContent";
-import type { DriveRef } from "microsoft-graph/Drive";
-import type { DriveItemPath, DriveItemRef } from "microsoft-graph/DriveItem";
+import type ExcelJS from "exceljs";
+import type { Cell } from "microsoft-graph/Cell";
 import InvalidArgumentError from "microsoft-graph/InvalidArgumentError";
-import type { WorkbookWorksheetName } from "microsoft-graph/WorkbookWorksheet";
-import { defaultWorkbookWorksheetName } from "microsoft-graph/workbookWorksheet";
-import { extname } from "node:path";
-import { Readable } from "node:stream";
 
-export type ReadOptions = {
-    address?: UsedAddress;
-    scope?: Partial<CellScope>;
-};
-
-export type WriterOptions = {
-    sheetName?: WorkbookWorksheetName;
-    conflictResolution?: "fail" | "replace" | "rename";
-};
-
-export async function createWorkbook(parentRef: DriveRef | DriveItemRef, itemPath: DriveItemPath, rows: Iterable<Partial<Cell>[]> | AsyncIterable<Partial<Cell>[]>, { sheetName, conflictResolution }: WriterOptions = {}): Promise<DriveItem & DriveItemRef> {
-    let buffer: Buffer;
-    const extension = extname(itemPath);
-    if (extension === ".csv") {
-        const writer = format({ headers: false });
-        for await (const row of rows) {
-            writer.write(row.map((cell) => cell.value ?? ""));
-        }
-        writer.end();
-
-        buffer = await writeToBuffer(writer);
-    } else if (extension === ".xlsx") {
-        const workbook = new ExcelJS.Workbook();
-        const worksheet = workbook.addWorksheet(sheetName ?? defaultWorkbookWorksheetName);
-
-        for await (const row of rows) {
-            appendRow(worksheet, row);
-        }
-
-        buffer = Buffer.from(await workbook.xlsx.writeBuffer());
-    } else {
-        throw new InvalidArgumentError(`Unsupported file extension: ${extension}. Supported extensions are .csv and .xlsx.`);
-    }
-
-    const stream = Readable.from(buffer);
-    return await createDriveItemContent(parentRef, itemPath, stream, buffer.byteLength, conflictResolution ?? "fail");
-}
-
-function appendRow(worksheet: ExcelJS.Worksheet, row: Partial<Cell>[]): void {
+export function appendRow(worksheet: ExcelJS.Worksheet, row: Partial<Cell>[]): void {
     const excelRow = worksheet.addRow(row.map((cell) => cell.value ?? ""));
     const rowIndex = excelRow.number; // ExcelJS row number (1-based)
     let colIndex = 1;
@@ -91,7 +43,6 @@ function appendRow(worksheet: ExcelJS.Worksheet, row: Partial<Cell>[]): void {
         colIndex++;
     }
 }
-
 function mapAlignment(alignment?: Cell["alignment"]): Partial<ExcelJS.Alignment> | undefined {
     if (!alignment) return undefined;
     const horizontalMap: Record<string, ExcelJS.Alignment["horizontal"]> = {
@@ -130,7 +81,6 @@ function mapAlignment(alignment?: Cell["alignment"]): Partial<ExcelJS.Alignment>
     if (typeof alignment.wrapText === "boolean") result.wrapText = alignment.wrapText;
     return Object.keys(result).length > 0 ? result : undefined;
 }
-
 function mapBorders(borders?: Cell["borders"]): Partial<ExcelJS.Borders> | undefined {
     if (!borders) return undefined;
     const supported = ["edgeTop", "edgeBottom", "edgeLeft", "edgeRight"];
@@ -156,13 +106,11 @@ function mapBorders(borders?: Cell["borders"]): Partial<ExcelJS.Borders> | undef
     if (right) result.right = right;
     return Object.keys(result).length > 0 ? result : undefined;
 }
-
 function colorToARGB(color: string): string {
     // Only allow string color for now
     if (typeof color === "string") return color;
     throw new InvalidArgumentError("Unsupported color type for ExcelJS");
 }
-
 function mapFill(fill?: Cell["fill"]): ExcelJS.Fill | undefined {
     if (!fill || !fill.color) return undefined;
     if (typeof fill.color !== "string") throw new InvalidArgumentError("Unsupported fill color type for ExcelJS");
@@ -172,7 +120,6 @@ function mapFill(fill?: Cell["fill"]): ExcelJS.Fill | undefined {
         fgColor: { argb: colorToARGB(fill.color) },
     };
 }
-
 function mapFont(font?: Cell["font"]): Partial<ExcelJS.Font> | undefined {
     if (!font) return undefined;
     if (font.color && typeof font.color !== "string") {
@@ -188,15 +135,7 @@ function mapFont(font?: Cell["font"]): Partial<ExcelJS.Font> | undefined {
     return Object.keys(result).length > 0 ? result : undefined;
 }
 
-async function writeToBuffer(writer: CsvFormatterStream<Row, Row>): Promise<Buffer> {
-    const chunks: Buffer[] = [];
-    for await (const chunk of writer) {
-        chunks.push(Buffer.isBuffer(chunk) ? chunk : Buffer.from(chunk));
-    }
-    const buff = Buffer.concat(chunks);
-    return buff;
+
+export async function xlsxToBuffer(workbook: ExcelJS.Workbook): Promise<Buffer> {
+    return Buffer.from(await workbook.xlsx.writeBuffer());
 }
-
-// export async function writeWorkbookCells(itemRef: DriveItemRef, rows: Iterable<Partial<Cell>[]> | AsyncIterable<Partial<Cell>[]>, options: WriteOptions = {}): Promise<void> { }
-
-// export async function* readWorkbookCells(itemRef: DriveItemRef, options: ReadOptions = {}): AsyncIterable<IteratedRow> { }
