@@ -14,8 +14,14 @@ import { getLargeSet, getMemoryLimitMB } from "./shared";
     const itemName = generateTempFileName("xlsx");
     const itemPath = driveItemPath(itemName);
     const driveRef = getDefaultDriveRef();
+    const uploadStart = Date.now();
     const item = await createWorkbook(driveRef, itemPath, rows, {
-        progress: (pct) => console.log(`Progress: ${Math.round(pct)}%`),
+        encodeProgress: (rowCount) => console.log(`Encoded ${rowCount.toLocaleString()} rows`),
+        uploadProgress: (rowCount, pct) => {
+            const elapsedSec = (Date.now() - uploadStart) / 1000;
+            const rowsPerSec = elapsedSec > 0 ? rowCount / elapsedSec : 0;
+            console.log(`Uploaded ${Math.round(pct * 100) / 100}% ${rowCount.toLocaleString()} rows (${rowsPerSec.toFixed(2)} rows/sec)`);
+        },
     });
 
     console.info(`Created item: ${item.id} (${item.name})`);
