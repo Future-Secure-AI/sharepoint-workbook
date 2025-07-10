@@ -1,10 +1,12 @@
 import type { Cell } from "microsoft-graph/Cell";
 import fs from "node:fs";
 import https from "node:https";
+import os from "node:os";
+import path from "node:path";
 import zlib from "node:zlib";
 
 const LARGE_CSV_URL = "https://github.com/DataTalksClub/nyc-tlc-data/releases/download/yellow/yellow_tripdata_2019-03.csv.gz";
-const LARGE_CSV_CACHE = "730MB.csv.gz.tmp";
+const LARGE_CSV_CACHE = path.join(os.tmpdir(), "730MB.csv.gz.tmp");
 
 export async function getMemoryLimitMB(): Promise<number> {
     const v8 = await import("node:v8");
