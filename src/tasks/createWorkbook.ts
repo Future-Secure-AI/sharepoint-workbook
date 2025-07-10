@@ -45,15 +45,13 @@ export default async function createWorkbook(parentRef: DriveRef | DriveItemRef,
     const extension = extname(itemPath);
     const tempFile = pathJoin(tmpdir(), `${randomUUID()}${extension}`);
     const fileStream = createWriteStream(tempFile);
-    const { sheetName = defaultWorkbookWorksheetName, conflictBehavior = "fail", chunkSize = 60 * 1024 * 1024, progress = () => { } } = options;
+    const { sheetName = defaultWorkbookWorksheetName, conflictBehavior, chunkSize, progress = () => { } } = options;
 
-    // TODO: Encode and upload at the same time, block if one catches up.
-    // TODO: Improve upload speed? So slow
     // TODO: ExcelJS compress file?
     let preparedCells = 0;
     let writtenCells = 0;
 
-    let lastProgressTime = 0;
+    let lastTime = 0;
     let lastPreparedCells = 0;
     let lastWrittenCells = 0;
     try {
@@ -74,7 +72,7 @@ export default async function createWorkbook(parentRef: DriveRef | DriveItemRef,
             });
         } else if (extension === ".xlsx") {
             const xls = new ExcelJS.stream.xlsx.WorkbookWriter({ stream: fileStream });
-            const worksheet = xls.addWorksheet(sheetName ?? defaultWorkbookWorksheetName);
+            const worksheet = xls.addWorksheet(sheetName);
             for await (const row of rows) {
                 appendRow(worksheet, row);
 
@@ -88,29 +86,32 @@ export default async function createWorkbook(parentRef: DriveRef | DriveItemRef,
         }
 
         const { size } = await fs.stat(tempFile);
-        const stream = createReadStream(tempFile);
-        return await createDriveItemContent(parentRef, itemPath, stream, size, {
+        const stream = createReadStream(tempFile, { highWaterMark: 1024 * 1024 });
+        const item = await createDriveItemContent(parentRef, itemPath, stream, size, {
             conflictBehavior,
             chunkSize,
-            progress: (pct) => {
-                writtenCells = Math.ceil((pct / 100) * preparedCells);
+            progress: (bytes) => {
+                writtenCells = Math.ceil(bytes / size * preparedCells);
                 progressUpdated();
             },
         });
+        progressUpdated(true);
+        return item;
     } finally {
         await fs.unlink(tempFile).catch(() => { });
     }
 
-    function progressUpdated() {
-        const nextTime = Math.floor(Date.now() / 1000);
-        if (nextTime !== lastProgressTime) {
-            const preparedDiff = preparedCells - lastPreparedCells;
-            const writtenDiff = writtenCells - lastWrittenCells;
+    function progressUpdated(force: boolean = false): void {
+        const time = Date.now();
+        const timeDiff = time - lastTime;
+        if (force || timeDiff > 1000) {
+            const preparedPerSecond = Math.ceil((preparedCells - lastPreparedCells) / (timeDiff / 1000));
+            const writtenPerSecond = Math.ceil((writtenCells - lastWrittenCells) / (timeDiff / 1000));
             lastPreparedCells = preparedCells;
             lastWrittenCells = writtenCells;
-            lastProgressTime = nextTime;
+            lastTime = time;
 
-            progress(preparedCells, writtenCells, preparedDiff, writtenDiff);
+            progress(preparedCells, writtenCells, preparedPerSecond, writtenPerSecond);
         }
     }
 }

@@ -16,15 +16,14 @@ import { getLargeSet, getMemoryLimitMB } from "./shared";
     const driveRef = getDefaultDriveRef();
     const uploadStart = Date.now();
     const item = await createWorkbook(driveRef, itemPath, rows, {
-        progress: (preparedCount, uploadedCount, preparedPerSecond, writtenPerSecond) => {
-            console.log(`Progress: ` +
-                `${preparedCount.toLocaleString()} prepared\t ` +
-                `${uploadedCount.toLocaleString()} uploaded\t ` +
-                `(${preparedPerSecond.toLocaleString()} prepared/sec, ${writtenPerSecond.toLocaleString()} uploaded/sec)`);
+        progress: (preparedCount, writtenCount, preparedPerSecond, writtenPerSecond) => {
+            console.log(
+                `Prepared: ${preparedCount.toLocaleString()} (${preparedPerSecond.toLocaleString()}/sec)\t ` +
+                `Written: ${writtenCount.toLocaleString()} (${writtenPerSecond.toLocaleString()}/sec)`);
         },
     });
 
-    console.info(`Created XLSX: ${item.id} (${item.name}) at ${item.size ?? 0 / 1024 / 1024} MB`);
+    console.info(`Created XLSX: ${item.id} (${item.name}) at ${((item.size ?? 0) / 1024 / 1024).toLocaleString()} MB`);
     const totalSec = (Date.now() - uploadStart) / 1000;
     console.info(`Total runtime: ${totalSec.toFixed(2)} seconds`);
 })();
