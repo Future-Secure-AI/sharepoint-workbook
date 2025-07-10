@@ -13,7 +13,7 @@ const rows: Partial<Cell>[][] = [
 ];
 
 describe("createWorkbook", () => {
-    it("creates a CSV file with correct values", async () => {
+    it("creates a CSV file", async () => {
         const itemName = generateTempFileName("csv");
         const itemPath = driveItemPath(itemName);
 
@@ -23,5 +23,25 @@ describe("createWorkbook", () => {
         expect(item.name).toBe(itemName);
         expect(item.size).toBeGreaterThan(0);
         await tryDeleteDriveItem(item);
+    });
+
+    it("creates an XLSX file", async () => {
+        const itemName = generateTempFileName("xlsx");
+        const itemPath = driveItemPath(itemName);
+        const driveRef = getDefaultDriveRef();
+        const item = await createWorkbook(driveRef, itemPath, rows);
+        expect(item).toBeTruthy();
+        expect(item.name).toBe(itemName);
+        expect(item.size).toBeGreaterThan(0);
+        await tryDeleteDriveItem(item);
+    });
+
+    it("throws for unsupported file extension", async () => {
+        const itemName = generateTempFileName("txt");
+        const itemPath = driveItemPath(itemName);
+        const driveRef = getDefaultDriveRef();
+        await expect(createWorkbook(driveRef, itemPath, rows)).rejects.toThrow(
+            /Unsupported file extension/
+        );
     });
 });
