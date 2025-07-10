@@ -29,8 +29,7 @@ export type CreateOptions = {
     sheetName?: WorkbookWorksheetName;
     conflictBehavior?: "fail" | "replace" | "rename";
     chunkSize?: number;
-    encodeProgress?: (count: number) => void;
-    uploadProgress?: (count: number, pct: number) => void;
+    progress?: (preparedCount: number, writtenCount: number, preparedPerSecond: number, writtenPerSecond: number) => void;
 };
 
 /**
@@ -46,22 +45,26 @@ export default async function createWorkbook(parentRef: DriveRef | DriveItemRef,
     const extension = extname(itemPath);
     const tempFile = pathJoin(tmpdir(), `${randomUUID()}${extension}`);
     const fileStream = createWriteStream(tempFile);
-    const {
-        sheetName = defaultWorkbookWorksheetName,
-        conflictBehavior = "fail",
-        chunkSize = 60 * 1024 * 1024,
-        encodeProgress = () => { },
-        uploadProgress = () => { }
-    } = options;
+    const { sheetName = defaultWorkbookWorksheetName, conflictBehavior = "fail", chunkSize = 60 * 1024 * 1024, progress = () => { } } = options;
 
+    // TODO: Encode and upload at the same time, block if one catches up.
+    // TODO: Improve upload speed? So slow
+    // TODO: ExcelJS compress file?
+    let preparedCells = 0;
+    let writtenCells = 0;
+
+    let lastProgressTime = 0;
+    let lastPreparedCells = 0;
+    let lastWrittenCells = 0;
     try {
-        let rowCount = 0;
         if (extension === ".csv") {
             const csv = format({ headers: false });
             csv.pipe(fileStream);
             for await (const row of rows) {
                 csv.write(row.map((cell) => cell.value ?? ""));
-                encodeProgress(++rowCount);
+
+                preparedCells += row.length;
+                progressUpdated();
             }
             csv.end();
 
@@ -74,7 +77,9 @@ export default async function createWorkbook(parentRef: DriveRef | DriveItemRef,
             const worksheet = xls.addWorksheet(sheetName ?? defaultWorkbookWorksheetName);
             for await (const row of rows) {
                 appendRow(worksheet, row);
-                encodeProgress(++rowCount);
+
+                preparedCells += row.length;
+                progressUpdated();
             }
             worksheet.commit();
             await xls.commit();
@@ -82,17 +87,30 @@ export default async function createWorkbook(parentRef: DriveRef | DriveItemRef,
             throw new InvalidArgumentError(`Unsupported file extension: ${extension}. Supported extensions are .csv and .xlsx.`);
         }
 
-        encodeProgress?.(rowCount);
-
         const { size } = await fs.stat(tempFile);
         const stream = createReadStream(tempFile);
         return await createDriveItemContent(parentRef, itemPath, stream, size, {
             conflictBehavior,
             chunkSize,
-            progress: (pct) => uploadProgress(Math.round(pct / 100 * rowCount), pct),
+            progress: (pct) => {
+                writtenCells = Math.ceil((pct / 100) * preparedCells);
+                progressUpdated();
+            },
         });
     } finally {
         await fs.unlink(tempFile).catch(() => { });
     }
-};
 
+    function progressUpdated() {
+        const nextTime = Math.floor(Date.now() / 1000);
+        if (nextTime !== lastProgressTime) {
+            const preparedDiff = preparedCells - lastPreparedCells;
+            const writtenDiff = writtenCells - lastWrittenCells;
+            lastPreparedCells = preparedCells;
+            lastWrittenCells = writtenCells;
+            lastProgressTime = nextTime;
+
+            progress(preparedCells, writtenCells, preparedDiff, writtenDiff);
+        }
+    }
+}

@@ -14,25 +14,14 @@ import { getLargeSet, getMemoryLimitMB } from "./shared";
     const itemName = generateTempFileName("csv");
     const itemPath = driveItemPath(itemName);
     const driveRef = getDefaultDriveRef();
+
     const uploadStart = Date.now();
-    let lastUploadCount = 0;
-    let lastUploadTime = uploadStart;
-    let lastEncodeCount = 0;
     const item = await createWorkbook(driveRef, itemPath, rows, {
-        encodeProgress: (rowCount) => {
-            if (rowCount - lastEncodeCount >= 100000) {
-                console.log(`Encoded ${rowCount.toLocaleString()} rows`);
-                lastEncodeCount = rowCount;
-            }
-        },
-        uploadProgress: (rowCount, pct) => {
-            const now = Date.now();
-            const elapsedSec = (now - lastUploadTime) / 1000;
-            const rowsSinceLast = rowCount - lastUploadCount;
-            const rowsPerSec = elapsedSec > 0 ? rowsSinceLast / elapsedSec : 0;
-            console.log(`Uploaded ${Math.round(pct * 100) / 100}% ${rowCount.toLocaleString()} rows (${rowsPerSec.toFixed(2)} rows/sec)`);
-            lastUploadCount = rowCount;
-            lastUploadTime = now;
+        progress: (preparedCount, uploadedCount, preparedPerSecond, writtenPerSecond) => {
+            console.log(`Progress: ` +
+                `${preparedCount.toLocaleString()} prepared\t ` +
+                `${uploadedCount.toLocaleString()} uploaded\t ` +
+                `(${preparedPerSecond.toLocaleString()} prepared/sec, ${writtenPerSecond.toLocaleString()} uploaded/sec)`);
         },
     });
 
