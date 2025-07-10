@@ -135,8 +135,3 @@ function mapFont(font?: Cell["font"]): Partial<ExcelJS.Font> | undefined {
     if (font.underline && font.underline !== "None") result.underline = true;
     return Object.keys(result).length > 0 ? result : undefined;
 }
-
-
-export async function xlsxToBuffer(workbook: ExcelJS.Workbook): Promise<Buffer> {
-    return Buffer.from(await workbook.xlsx.writeBuffer());
-}

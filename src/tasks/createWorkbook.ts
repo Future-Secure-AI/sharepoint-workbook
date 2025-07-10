@@ -4,7 +4,6 @@
  * @category Tasks
  */
 
-import { format } from "@fast-csv/format";
 import type { DriveItem } from "@microsoft/microsoft-graph-types";
 import ExcelJS from "exceljs";
 import type { Cell } from "microsoft-graph/Cell";
@@ -22,18 +21,18 @@ import { appendRow } from "../services/excelJs.ts";
 
 /**
  * Options for creating a new workbook file.
- * @property {WorkbookWorksheetName} [sheetName] Name of the worksheet to create (for .xlsx files).
+ * @property {WorkbookWorksheetName} [sheetName] Name of the worksheet to create.
  * @property {"fail" | "replace" | "rename"} [conflictResolution] How to resolve name conflicts when uploading the file.
  */
 export type CreateOptions = {
     sheetName?: WorkbookWorksheetName;
     conflictBehavior?: "fail" | "replace" | "rename";
-    chunkSize?: number;
+    maxChunkSize?: number;
     progress?: (preparedCount: number, writtenCount: number, preparedPerSecond: number, writtenPerSecond: number) => void;
 };
 
 /**
- * Creates a new workbook (.csv or .xlsx) in the specified parent location with the provided rows.
+ * Creates a new workbook (.xlsx) in the specified parent location with the provided rows.
  * @param {DriveRef | DriveItemRef} parentRef Reference to the parent drive or item where the file will be created.
  * @param {DriveItemPath} itemPath Path (including filename and extension) for the new workbook.
  * @param {Iterable<Partial<Cell>[]> | AsyncIterable<Partial<Cell>[]>} rows Iterable or async iterable of row arrays, each containing partial Cell objects.
@@ -43,16 +42,19 @@ export type CreateOptions = {
  */
 export default async function createWorkbook(parentRef: DriveRef | DriveItemRef, itemPath: DriveItemPath, rows: Iterable<Partial<Cell>[]> | AsyncIterable<Partial<Cell>[]>, options: CreateOptions = {}): Promise<DriveItem & DriveItemRef> {
     const extension = extname(itemPath);
-    const tempFile = pathJoin(tmpdir(), `${randomUUID()}${extension}`);
-    const fileStream = createWriteStream(tempFile);
+
+    if (extension !== ".xlsx") {
+        throw new InvalidArgumentError(`Unsupported file extension: ${extension}. Only .xlsx files are supported for workbook creation.`);
+    }
+
+    const localFilePath = pathJoin(tmpdir(), `${randomUUID()}${extension}`);
     const {
         sheetName = defaultWorkbookWorksheetName,
         conflictBehavior = "fail",
-        chunkSize = 60 * 1024 * 1024, // 60MB is the largest supported size, minimizing inter-chunk overhead at the expense of large retry blocks
+        maxChunkSize = 60 * 1024 * 1024, // 60MB is the largest supported size, minimizing inter-chunk overhead at the expense of large retry blocks
         progress = () => { }
     } = options;
 
-    // TODO: ExcelJS compress file?
     let preparedCells = 0;
     let writtenCells = 0;
 
@@ -60,43 +62,30 @@ export default async function createWorkbook(parentRef: DriveRef | DriveItemRef,
     let lastPreparedCells = 0;
     let lastWrittenCells = 0;
     try {
-        if (extension === ".csv") {
-            const csv = format({ headers: false });
-            csv.pipe(fileStream);
-            for await (const row of rows) {
-                csv.write(row.map((cell) => cell.value ?? ""));
+        const fileStream = createWriteStream(localFilePath);
 
-                preparedCells += row.length;
-                progressUpdated();
-            }
-            csv.end();
+        const xls = new ExcelJS.stream.xlsx.WorkbookWriter({ stream: fileStream });
+        const worksheet = xls.addWorksheet(sheetName);
 
-            await new Promise((resolve, reject) => {
-                fileStream.on("finish", () => resolve(void 0));
-                fileStream.on("error", reject);
-            });
-        } else if (extension === ".xlsx") {
-            const xls = new ExcelJS.stream.xlsx.WorkbookWriter({ stream: fileStream });
-            const worksheet = xls.addWorksheet(sheetName);
-            for await (const row of rows) {
-                appendRow(worksheet, row);
+        for await (const row of rows) {
+            appendRow(worksheet, row);
 
-                preparedCells += row.length;
-                progressUpdated();
-            }
-            worksheet.commit();
-            await xls.commit();
-        } else {
-            throw new InvalidArgumentError(`Unsupported file extension: ${extension}. Supported extensions are .csv and .xlsx.`);
+            preparedCells += row.length;
+            progressUpdated();
         }
+
+        worksheet.commit();
+        await xls.commit();
+
+        // TODO:  recompress file?
 
         progressUpdated(true);
 
-        const { size } = await fs.stat(tempFile);
-        const stream = createReadStream(tempFile, { highWaterMark: 1024 * 1024 });
+        const { size } = await fs.stat(localFilePath);
+        const stream = createReadStream(localFilePath, { highWaterMark: 1024 * 1024 });
         const item = await createDriveItemContent(parentRef, itemPath, stream, size, {
             conflictBehavior,
-            chunkSize,
+            maxChunkSize,
             progress: (bytes) => {
                 writtenCells = Math.ceil(bytes / size * preparedCells);
                 progressUpdated();
@@ -105,7 +94,7 @@ export default async function createWorkbook(parentRef: DriveRef | DriveItemRef,
         progressUpdated(true);
         return item;
     } finally {
-        await fs.unlink(tempFile).catch(() => { });
+        await fs.unlink(localFilePath).catch(() => { });
     }
 
     function progressUpdated(force: boolean = false): void {

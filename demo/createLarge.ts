@@ -8,10 +8,10 @@ import { getLargeSet, getMemoryLimitMB } from "./shared";
     const memoryLimit = await getMemoryLimitMB();
 
     console.info(`Memory limit: ${memoryLimit.toFixed(2)} MB`);
-    console.info("Creating large CSV file...")
+    console.info("Creating large XLSX file...")
 
     const rows = getLargeSet();
-    const itemName = generateTempFileName("csv");
+    const itemName = generateTempFileName("xlsx");
     const itemPath = driveItemPath(itemName);
     const driveRef = getDefaultDriveRef();
 
@@ -25,7 +25,7 @@ import { getLargeSet, getMemoryLimitMB } from "./shared";
         },
     });
 
-    console.info(`Created CSV: ${item.id} (${item.name}) at ${((item.size ?? 0) / 1024 / 1024).toLocaleString()} MB`);
+    console.info(`Created XLSX: ${item.id} (${item.name}) at ${((item.size ?? 0) / 1024 / 1024).toLocaleString()} MB`);
     const totalSec = (Date.now() - uploadStart) / 1000;
     console.info(`Total runtime: ${totalSec.toFixed(2)} seconds`);
 })();
