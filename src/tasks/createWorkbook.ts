@@ -45,7 +45,12 @@ export default async function createWorkbook(parentRef: DriveRef | DriveItemRef,
     const extension = extname(itemPath);
     const tempFile = pathJoin(tmpdir(), `${randomUUID()}${extension}`);
     const fileStream = createWriteStream(tempFile);
-    const { sheetName = defaultWorkbookWorksheetName, conflictBehavior, chunkSize, progress = () => { } } = options;
+    const {
+        sheetName = defaultWorkbookWorksheetName,
+        conflictBehavior = "fail",
+        chunkSize = 60 * 1024 * 1024, // 60MB is the largest supported size, minimizing inter-chunk overhead at the expense of large retry blocks
+        progress = () => { }
+    } = options;
 
     // TODO: ExcelJS compress file?
     let preparedCells = 0;
