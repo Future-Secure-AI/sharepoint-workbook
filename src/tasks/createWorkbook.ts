@@ -29,11 +29,10 @@ export type CreateOptions = {
     sheetName?: WorkbookWorksheetName;
     conflictBehavior?: "fail" | "replace" | "rename";
     chunkSize?: number;
-    encodeProgress?: (records: number) => void;
-    uploadProgress?: (records: number, pct: number) => void;
+    encodeProgress?: (count: number) => void;
+    uploadProgress?: (count: number, pct: number) => void;
 };
 
-const encodeProgressEvery = 100_000;
 /**
  * Creates a new workbook (.csv or .xlsx) in the specified parent location with the provided rows.
  * @param {DriveRef | DriveItemRef} parentRef Reference to the parent drive or item where the file will be created.
@@ -43,10 +42,17 @@ const encodeProgressEvery = 100_000;
  * @returns {Promise<DriveItem & DriveItemRef>} Created DriveItem with reference.
  * @throws {InvalidArgumentError} If the file extension is not supported.
  */
-export default async function createWorkbook(parentRef: DriveRef | DriveItemRef, itemPath: DriveItemPath, rows: Iterable<Partial<Cell>[]> | AsyncIterable<Partial<Cell>[]>, { sheetName, conflictBehavior, chunkSize, encodeProgress, uploadProgress }: CreateOptions = {}): Promise<DriveItem & DriveItemRef> {
+export default async function createWorkbook(parentRef: DriveRef | DriveItemRef, itemPath: DriveItemPath, rows: Iterable<Partial<Cell>[]> | AsyncIterable<Partial<Cell>[]>, options: CreateOptions = {}): Promise<DriveItem & DriveItemRef> {
     const extension = extname(itemPath);
     const tempFile = pathJoin(tmpdir(), `${randomUUID()}${extension}`);
     const fileStream = createWriteStream(tempFile);
+    const {
+        sheetName = defaultWorkbookWorksheetName,
+        conflictBehavior = "fail",
+        chunkSize = 60 * 1024 * 1024,
+        encodeProgress = () => { },
+        uploadProgress = () => { }
+    } = options;
 
     try {
         let rowCount = 0;
@@ -55,10 +61,7 @@ export default async function createWorkbook(parentRef: DriveRef | DriveItemRef,
             csv.pipe(fileStream);
             for await (const row of rows) {
                 csv.write(row.map((cell) => cell.value ?? ""));
-                rowCount++;
-                if (rowCount % encodeProgressEvery === 0 && encodeProgress) {
-                    encodeProgress(rowCount);
-                }
+                encodeProgress(++rowCount);
             }
             csv.end();
 
@@ -67,21 +70,14 @@ export default async function createWorkbook(parentRef: DriveRef | DriveItemRef,
                 fileStream.on("error", reject);
             });
         } else if (extension === ".xlsx") {
-            const xls = new ExcelJS.Workbook();
+            const xls = new ExcelJS.stream.xlsx.WorkbookWriter({ stream: fileStream });
             const worksheet = xls.addWorksheet(sheetName ?? defaultWorkbookWorksheetName);
             for await (const row of rows) {
                 appendRow(worksheet, row);
-                rowCount++;
-                if (rowCount % encodeProgressEvery === 0 && encodeProgress) {
-                    encodeProgress(rowCount);
-                }
+                encodeProgress(++rowCount);
             }
-
-            await xls.xlsx.write(fileStream);
-            await new Promise((resolve, reject) => {
-                fileStream.on("finish", () => resolve(void 0));
-                fileStream.on("error", reject);
-            });
+            worksheet.commit();
+            await xls.commit();
         } else {
             throw new InvalidArgumentError(`Unsupported file extension: ${extension}. Supported extensions are .csv and .xlsx.`);
         }
@@ -92,8 +88,8 @@ export default async function createWorkbook(parentRef: DriveRef | DriveItemRef,
         const stream = createReadStream(tempFile);
         return await createDriveItemContent(parentRef, itemPath, stream, size, {
             conflictBehavior,
-            chunkSize: chunkSize ?? 60 * 1024 * 1024,
-            progress: (pct) => uploadProgress?.(Math.round(pct / 100 * rowCount), pct),
+            chunkSize,
+            progress: (pct) => uploadProgress(Math.round(pct / 100 * rowCount), pct),
         });
     } finally {
         await fs.unlink(tempFile).catch(() => { });

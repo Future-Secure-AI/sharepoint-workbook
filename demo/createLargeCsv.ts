@@ -15,14 +15,28 @@ import { getLargeSet, getMemoryLimitMB } from "./shared";
     const itemPath = driveItemPath(itemName);
     const driveRef = getDefaultDriveRef();
     const uploadStart = Date.now();
+    let lastUploadCount = 0;
+    let lastUploadTime = uploadStart;
+    let lastEncodeCount = 0;
     const item = await createWorkbook(driveRef, itemPath, rows, {
-        encodeProgress: (rowCount) => console.log(`Encoded ${rowCount.toLocaleString()} rows`),
+        encodeProgress: (rowCount) => {
+            if (rowCount - lastEncodeCount >= 100000) {
+                console.log(`Encoded ${rowCount.toLocaleString()} rows`);
+                lastEncodeCount = rowCount;
+            }
+        },
         uploadProgress: (rowCount, pct) => {
-            const elapsedSec = (Date.now() - uploadStart) / 1000;
-            const rowsPerSec = elapsedSec > 0 ? rowCount / elapsedSec : 0;
+            const now = Date.now();
+            const elapsedSec = (now - lastUploadTime) / 1000;
+            const rowsSinceLast = rowCount - lastUploadCount;
+            const rowsPerSec = elapsedSec > 0 ? rowsSinceLast / elapsedSec : 0;
             console.log(`Uploaded ${Math.round(pct * 100) / 100}% ${rowCount.toLocaleString()} rows (${rowsPerSec.toFixed(2)} rows/sec)`);
+            lastUploadCount = rowCount;
+            lastUploadTime = now;
         },
     });
 
-    console.info(`Created item: ${item.id} (${item.name})`);
+    console.info(`Created CSV: ${item.id} (${item.name}) at ${item.size ?? 0 / 1024 / 1024} MB`);
+    const totalSec = (Date.now() - uploadStart) / 1000;
+    console.info(`Total runtime: ${totalSec.toFixed(2)} seconds`);
 })();

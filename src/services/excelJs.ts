@@ -42,6 +42,7 @@ export function appendRow(worksheet: ExcelJS.Worksheet, row: Partial<Cell>[]): v
         }
         colIndex++;
     }
+    excelRow.commit();
 }
 function mapAlignment(alignment?: Cell["alignment"]): Partial<ExcelJS.Alignment> | undefined {
     if (!alignment) return undefined;
