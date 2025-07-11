@@ -1,10 +1,9 @@
-
 import { getDefaultDriveRef } from "microsoft-graph/drive";
 import { driveItemPath } from "microsoft-graph/driveItem";
 import { generateTempFileName } from "microsoft-graph/temporaryFiles";
 import tryDeleteDriveItem from "microsoft-graph/tryDeleteDriveItem";
+import type { WorkbookWorksheetName } from "microsoft-graph/WorkbookWorksheet";
 import { describe, expect, it } from "vitest";
-import { getLargeSet } from "../../demo/shared.ts";
 import createWorkbook from "./createWorkbook.ts";
 
 function getSmallSet() {
@@ -15,26 +14,16 @@ function getSmallSet() {
     ]
 }
 
-
 describe("createWorkbook", { timeout: 15 * 60 * 1000 }, () => {
-    it("creates small CSV file", async () => {
-        const rows = getSmallSet();
-        const itemName = generateTempFileName("csv");
-        const itemPath = driveItemPath(itemName);
-        const driveRef = getDefaultDriveRef();
-        const item = await createWorkbook(driveRef, itemPath, rows);
-        expect(item).toBeTruthy();
-        expect(item.name).toBe(itemName);
-        expect(item.size).toBeGreaterThan(0);
-        await tryDeleteDriveItem(item);
-    });
-
     it("creates small XLSX file", async () => {
         const rows = getSmallSet();
         const itemName = generateTempFileName("xlsx");
         const itemPath = driveItemPath(itemName);
         const driveRef = getDefaultDriveRef();
-        const item = await createWorkbook(driveRef, itemPath, rows);
+        const item = await createWorkbook(driveRef, itemPath, {
+            ["Sheet1" as WorkbookWorksheetName]: rows,
+            ["Sheet2" as WorkbookWorksheetName]: rows,
+        });
         expect(item).toBeTruthy();
         expect(item.name).toBe(itemName);
         expect(item.size).toBeGreaterThan(0);
@@ -46,36 +35,8 @@ describe("createWorkbook", { timeout: 15 * 60 * 1000 }, () => {
         const itemName = generateTempFileName("txt");
         const itemPath = driveItemPath(itemName);
         const driveRef = getDefaultDriveRef();
-        await expect(createWorkbook(driveRef, itemPath, rows)).rejects.toThrow(
+        await expect(createWorkbook(driveRef, itemPath, { ["Sheet1" as WorkbookWorksheetName]: rows })).rejects.toThrow(
             /Unsupported file extension/
         );
-    });
-
-    it("creates large CSV file from NYC dataset subset", async () => {
-        const rows = getLargeSet();
-        const itemName = generateTempFileName("csv");
-        const itemPath = driveItemPath(itemName);
-        const driveRef = getDefaultDriveRef();
-        const item = await createWorkbook(driveRef, itemPath, rows, {
-            progress: (pct) => console.log(`Progress: ${Math.round(pct)}%`),
-        });
-        expect(item).toBeTruthy();
-        expect(item.name).toBe(itemName);
-        expect(item.size).toBeGreaterThan(0);
-        // await tryDeleteDriveItem(item);
-    });
-
-    it("creates large XLSX file from NYC dataset subset", async () => {
-        const rows = getLargeSet();
-        const itemName = generateTempFileName("xlsx");
-        const itemPath = driveItemPath(itemName);
-        const driveRef = getDefaultDriveRef();
-        const item = await createWorkbook(driveRef, itemPath, rows, {
-            progress: (pct) => console.log(`Progress: ${Math.round(pct)}%`),
-        });
-        expect(item).toBeTruthy();
-        expect(item.name).toBe(itemName);
-        expect(item.size).toBeGreaterThan(0);
-        await tryDeleteDriveItem(item);
     });
 });

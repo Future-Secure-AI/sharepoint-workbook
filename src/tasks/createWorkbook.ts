@@ -12,7 +12,6 @@ import type { DriveRef } from "microsoft-graph/Drive";
 import type { DriveItemPath, DriveItemRef } from "microsoft-graph/DriveItem";
 import InvalidArgumentError from "microsoft-graph/InvalidArgumentError";
 import type { WorkbookWorksheetName } from "microsoft-graph/WorkbookWorksheet";
-import { defaultWorkbookWorksheetName } from "microsoft-graph/workbookWorksheet";
 import { randomUUID } from "node:crypto";
 import { createReadStream, createWriteStream, promises as fs } from "node:fs";
 import { tmpdir } from "node:os";
@@ -25,35 +24,39 @@ import { appendRow } from "../services/excelJs.ts";
  * @property {"fail" | "replace" | "rename"} [conflictResolution] How to resolve name conflicts when uploading the file.
  */
 export type CreateOptions = {
-    sheetName?: WorkbookWorksheetName;
     conflictBehavior?: "fail" | "replace" | "rename";
     maxChunkSize?: number;
     progress?: (preparedCount: number, writtenCount: number, preparedPerSecond: number, writtenPerSecond: number) => void;
 };
 
 /**
- * Creates a new workbook (.xlsx) in the specified parent location with the provided rows.
+ * Creates a new workbook (.xlsx) in the specified parent location with the provided rows for multiple sheets.
  * @param {DriveRef | DriveItemRef} parentRef Reference to the parent drive or item where the file will be created.
  * @param {DriveItemPath} itemPath Path (including filename and extension) for the new workbook.
- * @param {Iterable<Partial<Cell>[]> | AsyncIterable<Partial<Cell>[]>} rows Iterable or async iterable of row arrays, each containing partial Cell objects.
- * @param {CreateOptions} [options] Options for sheet name and conflict resolution.
+ * @param {Record<WorkbookWorksheetName, Iterable<Partial<Cell>[]> | AsyncIterable<Partial<Cell>[]>>} sheets Object where each key is a sheet name (WorkbookWorksheetName) and the value is an iterable or async iterable of row arrays.
+ * @param {CreateOptions} [options] Options for conflict resolution, etc.
  * @returns {Promise<DriveItem & DriveItemRef>} Created DriveItem with reference.
  * @throws {InvalidArgumentError} If the file extension is not supported.
  */
-export default async function createWorkbook(parentRef: DriveRef | DriveItemRef, itemPath: DriveItemPath, rows: Iterable<Partial<Cell>[]> | AsyncIterable<Partial<Cell>[]>, options: CreateOptions = {}): Promise<DriveItem & DriveItemRef> {
+export default async function createWorkbook(
+    parentRef: DriveRef | DriveItemRef,
+    itemPath: DriveItemPath,
+    sheets: Record<WorkbookWorksheetName, Iterable<Partial<Cell>[]> | AsyncIterable<Partial<Cell>[]>>,
+    options: CreateOptions = {}
+): Promise<DriveItem & DriveItemRef> {
     const extension = extname(itemPath);
-
     if (extension !== ".xlsx") {
         throw new InvalidArgumentError(`Unsupported file extension: ${extension}. Only .xlsx files are supported for workbook creation.`);
     }
 
-    const localFilePath = pathJoin(tmpdir(), `${randomUUID()}${extension}`);
     const {
-        sheetName = defaultWorkbookWorksheetName,
+        // sheetName is ignored for multi-sheet
         conflictBehavior = "fail",
         maxChunkSize = 60 * 1024 * 1024, // 60MB is the largest supported size, minimizing inter-chunk overhead at the expense of large retry blocks
-        progress = () => { }
+        progress = () => { },
     } = options;
+
+    const localFilePath = pathJoin(tmpdir(), `${randomUUID()}${extension}`);
 
     let preparedCells = 0;
     let writtenCells = 0;
@@ -63,22 +66,19 @@ export default async function createWorkbook(parentRef: DriveRef | DriveItemRef,
     let lastWrittenCells = 0;
     try {
         const fileStream = createWriteStream(localFilePath);
-
         const xls = new ExcelJS.stream.xlsx.WorkbookWriter({ stream: fileStream });
-        const worksheet = xls.addWorksheet(sheetName);
 
-        for await (const row of rows) {
-            appendRow(worksheet, row);
-
-            preparedCells += row.length;
-            progressUpdated();
+        for (const [sheetName, sheetRows] of Object.entries(sheets)) {
+            const worksheet = xls.addWorksheet(sheetName);
+            for await (const row of sheetRows) {
+                appendRow(worksheet, row);
+                preparedCells += row.length;
+                progressUpdated();
+            }
+            worksheet.commit();
         }
 
-        worksheet.commit();
         await xls.commit();
-
-        // TODO:  recompress file?
-
         progressUpdated(true);
 
         const { size } = await fs.stat(localFilePath);
@@ -87,7 +87,7 @@ export default async function createWorkbook(parentRef: DriveRef | DriveItemRef,
             conflictBehavior,
             maxChunkSize,
             progress: (bytes) => {
-                writtenCells = Math.ceil(bytes / size * preparedCells);
+                writtenCells = Math.ceil((bytes / size) * preparedCells);
                 progressUpdated();
             },
         });
@@ -101,8 +101,8 @@ export default async function createWorkbook(parentRef: DriveRef | DriveItemRef,
         const time = Date.now();
         const timeDiff = time - lastTime;
         if (force || timeDiff > 1000) {
-            const preparedPerSecond = Math.ceil((preparedCells - lastPreparedCells) / (timeDiff / 1000));
-            const writtenPerSecond = Math.ceil((writtenCells - lastWrittenCells) / (timeDiff / 1000));
+            const preparedPerSecond = timeDiff ? Math.ceil((preparedCells - lastPreparedCells) / (timeDiff / 1000)) : 0;
+            const writtenPerSecond = timeDiff ? Math.ceil((writtenCells - lastWrittenCells) / (timeDiff / 1000)) : 0;
             lastPreparedCells = preparedCells;
             lastWrittenCells = writtenCells;
             lastTime = time;
