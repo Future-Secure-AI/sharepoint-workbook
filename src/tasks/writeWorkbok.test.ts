@@ -2,7 +2,6 @@ import { getDefaultDriveRef } from "microsoft-graph/drive";
 import { driveItemPath } from "microsoft-graph/driveItem";
 import { generateTempFileName } from "microsoft-graph/temporaryFiles";
 import tryDeleteDriveItem from "microsoft-graph/tryDeleteDriveItem";
-import type { WorkbookWorksheetName } from "microsoft-graph/WorkbookWorksheet";
 import { describe, expect, it } from "vitest";
 import writeWorkbook from "./writeWorkbook.ts";
 
@@ -20,10 +19,11 @@ describe("writeWorkbook", { timeout: 15 * 60 * 1000 }, () => {
 		const itemName = generateTempFileName("xlsx");
 		const itemPath = driveItemPath(itemName);
 		const driveRef = getDefaultDriveRef();
-		const item = await writeWorkbook(driveRef, itemPath, {
-			["Sheet1" as WorkbookWorksheetName]: rows,
-			["Sheet2" as WorkbookWorksheetName]: rows,
-		});
+		const worksheets = [
+			{ name: "Sheet1", rows },
+			{ name: "Sheet2", rows },
+		];
+		const item = await writeWorkbook(driveRef, itemPath, worksheets);
 		expect(item).toBeTruthy();
 		expect(item.name).toBe(itemName);
 		expect(item.size).toBeGreaterThan(0);
@@ -35,6 +35,7 @@ describe("writeWorkbook", { timeout: 15 * 60 * 1000 }, () => {
 		const itemName = generateTempFileName("txt");
 		const itemPath = driveItemPath(itemName);
 		const driveRef = getDefaultDriveRef();
-		await expect(writeWorkbook(driveRef, itemPath, { ["Sheet1" as WorkbookWorksheetName]: rows })).rejects.toThrow(/Unsupported file extension/);
+		const worksheets = [{ name: "Sheet1", rows }];
+		await expect(writeWorkbook(driveRef, itemPath, worksheets)).rejects.toThrow(/Unsupported file extension/);
 	});
 });
