@@ -39,24 +39,12 @@ jobs:
           npm version --no-git-tag-version "$VERSION"
           echo "version=$VERSION" >> $GITHUB_OUTPUT
 
+      - name: Tag commit
+        run: |
+            git config user.name "github-actions[bot]"
+            git config user.email "github-actions[bot]@users.noreply.github.com"
+            git tag v${{ steps.version.outputs.version }}
+            git push origin v${{ steps.version.outputs.version }}
+        
       - name: Run release
         run: npm run release
-        
-      - name: Create dist zip
-        run: |
-          VERSION="${{ steps.version.outputs.version }}"
-          ZIP_NAME="sharepoint-workbook-v${VERSION//./_}.zip"
-          cd dist
-          zip -r "../$ZIP_NAME" .
-          echo "ZIP_NAME=$ZIP_NAME" >> $GITHUB_ENV
-
-      - name: Publish GitHub Release
-        uses: softprops/action-gh-release@v2
-        with:
-          tag_name: v${{ steps.version.outputs.version }}
-          name: v${{ steps.version.outputs.version }}
-          body: |
-            ${{ github.event.head_commit.message }}
-          files: ${{ env.ZIP_NAME }}
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
