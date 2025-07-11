@@ -4,7 +4,7 @@ import { generateTempFileName } from "microsoft-graph/temporaryFiles";
 import tryDeleteDriveItem from "microsoft-graph/tryDeleteDriveItem";
 import type { WorkbookWorksheetName } from "microsoft-graph/WorkbookWorksheet";
 import { describe, expect, it } from "vitest";
-import createWorkbook from "./createWorkbook.ts";
+import writeWorkbook from "./writeWorkbook.ts";
 
 function getSmallSet() {
 	return [
@@ -14,13 +14,13 @@ function getSmallSet() {
 	];
 }
 
-describe("createWorkbook", { timeout: 15 * 60 * 1000 }, () => {
+describe("writeWorkbook", { timeout: 15 * 60 * 1000 }, () => {
 	it("creates small XLSX file", async () => {
 		const rows = getSmallSet();
 		const itemName = generateTempFileName("xlsx");
 		const itemPath = driveItemPath(itemName);
 		const driveRef = getDefaultDriveRef();
-		const item = await createWorkbook(driveRef, itemPath, {
+		const item = await writeWorkbook(driveRef, itemPath, {
 			["Sheet1" as WorkbookWorksheetName]: rows,
 			["Sheet2" as WorkbookWorksheetName]: rows,
 		});
@@ -35,6 +35,6 @@ describe("createWorkbook", { timeout: 15 * 60 * 1000 }, () => {
 		const itemName = generateTempFileName("txt");
 		const itemPath = driveItemPath(itemName);
 		const driveRef = getDefaultDriveRef();
-		await expect(createWorkbook(driveRef, itemPath, { ["Sheet1" as WorkbookWorksheetName]: rows })).rejects.toThrow(/Unsupported file extension/);
+		await expect(writeWorkbook(driveRef, itemPath, { ["Sheet1" as WorkbookWorksheetName]: rows })).rejects.toThrow(/Unsupported file extension/);
 	});
 });

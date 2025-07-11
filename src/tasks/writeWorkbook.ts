@@ -1,5 +1,5 @@
 /**
- * Copy a drive item.
+ * Create a workbook.
  * @module createWorkbook
  * @category Tasks
  */
@@ -12,21 +12,23 @@ import type { DriveRef } from "microsoft-graph/dist/cjs/models/Drive";
 import type { DriveItemPath, DriveItemRef } from "microsoft-graph/dist/cjs/models/DriveItem";
 import type { WorkbookWorksheetName } from "microsoft-graph/dist/cjs/models/WorkbookWorksheet";
 import createDriveItemContent from "microsoft-graph/dist/cjs/operations/driveItem/createDriveItemContent";
+import { getEnvironmentVariable } from "microsoft-graph/environmentVariable";
 import { randomUUID } from "node:crypto";
 import { createReadStream, createWriteStream, promises as fs } from "node:fs";
 import { tmpdir } from "node:os";
 import { extname, join as pathJoin } from "node:path";
 import { appendRow } from "../services/excelJs.ts";
 
-// TODO: Temp location env
-
 /**
  * Options for creating a new workbook file.
  * @property {WorkbookWorksheetName} [sheetName] Name of the worksheet to create.
- * @property {"fail" | "replace" | "rename"} [conflictResolution] How to resolve name conflicts when uploading the file.
+ * @property {"fail" | "replace" | "rename"} [ifAlreadyExists] How to resolve if the file already exists.
+ * @property {number} [maxChunkSize] Maximum chunk size for upload (in bytes).
+ * @property {(preparedCount: number, writtenCount: number, preparedPerSecond: number, writtenPerSecond: number) =&lt; void} [progress] Progress callback.
+ * @property {string} [workingFolder] Working folder for temporary file storage. Defaults to theWORKING_FOLDER or OS temp dir.
  */
 export type CreateOptions = {
-	conflictBehavior?: "fail" | "replace" | "rename";
+	ifAlreadyExists?: "fail" | "replace" | "rename";
 	maxChunkSize?: number;
 	progress?: (preparedCount: number, writtenCount: number, preparedPerSecond: number, writtenPerSecond: number) => void;
 	workingFolder?: string;
@@ -40,14 +42,15 @@ export type CreateOptions = {
  * @param {CreateOptions} [options] Options for conflict resolution, etc.
  * @returns {Promise<DriveItem & DriveItemRef>} Created DriveItem with reference.
  * @throws {InvalidArgumentError} If the file extension is not supported.
+ * @experimental
  */
-export default async function createWorkbook(parentRef: DriveRef | DriveItemRef, itemPath: DriveItemPath, sheets: Record<WorkbookWorksheetName, Iterable<Partial<Cell>[]> | AsyncIterable<Partial<Cell>[]>>, options: CreateOptions = {}): Promise<DriveItem & DriveItemRef> {
+export default async function writeWorkbook(parentRef: DriveRef | DriveItemRef, itemPath: DriveItemPath, sheets: Record<WorkbookWorksheetName, Iterable<Partial<Cell>[]> | AsyncIterable<Partial<Cell>[]>>, options: CreateOptions = {}): Promise<DriveItem & DriveItemRef> {
 	const extension = extname(itemPath);
 	if (extension !== ".xlsx") {
 		throw new InvalidArgumentError(`Unsupported file extension: ${extension}. Only .xlsx files are supported for workbook creation.`);
 	}
 
-	const { conflictBehavior = "fail", maxChunkSize = 60 * 1024 * 1024, progress = () => {}, workingFolder = tmpdir() } = options;
+	const { ifAlreadyExists: conflictBehavior = "fail", maxChunkSize = 60 * 1024 * 1024, progress = () => {}, workingFolder = getEnvironmentVariable("WORKING_FOLDER", tmpdir()) as string } = options;
 
 	const localFilePath = pathJoin(workingFolder, `${randomUUID()}${extension}`);
 
