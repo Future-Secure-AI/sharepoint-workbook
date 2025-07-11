@@ -50,7 +50,6 @@ export default async function createWorkbook(
     }
 
     const {
-        // sheetName is ignored for multi-sheet
         conflictBehavior = "fail",
         maxChunkSize = 60 * 1024 * 1024, // 60MB is the largest supported size, minimizing inter-chunk overhead at the expense of large retry blocks
         progress = () => { },
