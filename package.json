@@ -49,5 +49,52 @@
 		"exceljs": "^4.4.0",
 		"fast-csv": "^5.0.2",
 		"microsoft-graph": "^3.9.4"
+	},
+	"exports": {
+		".": {
+			"import": "./dist/esm/index.js",
+			"require": "./dist/cjs/index.js",
+			"types": "./dist/esm/index.d.ts"
+		},
+		"./excelJs": {
+			"import": "./dist/esm/services/excelJs.js",
+			"require": "./dist/cjs/services/excelJs.js",
+			"types": "./dist/esm/services/excelJs.d.ts"
+		},
+		"./dist/cjs/services/excelJs": {
+			"import": "./dist/esm/services/excelJs.js",
+			"require": "./dist/cjs/services/excelJs.js",
+			"types": "./dist/esm/services/excelJs.d.ts"
+		},
+		"./createWorkbook": {
+			"import": "./dist/esm/tasks/createWorkbook.js",
+			"require": "./dist/cjs/tasks/createWorkbook.js",
+			"types": "./dist/esm/tasks/createWorkbook.d.ts"
+		},
+		"./dist/cjs/tasks/createWorkbook": {
+			"import": "./dist/esm/tasks/createWorkbook.js",
+			"require": "./dist/cjs/tasks/createWorkbook.js",
+			"types": "./dist/esm/tasks/createWorkbook.d.ts"
+		},
+		"./readWorkbookCells": {
+			"import": "./dist/esm/tasks/readWorkbookCells.js",
+			"require": "./dist/cjs/tasks/readWorkbookCells.js",
+			"types": "./dist/esm/tasks/readWorkbookCells.d.ts"
+		},
+		"./dist/cjs/tasks/readWorkbookCells": {
+			"import": "./dist/esm/tasks/readWorkbookCells.js",
+			"require": "./dist/cjs/tasks/readWorkbookCells.js",
+			"types": "./dist/esm/tasks/readWorkbookCells.d.ts"
+		},
+		"./writeWorkbookCells": {
+			"import": "./dist/esm/tasks/writeWorkbookCells.js",
+			"require": "./dist/cjs/tasks/writeWorkbookCells.js",
+			"types": "./dist/esm/tasks/writeWorkbookCells.d.ts"
+		},
+		"./dist/cjs/tasks/writeWorkbookCells": {
+			"import": "./dist/esm/tasks/writeWorkbookCells.js",
+			"require": "./dist/cjs/tasks/writeWorkbookCells.js",
+			"types": "./dist/esm/tasks/writeWorkbookCells.d.ts"
+		}
 	}
 }

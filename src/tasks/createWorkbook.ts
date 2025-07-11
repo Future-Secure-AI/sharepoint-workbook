@@ -6,12 +6,12 @@
 
 import type { DriveItem } from "@microsoft/microsoft-graph-types";
 import ExcelJS from "exceljs";
-import type { Cell } from "microsoft-graph/Cell";
-import createDriveItemContent from "microsoft-graph/createDriveItemContent";
-import type { DriveRef } from "microsoft-graph/Drive";
-import type { DriveItemPath, DriveItemRef } from "microsoft-graph/DriveItem";
-import InvalidArgumentError from "microsoft-graph/InvalidArgumentError";
-import type { WorkbookWorksheetName } from "microsoft-graph/WorkbookWorksheet";
+import InvalidArgumentError from "microsoft-graph/dist/cjs/errors/InvalidArgumentError";
+import type { Cell } from "microsoft-graph/dist/cjs/models/Cell";
+import type { DriveRef } from "microsoft-graph/dist/cjs/models/Drive";
+import type { DriveItemPath, DriveItemRef } from "microsoft-graph/dist/cjs/models/DriveItem";
+import type { WorkbookWorksheetName } from "microsoft-graph/dist/cjs/models/WorkbookWorksheet";
+import createDriveItemContent from "microsoft-graph/dist/cjs/operations/driveItem/createDriveItemContent";
 import { randomUUID } from "node:crypto";
 import { createReadStream, createWriteStream, promises as fs } from "node:fs";
 import { tmpdir } from "node:os";

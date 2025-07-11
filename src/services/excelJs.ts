@@ -1,6 +1,6 @@
 import type ExcelJS from "exceljs";
-import type { Cell } from "microsoft-graph/Cell";
-import InvalidArgumentError from "microsoft-graph/InvalidArgumentError";
+import InvalidArgumentError from "microsoft-graph/dist/cjs/errors/InvalidArgumentError";
+import type { Cell } from "microsoft-graph/dist/cjs/models/Cell";
 
 export function appendRow(worksheet: ExcelJS.Worksheet, row: Partial<Cell>[]): void {
 	const excelRow = worksheet.addRow(row.map((cell) => cell.value ?? ""));
