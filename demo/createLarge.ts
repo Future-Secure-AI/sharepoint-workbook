@@ -2,7 +2,7 @@ import { getDefaultDriveRef } from "microsoft-graph/drive";
 import { driveItemPath } from "microsoft-graph/driveItem";
 import { generateTempFileName } from "microsoft-graph/temporaryFiles";
 import type { WorkbookWorksheetName } from "microsoft-graph/WorkbookWorksheet";
-import createWorkbook from "../src/tasks/createWorkbook";
+import writeWorkbook from "../src/tasks/writeWorkbook";
 import { getLargeSet, getMemoryLimitMB } from "./shared";
 
 (async () => {
@@ -17,7 +17,7 @@ import { getLargeSet, getMemoryLimitMB } from "./shared";
 	const driveRef = getDefaultDriveRef();
 
 	const uploadStart = Date.now();
-	const item = await createWorkbook(
+	const item = await writeWorkbook(
 		driveRef,
 		itemPath,
 		{ ["Sheet1" as WorkbookWorksheetName]: rows },
