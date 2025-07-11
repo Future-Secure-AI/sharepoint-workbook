@@ -22,8 +22,8 @@ import { getLargeSet, getMemoryLimitMB } from "./shared";
 		itemPath,
 		{ ["Sheet1" as WorkbookWorksheetName]: rows },
 		{
-			progress: (preparedCount, writtenCount, preparedPerSecond, writtenPerSecond) => {
-				console.log(`[${new Date().toLocaleTimeString()}] ` + `Prepared: ${preparedCount.toLocaleString()} (${preparedPerSecond.toLocaleString()}/sec)\t ` + `Written: ${writtenCount.toLocaleString()} (${writtenPerSecond.toLocaleString()}/sec)`);
+			progress: ({ prepared, compressionRatio, written, preparedPerSecond, writtenPerSecond }) => {
+				console.log(`[${new Date().toLocaleTimeString()}] Prepared ${prepared.toLocaleString()} (${preparedPerSecond.toLocaleString()}/sec), ${Math.round(compressionRatio * 100)}% compression, written: ${written.toLocaleString()} (${writtenPerSecond.toLocaleString()}/sec) cells`);
 			},
 		},
 	);

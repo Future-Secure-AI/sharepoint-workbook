@@ -23,18 +23,35 @@ import yazl, { type ZipFile as YazlZipFile } from "yazl";
 import { appendRow } from "../services/excelJs.ts";
 
 /**
+ * Progress information for workbook writing operations.
+ * @typedef {Object} WriteProgress
+ * @property {number} prepared Number of cells prepared for writing
+ * @property {number} written Number of cells written to the destination
+ * @property {number} compressionRatio Ratio of compressed file size to original file size (0 to 1, where 1 is no compression)
+ * @property {number} preparedPerSecond Number of cells prepared per second
+ * @property {number} writtenPerSecond Number of cells written per second
+ */
+export type WriteProgress = {
+	prepared: number;
+	written: number;
+	compressionRatio: number;
+	preparedPerSecond: number;
+	writtenPerSecond: number;
+};
+
+/**
  * Options for writing a workbook file.
- * @property {WorkbookWorksheetName} [sheetName] Name of the worksheet to create.
+ * @typedef {Object} WriteOptions
  * @property {"fail" | "replace" | "rename"} [ifAlreadyExists] What to do if the file already exists.
  * @property {number} [maxChunkSize] Maximum chunk size for upload (in bytes).
- * @property {(preparedCount: number, writtenCount: number, preparedPerSecond: number, writtenPerSecond: number) =&lt; void} [progress] Progress callback.
+ * @property {(update: WriteProgress) => void} [progress] Progress callback.
  * @property {string} [workingFolder] Working folder for temporary file storage. Defaults to the `WORKING_FOLDER` env, then the OS temporary folder if not set.
- * @property {number} [compressionLevel] Compression level for the output .xlsx zip file (0-9, default 6, )
+ * @property {number} [compressionLevel] Compression level for the output .xlsx zip file (0-9, default 6)
  */
 export type WriteOptions = {
 	ifAlreadyExists?: "fail" | "replace" | "rename";
 	maxChunkSize?: number;
-	progress?: (preparedCount: number, writtenCount: number, preparedPerSecond: number, writtenPerSecond: number) => void;
+	progress?: (update: WriteProgress) => void;
 	workingFolder?: string;
 	compressionLevel?: number;
 };
@@ -56,34 +73,40 @@ export default async function writeWorkbook(parentRef: DriveRef | DriveItemRef, 
 
 	const { ifAlreadyExists: conflictBehavior = "fail", maxChunkSize = 60 * 1024 * 1024, progress = () => {}, workingFolder = getEnvironmentVariable("WORKING_FOLDER", tmpdir()) as string, compressionLevel = 6 } = options;
 
-	let lastTime = 0;
-	let lastPreparedCells = 0;
-	let lastWrittenCells = 0;
-	let lastPreparedPerSecond = 0;
-	let lastWrittenPerSecond = 0;
+	const state = {
+		time: Date.now(),
+		prepared: 0,
+		written: 0,
+		compressionRatio: 0,
+		preparedPerSecond: 0,
+		writtenPerSecond: 0,
+	};
 
-	const notifyProgress = (force: boolean, preparedCells: number | undefined, writtenCells: number | undefined): void => {
-		const time = Date.now();
-		const timeDiff = time - lastTime;
-		if (force || timeDiff > 1000) {
-			if (preparedCells !== undefined) {
-				lastPreparedPerSecond = timeDiff ? Math.ceil((preparedCells - lastPreparedCells) / (timeDiff / 1000)) : 0;
-				lastPreparedCells = preparedCells;
-			}
-			if (writtenCells !== undefined) {
-				lastWrittenPerSecond = timeDiff ? Math.ceil((writtenCells - lastWrittenCells) / (timeDiff / 1000)) : 0;
-				lastWrittenCells = writtenCells;
-			}
-			lastTime = time;
+	const reportProgress = (prepared?: number, compressionRatio?: number, written?: number, force = false): void => {
+		const now = Date.now();
+		const elapsed = now - state.time;
 
-			progress(lastPreparedCells, lastWrittenCells, lastPreparedPerSecond, lastWrittenPerSecond);
+		state.compressionRatio = compressionRatio ?? state.compressionRatio;
+
+		if (force || elapsed > 1000) {
+			if (prepared !== undefined) {
+				state.preparedPerSecond = elapsed ? Math.ceil((prepared - state.prepared) / (elapsed / 1000)) : 0;
+				state.prepared = prepared ?? state.prepared;
+			}
+			if (written !== undefined) {
+				state.writtenPerSecond = elapsed ? Math.ceil((written - state.written) / (elapsed / 1000)) : 0;
+				state.written = written ?? state.written;
+			}
+
+			state.time = now;
+			progress(state);
 		}
 	};
 
 	const scratchFolder = await createScratchFolder(workingFolder);
-	const { localWorkbookPath, preparedCells } = await createLocalWorkbook(scratchFolder, sheets, notifyProgress);
-	const compressedLocalWorkbookPath = await recompressWorkbook(localWorkbookPath, scratchFolder, compressionLevel);
-	return await uploadWorkbook(compressedLocalWorkbookPath, parentRef, itemPath, conflictBehavior, maxChunkSize, preparedCells, notifyProgress);
+	const { localWorkbookPath, preparedCells } = await createLocalWorkbook(scratchFolder, sheets, reportProgress);
+	const compressedLocalWorkbookPath = await recompressWorkbook(localWorkbookPath, scratchFolder, compressionLevel, reportProgress);
+	return await uploadWorkbook(compressedLocalWorkbookPath, parentRef, itemPath, conflictBehavior, maxChunkSize, preparedCells, reportProgress);
 }
 
 async function createScratchFolder(workingFolder: string): Promise<string> {
@@ -92,7 +115,7 @@ async function createScratchFolder(workingFolder: string): Promise<string> {
 	return path;
 }
 
-async function createLocalWorkbook(scratchFolder: string, sheets: Record<WorkbookWorksheetName, Iterable<Partial<Cell>[]> | AsyncIterable<Partial<Cell>[]>>, notifyProgress: (force: boolean, preparedCells: number | undefined, writtenCells: number | undefined) => void) {
+async function createLocalWorkbook(scratchFolder: string, sheets: Record<WorkbookWorksheetName, Iterable<Partial<Cell>[]> | AsyncIterable<Partial<Cell>[]>>, notifyProgress: (prepared: number | undefined, compressionRation: number | undefined, written: number | undefined, force: boolean) => void) {
 	const rawFilePath = join(scratchFolder, `raw.xlsx`);
 	const rawStream = createWriteStream(rawFilePath);
 	const xls = new ExcelJS.stream.xlsx.WorkbookWriter({ stream: rawStream });
@@ -102,18 +125,19 @@ async function createLocalWorkbook(scratchFolder: string, sheets: Record<Workboo
 		for await (const row of sheetRows) {
 			appendRow(worksheet, row);
 			preparedCells += row.length;
-			notifyProgress(false, preparedCells, undefined);
+			notifyProgress(preparedCells, undefined, undefined, false);
 		}
 		worksheet.commit();
 	}
 	await xls.commit();
 
-	notifyProgress(true, undefined, undefined);
+	notifyProgress(undefined, undefined, undefined, true);
 	return { localWorkbookPath: rawFilePath, preparedCells };
 }
 
-async function recompressWorkbook(inputFilePath: string, scratchFolder: string, compressionLevel: number): Promise<string> {
+async function recompressWorkbook(inputFilePath: string, scratchFolder: string, compressionLevel: number, notifyProgress: (prepared: number | undefined, compressionRation: number | undefined, written: number | undefined, force: boolean) => void): Promise<string> {
 	if (compressionLevel === 0) {
+		notifyProgress(undefined, 1, undefined, true);
 		return inputFilePath;
 	}
 
@@ -143,6 +167,10 @@ async function recompressWorkbook(inputFilePath: string, scratchFolder: string, 
 			zipfile.on("error", reject);
 		});
 	});
+
+	const { size: inputSize } = await fs.stat(inputFilePath);
+	const { size: outputSize } = await fs.stat(outputFilePath);
+	notifyProgress(undefined, outputSize / inputSize, undefined, true);
 	return outputFilePath;
 }
 
@@ -153,7 +181,7 @@ async function uploadWorkbook(
 	conflictBehavior: "fail" | "replace" | "rename",
 	maxChunkSize: number,
 	preparedCells: number,
-	notifyProgress: (force: boolean, preparedCells: number | undefined, writtenCells: number | undefined) => void,
+	notifyProgress: (prepared: number | undefined, compressionRation: number | undefined, written: number | undefined, force: boolean) => void,
 ): Promise<DriveItem & DriveItemRef> {
 	const { size } = await fs.stat(compressedFilePath);
 	const stream = createReadStream(compressedFilePath, { highWaterMark: 1024 * 1024 });
@@ -162,9 +190,9 @@ async function uploadWorkbook(
 		maxChunkSize,
 		progress: (bytes) => {
 			const writtenCells = Math.ceil((bytes / size) * preparedCells);
-			notifyProgress(false, undefined, writtenCells);
+			notifyProgress(undefined, undefined, writtenCells, false);
 		},
 	});
-	notifyProgress(true, undefined, undefined);
+	notifyProgress(undefined, undefined, undefined, true);
 	return item;
 }
