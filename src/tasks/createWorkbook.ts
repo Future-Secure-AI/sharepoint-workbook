@@ -18,6 +18,8 @@ import { tmpdir } from "node:os";
 import { extname, join as pathJoin } from "node:path";
 import { appendRow } from "../services/excelJs.ts";
 
+// TODO: Temp location env
+
 /**
  * Options for creating a new workbook file.
  * @property {WorkbookWorksheetName} [sheetName] Name of the worksheet to create.
@@ -27,6 +29,7 @@ export type CreateOptions = {
 	conflictBehavior?: "fail" | "replace" | "rename";
 	maxChunkSize?: number;
 	progress?: (preparedCount: number, writtenCount: number, preparedPerSecond: number, writtenPerSecond: number) => void;
+	workingFolder?: string;
 };
 
 /**
@@ -44,13 +47,9 @@ export default async function createWorkbook(parentRef: DriveRef | DriveItemRef,
 		throw new InvalidArgumentError(`Unsupported file extension: ${extension}. Only .xlsx files are supported for workbook creation.`);
 	}
 
-	const {
-		conflictBehavior = "fail",
-		maxChunkSize = 60 * 1024 * 1024, // 60MB is the largest supported size, minimizing inter-chunk overhead at the expense of large retry blocks
-		progress = () => {},
-	} = options;
+	const { conflictBehavior = "fail", maxChunkSize = 60 * 1024 * 1024, progress = () => {}, workingFolder = tmpdir() } = options;
 
-	const localFilePath = pathJoin(tmpdir(), `${randomUUID()}${extension}`);
+	const localFilePath = pathJoin(workingFolder, `${randomUUID()}${extension}`);
 
 	let preparedCells = 0;
 	let writtenCells = 0;
