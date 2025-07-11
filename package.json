@@ -10,7 +10,8 @@
 		"release": "npm run build && npm run docs && npm publish --access public",
 		"test": "vitest --bail=3",
 		"update": "npm-check-updates -u && npm install",
-		"docs": "typedoc src"
+		"docs": "typedoc src",
+		"check": "biome check && tsc --noEmit --pretty"
 	},
 	"keywords": [
 		"Microsoft",
@@ -768,11 +769,6 @@
 			"types": "./dist/esm/operations/site/getSite.d.ts"
 		},
 		"./getSiteByName": {
-			"import": "./dist/esm/operations/site/getSiteByName.js",
-			"require": "./dist/cjs/operations/site/getSiteByName.js",
-			"types": "./dist/esm/operations/site/getSiteByName.d.ts"
-		},
-		"./dist/cjs/operations/site/getSiteByName": {
 			"import": "./dist/esm/operations/site/getSiteByName.js",
 			"require": "./dist/cjs/operations/site/getSiteByName.js",
 			"types": "./dist/esm/operations/site/getSiteByName.d.ts"

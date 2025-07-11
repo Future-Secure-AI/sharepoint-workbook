@@ -1,0 +1,62 @@
+name: Release
+
+on:
+  push:
+    branches:
+      - main
+
+
+permissions:
+    contents: write
+
+jobs:
+  release:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Setup NPM cache
+        uses: actions/cache@v4
+        with:
+          path: ~/.npm
+          key: ${{ runner.os }}-node-${{ hashFiles('**/package-lock.json') }}
+          restore-keys: |
+            ${{ runner.os }}-node-
+
+      - name: Authenticate with npm
+        run: echo "//registry.npmjs.org/:_authToken=${{ secrets.NPM_TOKEN }}" > ~/.npmrc
+
+      - name: Install dependencies
+        run: npm clean-install --prefer-offline --no-audit --no-fund
+
+      - name: Update version
+        id: version
+        run: |
+          MAJOR=$(node -p "require('./package.json').version.split('.')[0]")
+          MINOR=$(node -p "require('./package.json').version.split('.')[1]")
+          VERSION="$MAJOR.$MINOR.${{ github.run_number }}"
+          npm version --no-git-tag-version "$VERSION"
+          echo "version=$VERSION" >> $GITHUB_OUTPUT
+
+      - name: Run release
+        run: npm run release
+        
+      - name: Create dist zip
+        run: |
+          VERSION="${{ steps.version.outputs.version }}"
+          ZIP_NAME="sharepoint-workbook-v${VERSION//./_}.zip"
+          cd dist
+          zip -r "../$ZIP_NAME" .
+          echo "ZIP_NAME=$ZIP_NAME" >> $GITHUB_ENV
+
+      - name: Publish GitHub Release
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: v${{ steps.version.outputs.version }}
+          name: v${{ steps.version.outputs.version }}
+          body: |
+            ${{ github.event.head_commit.message }}
+          files: ${{ env.ZIP_NAME }}
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

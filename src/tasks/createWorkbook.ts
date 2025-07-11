@@ -24,9 +24,9 @@ import { appendRow } from "../services/excelJs.ts";
  * @property {"fail" | "replace" | "rename"} [conflictResolution] How to resolve name conflicts when uploading the file.
  */
 export type CreateOptions = {
-    conflictBehavior?: "fail" | "replace" | "rename";
-    maxChunkSize?: number;
-    progress?: (preparedCount: number, writtenCount: number, preparedPerSecond: number, writtenPerSecond: number) => void;
+	conflictBehavior?: "fail" | "replace" | "rename";
+	maxChunkSize?: number;
+	progress?: (preparedCount: number, writtenCount: number, preparedPerSecond: number, writtenPerSecond: number) => void;
 };
 
 /**
@@ -38,75 +38,70 @@ export type CreateOptions = {
  * @returns {Promise<DriveItem & DriveItemRef>} Created DriveItem with reference.
  * @throws {InvalidArgumentError} If the file extension is not supported.
  */
-export default async function createWorkbook(
-    parentRef: DriveRef | DriveItemRef,
-    itemPath: DriveItemPath,
-    sheets: Record<WorkbookWorksheetName, Iterable<Partial<Cell>[]> | AsyncIterable<Partial<Cell>[]>>,
-    options: CreateOptions = {}
-): Promise<DriveItem & DriveItemRef> {
-    const extension = extname(itemPath);
-    if (extension !== ".xlsx") {
-        throw new InvalidArgumentError(`Unsupported file extension: ${extension}. Only .xlsx files are supported for workbook creation.`);
-    }
+export default async function createWorkbook(parentRef: DriveRef | DriveItemRef, itemPath: DriveItemPath, sheets: Record<WorkbookWorksheetName, Iterable<Partial<Cell>[]> | AsyncIterable<Partial<Cell>[]>>, options: CreateOptions = {}): Promise<DriveItem & DriveItemRef> {
+	const extension = extname(itemPath);
+	if (extension !== ".xlsx") {
+		throw new InvalidArgumentError(`Unsupported file extension: ${extension}. Only .xlsx files are supported for workbook creation.`);
+	}
 
-    const {
-        conflictBehavior = "fail",
-        maxChunkSize = 60 * 1024 * 1024, // 60MB is the largest supported size, minimizing inter-chunk overhead at the expense of large retry blocks
-        progress = () => { },
-    } = options;
+	const {
+		conflictBehavior = "fail",
+		maxChunkSize = 60 * 1024 * 1024, // 60MB is the largest supported size, minimizing inter-chunk overhead at the expense of large retry blocks
+		progress = () => {},
+	} = options;
 
-    const localFilePath = pathJoin(tmpdir(), `${randomUUID()}${extension}`);
+	const localFilePath = pathJoin(tmpdir(), `${randomUUID()}${extension}`);
 
-    let preparedCells = 0;
-    let writtenCells = 0;
+	let preparedCells = 0;
+	let writtenCells = 0;
 
-    let lastTime = 0;
-    let lastPreparedCells = 0;
-    let lastWrittenCells = 0;
-    try {
-        const fileStream = createWriteStream(localFilePath);
-        const xls = new ExcelJS.stream.xlsx.WorkbookWriter({ stream: fileStream });
+	let lastTime = 0;
+	let lastPreparedCells = 0;
+	let lastWrittenCells = 0;
+	try {
+		const fileStream = createWriteStream(localFilePath);
+		const xls = new ExcelJS.stream.xlsx.WorkbookWriter({ stream: fileStream });
 
-        for (const [sheetName, sheetRows] of Object.entries(sheets)) {
-            const worksheet = xls.addWorksheet(sheetName);
-            for await (const row of sheetRows) {
-                appendRow(worksheet, row);
-                preparedCells += row.length;
-                progressUpdated();
-            }
-            worksheet.commit();
-        }
+		for (const [sheetName, sheetRows] of Object.entries(sheets)) {
+			const worksheet = xls.addWorksheet(sheetName);
+			for await (const row of sheetRows) {
+				appendRow(worksheet, row);
+				preparedCells += row.length;
+				progressUpdated();
+			}
+			worksheet.commit();
+		}
 
-        await xls.commit();
-        progressUpdated(true);
+		await xls.commit();
+		progressUpdated(true);
 
-        const { size } = await fs.stat(localFilePath);
-        const stream = createReadStream(localFilePath, { highWaterMark: 1024 * 1024 });
-        const item = await createDriveItemContent(parentRef, itemPath, stream, size, {
-            conflictBehavior,
-            maxChunkSize,
-            progress: (bytes) => {
-                writtenCells = Math.ceil((bytes / size) * preparedCells);
-                progressUpdated();
-            },
-        });
-        progressUpdated(true);
-        return item;
-    } finally {
-        await fs.unlink(localFilePath).catch(() => { });
-    }
+		const { size } = await fs.stat(localFilePath);
+		const stream = createReadStream(localFilePath, { highWaterMark: 1024 * 1024 });
+		const item = await createDriveItemContent(parentRef, itemPath, stream, size, {
+			conflictBehavior,
+			maxChunkSize,
+			progress: (bytes) => {
+				writtenCells = Math.ceil((bytes / size) * preparedCells);
+				progressUpdated();
+			},
+		});
+		progressUpdated(true);
+		return item;
+	} finally {
+		await fs.unlink(localFilePath).catch(() => {});
+	}
 
-    function progressUpdated(force: boolean = false): void {
-        const time = Date.now();
-        const timeDiff = time - lastTime;
-        if (force || timeDiff > 1000) {
-            const preparedPerSecond = timeDiff ? Math.ceil((preparedCells - lastPreparedCells) / (timeDiff / 1000)) : 0;
-            const writtenPerSecond = timeDiff ? Math.ceil((writtenCells - lastWrittenCells) / (timeDiff / 1000)) : 0;
-            lastPreparedCells = preparedCells;
-            lastWrittenCells = writtenCells;
-            lastTime = time;
+	function progressUpdated(force: boolean = false): void {
+		const time = Date.now();
+		const timeDiff = time - lastTime;
+		if (force || timeDiff > 1000) {
+			const preparedPerSecond = timeDiff ? Math.ceil((preparedCells - lastPreparedCells) / (timeDiff / 1000)) : 0;
+			const writtenPerSecond = timeDiff ? Math.ceil((writtenCells - lastWrittenCells) / (timeDiff / 1000)) : 0;
+			lastPreparedCells = preparedCells;
+			lastWrittenCells = writtenCells;
+			lastTime = time;
 
-            progress(preparedCells, writtenCells, preparedPerSecond, writtenPerSecond);
-        }
-    }
+			progress(preparedCells, writtenCells, preparedPerSecond, writtenPerSecond);
+		}
+	}
 }
