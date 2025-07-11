@@ -22,7 +22,7 @@ import { appendRow } from "../services/excelJs.ts";
 /**
  * Options for writing a workbook file.
  * @property {WorkbookWorksheetName} [sheetName] Name of the worksheet to create.
- * @property {"fail" | "replace" | "rename"} [ifAlreadyExists] How to resolve if the file already exists.
+ * @property {"fail" | "replace" | "rename"} [ifAlreadyExists] What to do if the file already exists.
  * @property {number} [maxChunkSize] Maximum chunk size for upload (in bytes).
  * @property {(preparedCount: number, writtenCount: number, preparedPerSecond: number, writtenPerSecond: number) =&lt; void} [progress] Progress callback.
  * @property {string} [workingFolder] Working folder for temporary file storage. Defaults to the `WORKING_FOLDER` env, then the OS temporary folder if not set.
