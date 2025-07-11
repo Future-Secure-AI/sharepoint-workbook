@@ -7,10 +7,8 @@
 import type { DriveItem } from "@microsoft/microsoft-graph-types";
 import ExcelJS from "exceljs";
 import InvalidArgumentError from "microsoft-graph/dist/cjs/errors/InvalidArgumentError";
-import type { Cell } from "microsoft-graph/dist/cjs/models/Cell";
 import type { DriveRef } from "microsoft-graph/dist/cjs/models/Drive";
 import type { DriveItemPath, DriveItemRef } from "microsoft-graph/dist/cjs/models/DriveItem";
-import type { WorkbookWorksheetName } from "microsoft-graph/dist/cjs/models/WorkbookWorksheet";
 import createDriveItemContent from "microsoft-graph/dist/cjs/operations/driveItem/createDriveItemContent";
 import { getEnvironmentVariable } from "microsoft-graph/dist/cjs/services/environmentVariable";
 import { randomUUID } from "node:crypto";
@@ -20,6 +18,7 @@ import { tmpdir } from "node:os";
 import { extname, join } from "node:path";
 import yauzl, { type Entry, type ZipFile as YauzlZipFile } from "yauzl";
 import yazl, { type ZipFile as YazlZipFile } from "yazl";
+import type { WriteWorksheet } from "../models/Worksheet.ts";
 import { appendRow } from "../services/excelJs.ts";
 
 /**
@@ -60,13 +59,13 @@ export type WriteOptions = {
  * Writes a workbook (.xlsx) in the specified parent location with the provided rows for multiple sheets.
  * @param {DriveRef | DriveItemRef} parentRef Reference to the parent drive or item where the file will be written.
  * @param {DriveItemPath} itemPath Path (including filename and extension) for the new workbook.
- * @param {Record<WorkbookWorksheetName, Iterable<Partial<Cell>[]> | AsyncIterable<Partial<Cell>[]>>} sheets Object where each key is a sheet name (WorkbookWorksheetName) and the value is an iterable or async iterable of row arrays.
+ * @param {AsyncIterator<WriteWorksheet>} worksheets Worksheets to be written.
  * @param {WriteOptions} [options] Options for conflict resolution, etc.
  * @returns {Promise<DriveItem & DriveItemRef>} Written DriveItem with reference.
  * @throws {InvalidArgumentError} If the file extension is not supported.
  * @experimental
  */
-export default async function writeWorkbook(parentRef: DriveRef | DriveItemRef, itemPath: DriveItemPath, sheets: Record<WorkbookWorksheetName, Iterable<Partial<Cell>[]> | AsyncIterable<Partial<Cell>[]>>, options: WriteOptions = {}): Promise<DriveItem & DriveItemRef> {
+export default async function writeWorkbook(parentRef: DriveRef | DriveItemRef, itemPath: DriveItemPath, worksheets: Iterable<WriteWorksheet> | AsyncIterable<WriteWorksheet>, options: WriteOptions = {}): Promise<DriveItem & DriveItemRef> {
 	if (extname(itemPath) !== ".xlsx") {
 		throw new InvalidArgumentError(`Unsupported file extension: ${extname(itemPath)}. Only .xlsx files are supported for workbook creation.`);
 	}
@@ -104,7 +103,7 @@ export default async function writeWorkbook(parentRef: DriveRef | DriveItemRef, 
 	};
 
 	const scratchFolder = await createScratchFolder(workingFolder);
-	const { localWorkbookPath, preparedCells } = await createLocalWorkbook(scratchFolder, sheets, reportProgress);
+	const { localWorkbookPath, preparedCells } = await createLocalWorkbook(scratchFolder, worksheets, reportProgress);
 	const compressedLocalWorkbookPath = await recompressWorkbook(localWorkbookPath, scratchFolder, compressionLevel, reportProgress);
 	return await uploadWorkbook(compressedLocalWorkbookPath, parentRef, itemPath, conflictBehavior, maxChunkSize, preparedCells, reportProgress);
 }
@@ -115,14 +114,14 @@ async function createScratchFolder(workingFolder: string): Promise<string> {
 	return path;
 }
 
-async function createLocalWorkbook(scratchFolder: string, sheets: Record<WorkbookWorksheetName, Iterable<Partial<Cell>[]> | AsyncIterable<Partial<Cell>[]>>, notifyProgress: (prepared: number | undefined, compressionRation: number | undefined, written: number | undefined, force: boolean) => void) {
+async function createLocalWorkbook(scratchFolder: string, worksheets: Iterable<WriteWorksheet> | AsyncIterable<WriteWorksheet>, notifyProgress: (prepared: number | undefined, compressionRation: number | undefined, written: number | undefined, force: boolean) => void) {
 	const rawFilePath = join(scratchFolder, `raw.xlsx`);
 	const rawStream = createWriteStream(rawFilePath);
 	const xls = new ExcelJS.stream.xlsx.WorkbookWriter({ stream: rawStream });
 	let preparedCells = 0;
-	for (const [sheetName, sheetRows] of Object.entries(sheets)) {
-		const worksheet = xls.addWorksheet(sheetName);
-		for await (const row of sheetRows) {
+	for await (const { name, rows } of worksheets) {
+		const worksheet = xls.addWorksheet(name);
+		for await (const row of rows) {
 			appendRow(worksheet, row);
 			preparedCells += row.length;
 			notifyProgress(preparedCells, undefined, undefined, false);
