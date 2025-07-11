@@ -10,4 +10,4 @@
 
 | Module | Description |
 | ------ | ------ |
-| [createWorkbook](createWorkbook.md) | Create a workbook. |
+| [writeWorkbook](writeWorkbook.md) | Write a workbook. |

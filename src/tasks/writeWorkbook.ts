@@ -1,6 +1,6 @@
 /**
- * Create a workbook.
- * @module createWorkbook
+ * Write a workbook.
+ * @module writeWorkbook
  * @category Tasks
  */
 
@@ -20,14 +20,14 @@ import { extname, join as pathJoin } from "node:path";
 import { appendRow } from "../services/excelJs.ts";
 
 /**
- * Options for creating a new workbook file.
+ * Options for writing a workbook file.
  * @property {WorkbookWorksheetName} [sheetName] Name of the worksheet to create.
  * @property {"fail" | "replace" | "rename"} [ifAlreadyExists] How to resolve if the file already exists.
  * @property {number} [maxChunkSize] Maximum chunk size for upload (in bytes).
  * @property {(preparedCount: number, writtenCount: number, preparedPerSecond: number, writtenPerSecond: number) =&lt; void} [progress] Progress callback.
  * @property {string} [workingFolder] Working folder for temporary file storage. Defaults to the `WORKING_FOLDER` env, then the OS temporary folder if not set.
  */
-export type CreateOptions = {
+export type WriteOptions = {
 	ifAlreadyExists?: "fail" | "replace" | "rename";
 	maxChunkSize?: number;
 	progress?: (preparedCount: number, writtenCount: number, preparedPerSecond: number, writtenPerSecond: number) => void;
@@ -35,16 +35,16 @@ export type CreateOptions = {
 };
 
 /**
- * Creates a new workbook (.xlsx) in the specified parent location with the provided rows for multiple sheets.
- * @param {DriveRef | DriveItemRef} parentRef Reference to the parent drive or item where the file will be created.
+ * Writes a workbook (.xlsx) in the specified parent location with the provided rows for multiple sheets.
+ * @param {DriveRef | DriveItemRef} parentRef Reference to the parent drive or item where the file will be written.
  * @param {DriveItemPath} itemPath Path (including filename and extension) for the new workbook.
  * @param {Record<WorkbookWorksheetName, Iterable<Partial<Cell>[]> | AsyncIterable<Partial<Cell>[]>>} sheets Object where each key is a sheet name (WorkbookWorksheetName) and the value is an iterable or async iterable of row arrays.
- * @param {CreateOptions} [options] Options for conflict resolution, etc.
- * @returns {Promise<DriveItem & DriveItemRef>} Created DriveItem with reference.
+ * @param {WriteOptions} [options] Options for conflict resolution, etc.
+ * @returns {Promise<DriveItem & DriveItemRef>} Written DriveItem with reference.
  * @throws {InvalidArgumentError} If the file extension is not supported.
  * @experimental
  */
-export default async function writeWorkbook(parentRef: DriveRef | DriveItemRef, itemPath: DriveItemPath, sheets: Record<WorkbookWorksheetName, Iterable<Partial<Cell>[]> | AsyncIterable<Partial<Cell>[]>>, options: CreateOptions = {}): Promise<DriveItem & DriveItemRef> {
+export default async function writeWorkbook(parentRef: DriveRef | DriveItemRef, itemPath: DriveItemPath, sheets: Record<WorkbookWorksheetName, Iterable<Partial<Cell>[]> | AsyncIterable<Partial<Cell>[]>>, options: WriteOptions = {}): Promise<DriveItem & DriveItemRef> {
 	const extension = extname(itemPath);
 	if (extension !== ".xlsx") {
 		throw new InvalidArgumentError(`Unsupported file extension: ${extension}. Only .xlsx files are supported for workbook creation.`);

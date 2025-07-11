@@ -1,18 +1,18 @@
-[Microsoft Graph SDK](README.md) / createWorkbook
+[Microsoft Graph SDK](README.md) / writeWorkbook
 
-# createWorkbook
+# writeWorkbook
 
-Create a workbook.
+Write a workbook.
 
 ## Type Aliases
 
-### CreateOptions
+### WriteOptions
 
-> **CreateOptions** = `object`
+> **WriteOptions** = `object`
 
 Defined in: [src/tasks/writeWorkbook.ts:30](https://github.com/Future-Secure-AI/sharepoint-workbook/blob/main/src/tasks/writeWorkbook.ts#L30)
 
-Options for creating a new workbook file.
+Options for writing a workbook file.
 
 #### Properties
 
@@ -33,22 +33,22 @@ Defined in: [src/tasks/writeWorkbook.ts:47](https://github.com/Future-Secure-AI/
 
 **`Experimental`**
 
-Creates a new workbook (.xlsx) in the specified parent location with the provided rows for multiple sheets.
+Writes a workbook (.xlsx) in the specified parent location with the provided rows for multiple sheets.
 
 #### Parameters
 
 | Parameter | Type | Description |
 | ------ | ------ | ------ |
-| `parentRef` | `DriveRef` \| `DriveItemRef` | Reference to the parent drive or item where the file will be created. |
+| `parentRef` | `DriveRef` \| `DriveItemRef` | Reference to the parent drive or item where the file will be written. |
 | `itemPath` | `DriveItemPath` | Path (including filename and extension) for the new workbook. |
 | `sheets` | [`Record`](https://www.typescriptlang.org/docs/handbook/utility-types.html#recordkeys-type)\<`WorkbookWorksheetName`, [`Iterable`](https://www.typescriptlang.org/docs/handbook/iterators-and-generators.html#iterable-interface)\<[`Partial`](https://www.typescriptlang.org/docs/handbook/utility-types.html#partialtype)\<`Cell`\>[]\> \| `AsyncIterable`\<[`Partial`](https://www.typescriptlang.org/docs/handbook/utility-types.html#partialtype)\<`Cell`\>[]\>\> | Object where each key is a sheet name (WorkbookWorksheetName) and the value is an iterable or async iterable of row arrays. |
-| `options?` | [`CreateOptions`](#createoptions) | Options for conflict resolution, etc. |
+| `options?` | [`WriteOptions`](#writeoptions) | Options for conflict resolution, etc. |
 
 #### Returns
 
 [`Promise`](https://developer.mozilla.org/docs/Web/JavaScript/Reference/Global_Objects/Promise)\<`DriveItem` & `SiteRef` & `object` & `object`\>
 
-Created DriveItem with reference.
+Written DriveItem with reference.
 
 #### Throws
 
