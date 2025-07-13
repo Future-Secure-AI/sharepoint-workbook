@@ -1,5 +1,5 @@
 /**
- * Write a workbook.
+ * Write a workbook to Microsoft Sharepoint.
  * @module writeWorkbook
  * @category Tasks
  */
