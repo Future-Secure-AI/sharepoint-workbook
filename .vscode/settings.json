@@ -8,5 +8,5 @@
 	"[jsonc]": {
 		"editor.defaultFormatter": "biomejs.biome"
 	},
-	"cSpell.words": ["exceljs", "yazl"]
+	"cSpell.words": ["exceljs", "FSAI", "yazl"]
 }
