@@ -2,7 +2,7 @@ import type { DriveItemRef } from "microsoft-graph/DriveItem";
 
 export type OpenRef = {
 	id: OpenId;
-	itemRef: DriveItemRef;
+	itemRef?: DriveItemRef;
 };
 
 export type OpenId = string & {

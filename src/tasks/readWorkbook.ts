@@ -1,5 +1,5 @@
 /**
- * Read a workbook from Microsoft SharePoint.
+ * Read workbook from Microsoft SharePoint.
  * @module readWorkbook
  * @category Tasks
  */
@@ -12,21 +12,12 @@ import getDriveItem from "microsoft-graph/getDriveItem";
 import InvalidArgumentError from "microsoft-graph/InvalidArgumentError";
 import streamDriveItemContent from "microsoft-graph/streamDriveItemContent";
 import { defaultWorkbookWorksheetName } from "microsoft-graph/workbookWorksheet";
-import type { WorkbookWorksheetName } from "microsoft-graph/WorkbookWorksheet";
 import { createWriteStream } from "node:fs";
 import { extname, join } from "node:path";
 import { pipeline } from "node:stream/promises";
 import type { OpenRef } from "../models/Open.ts";
+import type { ReadOptions } from "../models/ReadOptions.ts";
 import { createOpenId, getWorkbookFolder } from "../services/workingFolder.ts";
-
-/**
- * Options for reading a workbook file.
- * @typedef {Object} ReadOptions
- * @property {WorkbookWorksheetName} [defaultWorksheetName] Default worksheet name to use when importing a CSV file.
- */
-export type ReadOptions = {
-	defaultWorksheetName?: WorkbookWorksheetName;
-};
 
 /**
  * Reads a workbook file (.xlsx or .csv) from a Microsoft Graph.
@@ -36,46 +27,48 @@ export type ReadOptions = {
  * @throws {InvalidArgumentError} If the file extension is not supported.
  */
 export default async function readWorkbook(itemRef: DriveItemRef & Partial<DriveItem>, options: ReadOptions = {}): Promise<OpenRef> {
-	const { defaultWorksheetName = defaultWorkbookWorksheetName } = options;
+	const { defaultWorksheetName = defaultWorkbookWorksheetName, progress = () => {} } = options;
 
 	const id = createOpenId();
 	let name = itemRef.name;
-	if (!name) {
-		const item = await getDriveItem(itemRef);
-		name = item.name ?? "";
-	}
+	if (!name) name = (await getDriveItem(itemRef)).name ?? "";
 
 	const extension = extname(name).toLowerCase();
-
 	const folder = await getWorkbookFolder(id);
 	const targetFileName = join(folder, "0");
 	const stream = await streamDriveItemContent(itemRef);
 
-	if (extension === ".xlsx") {
-		const fileStream = createWriteStream(targetFileName);
-		await pipeline(stream, fileStream);
-	} else if (extension === ".csv") {
-		const xlsx = new ExcelJS.stream.xlsx.WorkbookWriter({ filename: targetFileName });
-		const workbook = xlsx.addWorksheet(defaultWorksheetName);
+	let bytesProcessed = 0;
+	let lastProgressTime = 0;
+	stream.on("data", (chunk) => {
+		bytesProcessed += chunk.length;
+		const now = Date.now();
+		if (now - lastProgressTime >= 1000) {
+			progress(bytesProcessed);
+			lastProgressTime = now;
+		}
+	});
 
+	if (extension === ".xlsx") {
+		await pipeline(stream, createWriteStream(targetFileName));
+		return { id, itemRef };
+	}
+
+	if (extension === ".csv") {
+		const xlsx = new ExcelJS.stream.xlsx.WorkbookWriter({ filename: targetFileName });
+		const worksheet = xlsx.addWorksheet(defaultWorksheetName);
 		await new Promise<void>((resolve, reject) => {
 			stream
 				.pipe(parse({ headers: false }))
 				.on("error", reject)
-				.on("data", (row: unknown[]) => {
-					workbook.addRow(row).commit();
-				})
+				.on("data", (row: unknown[]) => worksheet.addRow(row).commit())
 				.on("end", async () => {
 					await xlsx.commit();
 					resolve();
 				});
 		});
-	} else {
-		throw new InvalidArgumentError(`Unsupported file extension "${extension}".`);
+		return { id };
 	}
 
-	return {
-		id,
-		itemRef,
-	};
+	throw new InvalidArgumentError(`Unsupported file extension "${extension}".`);
 }
