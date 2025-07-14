@@ -62,6 +62,7 @@ export default async function readWorkbook(itemRef: DriveItemRef & Partial<Drive
 				.on("error", reject)
 				.on("data", (row: unknown[]) => worksheet.addRow(row).commit())
 				.on("end", async () => {
+					worksheet.commit();
 					await xlsx.commit();
 					resolve();
 				});
