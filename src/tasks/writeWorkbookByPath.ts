@@ -4,10 +4,12 @@
  * @category Tasks
  */
 
+import type { DriveItem } from "@microsoft/microsoft-graph-types";
 import type { DriveRef } from "microsoft-graph/dist/cjs/models/Drive";
 import type { DriveItemPath, DriveItemRef } from "microsoft-graph/dist/cjs/models/DriveItem";
 import createDriveItemContent from "microsoft-graph/dist/cjs/operations/driveItem/createDriveItemContent";
 import { createReadStream, promises as fs } from "node:fs";
+import { extname } from "node:path";
 import type { Handle } from "../models/Handle.ts";
 import type { WriteOptions } from "../models/WriteOptions.ts";
 import { streamHighWaterMark } from "../services/streamParameters.ts";
@@ -21,16 +23,22 @@ import { getLatestRevisionFilePath } from "../services/workingFolder.ts";
  * @param {WriteOptions} [options] Options for writing, such as progress callback.
  * @returns {Promise<void>} Resolves when the workbook has been written.
  */
-export default async function writeWorkbookByPath(hdl: Handle, parentRef: DriveRef | DriveItemRef, path: DriveItemPath, options: WriteOptions = {}): Promise<void> {
+export default async function writeWorkbookByPath(hdl: Handle, parentRef: DriveRef | DriveItemRef, path: DriveItemPath, options: WriteOptions = {}): Promise<DriveItem & DriveItemRef> {
+	const extension = extname(path).toLowerCase();
+	if (extension !== ".xlsx") {
+		throw new Error(`Unsupported file extension: "${extension}". Only .xlsx supported.`);
+	}
+
 	const { ifExists = "fail", maxChunkSize, progress } = options;
 	const { id } = hdl;
 	const localPath = await getLatestRevisionFilePath(id);
 
 	const { size } = await fs.stat(localPath);
 	const stream = createReadStream(localPath, { highWaterMark: streamHighWaterMark });
-	await createDriveItemContent(parentRef, path, stream, size, {
+	const item = await createDriveItemContent(parentRef, path, stream, size, {
 		conflictBehavior: ifExists,
 		maxChunkSize,
 		progress,
 	});
+	return item;
 }

@@ -1,9 +1,8 @@
 import { getDefaultDriveRef } from "microsoft-graph/drive";
-import { driveItemPath } from "microsoft-graph/driveItem";
-import { generateTempFileName } from "microsoft-graph/temporaryFiles";
-import tryDeleteDriveItem from "microsoft-graph/tryDeleteDriveItem";
 import { describe, expect, it } from "vitest";
+import importWorkbook from "./importWorkbook";
 import writeWorkbook from "./writeWorkbook.ts";
+import type { DriveItemId } from "microsoft-graph/DriveItem";
 
 function getSmallSet() {
 	return [
@@ -15,27 +14,22 @@ function getSmallSet() {
 
 describe("writeWorkbook", { timeout: 15 * 60 * 1000 }, () => {
 	it("creates small XLSX file", async () => {
-		const rows = getSmallSet();
-		const itemName = generateTempFileName("xlsx");
-		const itemPath = driveItemPath(itemName);
+		const hdl = await importWorkbook([
+			{ name: "Sheet1", rows: getSmallSet() },
+			{ name: "Sheet2", rows: getSmallSet() },
+		]);
 		const driveRef = getDefaultDriveRef();
-		const worksheets = [
-			{ name: "Sheet1", rows },
-			{ name: "Sheet2", rows },
-		];
-		const item = await writeWorkbook(driveRef, itemPath, worksheets);
-		expect(item).toBeTruthy();
-		expect(item.name).toBe(itemName);
-		expect(item.size).toBeGreaterThan(0);
-		await tryDeleteDriveItem(item);
+		const itemId = "dummy-item-id" as unknown as DriveItemId;
+		const itemRef = { ...driveRef, itemId };
+		await expect(writeWorkbook({ ...hdl, itemRef })).resolves.toBeUndefined();
 	});
 
 	it("throws for unsupported file extension", async () => {
-		const rows = getSmallSet();
-		const itemName = generateTempFileName("txt");
-		const itemPath = driveItemPath(itemName);
+		const worksheets = [{ name: "Sheet1", rows: getSmallSet() }];
+		const handle = await importWorkbook(worksheets);
 		const driveRef = getDefaultDriveRef();
-		const worksheets = [{ name: "Sheet1", rows }];
-		await expect(writeWorkbook(driveRef, itemPath, worksheets)).rejects.toThrow(/Unsupported file extension/);
+		const itemId = "dummy-item-id" as unknown as DriveItemId;
+		const itemRef = { ...driveRef, itemId };
+		await expect(writeWorkbook({ ...handle, itemRef })).rejects.toThrow(/Unsupported file extension/);
 	});
 });
