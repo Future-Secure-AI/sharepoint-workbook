@@ -28,8 +28,8 @@ const handle = await readWorkbookByPath(driveRef, readFile, {
  * recommend anything but 6, as it can take a long time to compress and doesn't save much more space. But if every byte counts, go for 9.
  */
 console.info(`Optimizing workbook... (may take a while)`);
-const ratio = await optimizeWorkbook(handle, { 
-	compressionLevel: 6 
+const ratio = await optimizeWorkbook(handle, {
+	compressionLevel: 6,
 });
 console.info(`  Reduced file size by ${Math.round((1 - ratio) * 100)}%`);
 

@@ -4,7 +4,7 @@ import { getDefaultDriveRef } from "microsoft-graph/drive";
 import { driveItemPath } from "microsoft-graph/driveItem";
 import { generateTempFileName } from "microsoft-graph/temporaryFiles";
 import tryDeleteDriveItem from "microsoft-graph/tryDeleteDriveItem";
-import { Readable } from "stream";
+import { Readable } from "node:stream";
 import { describe, expect, it } from "vitest";
 import { getLatestRevisionFilePath } from "../services/workingFolder";
 import importWorkbook from "./importWorkbook";
