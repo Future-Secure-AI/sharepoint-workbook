@@ -19,7 +19,7 @@ Optimizes an opened workbook by recompressing it.
 | Parameter | Type | Description |
 | ------ | ------ | ------ |
 | `hdl` | [`Handle`](Handle.md#handle) | Reference to the opened workbook. |
-| `options` | [`OptimizeOptions`](models/OptimizeOptions.md#optimizeoptions) | Options for optimization, including compression level. |
+| `options` | [`OptimizeOptions`](OptimizeOptions.md#optimizeoptions) | Options for optimization, including compression level. |
 
 #### Returns
 

@@ -6,6 +6,7 @@
 | ------ | ------ |
 | [Handle](Handle.md) | Reference to an opened workbook. |
 | [LocalFilePath](LocalFilePath.md) | Local file path. |
+| [OptimizeOptions](OptimizeOptions.md) | Options for optimizing a workbook. |
 | [ReadOptions](ReadOptions.md) | Configuration for a read operation. |
 | [Row](Row.md) | Row models |
 | [Workbook](Workbook.md) | Workbook models. |
@@ -16,11 +17,15 @@
 
 | Module | Description |
 | ------ | ------ |
-| [models/OptimizeOptions](models/OptimizeOptions.md) | - |
 | [services/excelJs](services/excelJs.md) | - |
-| [services/rows](services/rows.md) | - |
 | [services/streamParameters](services/streamParameters.md) | - |
 | [services/workingFolder](services/workingFolder.md) | - |
+
+## Services
+
+| Module | Description |
+| ------ | ------ |
+| [Rows](Rows.md) | Utilities for manipulating rows. |
 
 ## Tasks
 
