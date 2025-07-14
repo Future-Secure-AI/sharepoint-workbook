@@ -1,4 +1,4 @@
-import { getEnvironmentVariable } from "microsoft-graph/environmentVariable";
+import { getEnvironmentVariable } from "microsoft-graph/dist/cjs/services/environmentVariable";
 import { promises as fs } from "node:fs";
 import { mkdir } from "node:fs/promises";
 import { tmpdir } from "node:os";

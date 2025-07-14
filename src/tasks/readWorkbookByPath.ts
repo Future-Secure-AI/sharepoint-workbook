@@ -5,11 +5,11 @@
  */
 
 import type { DriveItem } from "@microsoft/microsoft-graph-types";
-import type { DriveRef } from "microsoft-graph/Drive";
-import type { DriveItemName, DriveItemPath, DriveItemRef } from "microsoft-graph/DriveItem";
-import getDriveItemByPath from "microsoft-graph/getDriveItemByPath";
-import iterateDriveItems from "microsoft-graph/iterateDriveItems";
-import NotFoundError from "microsoft-graph/NotFoundError";
+import NotFoundError from "microsoft-graph/dist/cjs/errors/NotFoundError";
+import type { DriveRef } from "microsoft-graph/dist/cjs/models/Drive";
+import type { DriveItemName, DriveItemPath, DriveItemRef } from "microsoft-graph/dist/cjs/models/DriveItem";
+import getDriveItemByPath from "microsoft-graph/dist/cjs/operations/driveItem/getDriveItemByPath";
+import iterateDriveItems from "microsoft-graph/dist/cjs/tasks/iterateDriveItems";
 import picomatch from "picomatch";
 import type { Handle } from "../models/Handle.ts";
 import type { ReadOptions } from "../models/ReadOptions.ts";

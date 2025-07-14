@@ -7,11 +7,11 @@
 import type { DriveItem } from "@microsoft/microsoft-graph-types";
 import ExcelJS from "exceljs";
 import { parse } from "fast-csv";
-import type { DriveItemRef } from "microsoft-graph/DriveItem";
-import getDriveItem from "microsoft-graph/getDriveItem";
-import InvalidArgumentError from "microsoft-graph/InvalidArgumentError";
-import streamDriveItemContent from "microsoft-graph/streamDriveItemContent";
-import { defaultWorkbookWorksheetName } from "microsoft-graph/workbookWorksheet";
+import InvalidArgumentError from "microsoft-graph/dist/cjs/errors/InvalidArgumentError";
+import type { DriveItemRef } from "microsoft-graph/dist/cjs/models/DriveItem";
+import getDriveItem from "microsoft-graph/dist/cjs/operations/driveItem/getDriveItem";
+import streamDriveItemContent from "microsoft-graph/dist/cjs/operations/driveItem/streamDriveItemContent";
+import { defaultWorkbookWorksheetName } from "microsoft-graph/dist/cjs/services/workbookWorksheet";
 import { createWriteStream } from "node:fs";
 import { extname } from "node:path";
 import { pipeline } from "node:stream/promises";

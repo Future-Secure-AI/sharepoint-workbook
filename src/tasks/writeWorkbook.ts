@@ -4,9 +4,9 @@
  * @category Tasks
  */
 
-import createDriveItemContent from "microsoft-graph/createDriveItemContent";
-import type { DriveItemPath } from "microsoft-graph/DriveItem";
-import getDriveItem from "microsoft-graph/getDriveItem";
+import type { DriveItemPath } from "microsoft-graph/dist/cjs/models/DriveItem";
+import createDriveItemContent from "microsoft-graph/dist/cjs/operations/driveItem/createDriveItemContent";
+import getDriveItem from "microsoft-graph/dist/cjs/operations/driveItem/getDriveItem";
 import { createReadStream } from "node:fs";
 import { stat } from "node:fs/promises";
 import type { Handle } from "../models/Handle.ts";

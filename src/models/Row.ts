@@ -3,7 +3,7 @@
  * @module Row
  * @category Models
  */
-import type { Cell } from "microsoft-graph/Cell";
+import type { Cell } from "microsoft-graph/dist/cjs/models/Cell";
 
 /**
  * Represents a row in a worksheet.

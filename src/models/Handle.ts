@@ -3,7 +3,7 @@
  * @module Handle
  * @category Models
  */
-import type { DriveItemRef } from "microsoft-graph/DriveItem";
+import type { DriveItemRef } from "microsoft-graph/dist/cjs/models/DriveItem";
 
 /**
  * A reference to an opened workbook.
