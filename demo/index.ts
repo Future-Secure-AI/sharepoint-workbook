@@ -16,7 +16,7 @@ const driveRef = getDefaultDriveRef();
  * Read an input file from Sharepoint. It could the CSV or XLSX, and it could be any size up to 250GB. This sample is about 730MB.
  */
 console.info(`Reading input CSV '${readFile}' from SharePoint...`);
-const ref = await readWorkbookByPath(driveRef, readFile, {
+const handle = await readWorkbookByPath(driveRef, readFile, {
 	progress: (bytes) => {
 		console.info(`  Read ${formatBytes(bytes)}...`);
 	},
@@ -28,7 +28,7 @@ const ref = await readWorkbookByPath(driveRef, readFile, {
  * recommend anything but 6, as it can take a long time to compress and doesn't save much more space. But if every byte counts, go for 9.
  */
 console.info(`Optimizing workbook... (may take a while)`);
-const ratio = await optimizeWorkbook(ref, { 
+const ratio = await optimizeWorkbook(handle, { 
 	compressionLevel: 6 
 });
 console.info(`  Reduced file size by ${Math.round((1 - ratio) * 100)}%`);
@@ -37,7 +37,7 @@ console.info(`  Reduced file size by ${Math.round((1 - ratio) * 100)}%`);
  * Write the workbook back to SharePoint in a location of your choosing. Only writing XLSX is supported.
  */
 console.info(`Writing output XLSX '${writeFile}' to SharePoint...`);
-await writeWorkbookByPath(ref, driveRef, writeFile, {
+await writeWorkbookByPath(handle, driveRef, writeFile, {
 	ifExists: "replace",
 	maxChunkSize: 15 * 1024 * 1024, // Best speed with 60MB chunks (max), but for this demo I'm using a smaller value to get more frequent progress updates.
 	progress: (bytes) => {
