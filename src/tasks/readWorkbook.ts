@@ -13,29 +13,28 @@ import InvalidArgumentError from "microsoft-graph/InvalidArgumentError";
 import streamDriveItemContent from "microsoft-graph/streamDriveItemContent";
 import { defaultWorkbookWorksheetName } from "microsoft-graph/workbookWorksheet";
 import { createWriteStream } from "node:fs";
-import { extname, join } from "node:path";
+import { extname } from "node:path";
 import { pipeline } from "node:stream/promises";
-import type { OpenRef } from "../models/Open.ts";
+import type { Handle } from "../models/Handle.ts";
 import type { ReadOptions } from "../models/ReadOptions.ts";
-import { createOpenId, getWorkbookFolder } from "../services/workingFolder.ts";
+import { createHandleId, getNextRevisionFilePath } from "../services/workingFolder.ts";
 
 /**
  * Reads a workbook file (.xlsx or .csv) from a Microsoft Graph.
  * @param {DriveItemRef & Partial<DriveItem>} itemRef - Reference to the DriveItem to read from.
  * @param {ReadOptions} [options] - Options for reading, such as default worksheet name for CSV.
- * @returns {Promise<OpenRef>} Reference to the locally opened workbook.
+ * @returns {Promise<Handle>} Reference to the locally opened workbook.
  * @throws {InvalidArgumentError} If the file extension is not supported.
  */
-export default async function readWorkbook(itemRef: DriveItemRef & Partial<DriveItem>, options: ReadOptions = {}): Promise<OpenRef> {
+export default async function readWorkbook(itemRef: DriveItemRef & Partial<DriveItem>, options: ReadOptions = {}): Promise<Handle> {
 	const { defaultWorksheetName = defaultWorkbookWorksheetName, progress = () => {} } = options;
 
-	const id = createOpenId();
+	const id = createHandleId();
 	let name = itemRef.name;
 	if (!name) name = (await getDriveItem(itemRef)).name ?? "";
 
 	const extension = extname(name).toLowerCase();
-	const folder = await getWorkbookFolder(id);
-	const targetFileName = join(folder, "0");
+	const targetFileName = await getNextRevisionFilePath(id);
 	const stream = await streamDriveItemContent(itemRef);
 
 	let bytesProcessed = 0;

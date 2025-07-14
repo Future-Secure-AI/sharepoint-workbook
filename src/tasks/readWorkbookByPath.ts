@@ -11,7 +11,7 @@ import getDriveItemByPath from "microsoft-graph/getDriveItemByPath";
 import iterateDriveItems from "microsoft-graph/iterateDriveItems";
 import NotFoundError from "microsoft-graph/NotFoundError";
 import picomatch from "picomatch";
-import type { OpenRef } from "../models/Open.ts";
+import type { Handle } from "../models/Handle.ts";
 import type { ReadOptions } from "../models/ReadOptions.ts";
 import readWorkbook from "./readWorkbook.ts";
 
@@ -19,10 +19,10 @@ import readWorkbook from "./readWorkbook.ts";
  * Reads a workbook file from a SharePoint drive by its path, supporting wildcards in the filename.
  * @param {DriveRef | DriveItemRef} parentRef - Reference to the parent drive or folder.
  * @param {DriveItemPath} itemPath - Path to the file, may include wildcards in the filename.
- * @returns {Promise<OpenRef>} Reference to the locally opened workbook.
+ * @returns {Promise<Handle>} Reference to the locally opened workbook.
  * @throws {Error} If the file path is invalid or no matching file is found.
  */
-export default async function readWorkbookByPath(parentRef: DriveRef | DriveItemRef, itemPath: DriveItemPath, options: ReadOptions = {}): Promise<OpenRef> {
+export default async function readWorkbookByPath(parentRef: DriveRef | DriveItemRef, itemPath: DriveItemPath, options: ReadOptions = {}): Promise<Handle> {
 	const { folderPath, fileName: filePattern } = decomposePath(itemPath);
 	const folder = await getDriveItemByPath(parentRef, folderPath);
 	const items = iterateDriveItems(folder);

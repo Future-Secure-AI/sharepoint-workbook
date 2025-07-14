@@ -1,2 +1,4 @@
-export const maxChunkSize = 60 * 1024 * 1024; // Largest supported chunk size
-export const highWaterMark = 1024 * 1024;
+/**
+ * Maximum amount of data to buffer in memory for streaming operations.
+ */
+export const streamHighWaterMark = 1024 * 1024;
