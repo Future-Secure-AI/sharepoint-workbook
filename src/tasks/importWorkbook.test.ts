@@ -3,8 +3,8 @@ import fs from "node:fs";
 import os from "node:os";
 import path from "node:path";
 import { afterEach, beforeEach, describe, expect, it } from "vitest";
-import type { WriteRow } from "../models/Row";
 import type { WriteWorksheet } from "../models/Worksheet";
+import { asRows } from "../services/rows";
 import { getLatestRevisionFilePath } from "../services/workingFolder";
 import importWorkbook from "./importWorkbook";
 
@@ -117,9 +117,3 @@ describe("importWorkbook integration", () => {
 		}
 	});
 });
-
-function asRows(rows: unknown[][]): AsyncIterable<WriteRow> {
-	return (async function* () {
-		for (const r of rows) yield r.map((cell) => ({ value: cell })) as WriteRow;
-	})();
-}
