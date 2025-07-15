@@ -3,7 +3,7 @@ import InvalidArgumentError from "microsoft-graph/InvalidArgumentError";
 import { iterateToArray } from "microsoft-graph/iteration";
 import NotFoundError from "microsoft-graph/NotFoundError";
 import picomatch from "picomatch";
-import type { Cell } from "../models/Cell.ts";
+import type { Cell, CellWrite } from "../models/Cell.ts";
 import type { Handle } from "../models/Handle.ts";
 import type { CellRef, RangeRef } from "../models/Reference.ts";
 import type { RowWrite } from "../models/Row.ts";
@@ -25,6 +25,8 @@ type TransactOperations = {
 	updateCells: (origin: CellRef, cells: Iterable<RowWrite> | AsyncIterable<RowWrite>) => Promise<void>;
 	insertCells: (origin: CellRef, shift: InsertShift, cells: Iterable<RowWrite> | AsyncIterable<RowWrite>) => Promise<void>;
 	deleteCells: (range: RangeRef, shift: DeleteShift) => void;
+
+	updateEachCell(range: RangeRef, write: CellWrite): void;
 };
 
 export default async function transactWorkbook(handle: Handle, context: TransactContext): Promise<void> {
@@ -33,7 +35,7 @@ export default async function transactWorkbook(handle: Handle, context: Transact
 	const workbook = new ExcelJS.Workbook();
 
 	await workbook.xlsx.readFile(file);
-	// TODO: Named ranges
+	// TODO: Named ranges, tables, pivot tables
 	// TODO: Merging cells
 
 	const listWorksheets = () => workbook.worksheets.map((ws) => ws.name) as WorksheetName[];
@@ -150,6 +152,25 @@ export default async function transactWorkbook(handle: Handle, context: Transact
 		isDirty = true;
 	};
 
+	const updateEachCell = (range: RangeRef, write: CellWrite): void => {
+		let [worksheetName, startCol, startRow, endCol, endRow] = parseRangeReference(range);
+		const worksheet = getWorksheetByName(workbook, worksheetName);
+
+		startCol = startCol ?? 1;
+		startRow = startRow ?? 1;
+		endCol = endCol ?? worksheet.columnCount;
+		endRow = endRow ?? worksheet.rowCount;
+
+		for (let r = startRow; r <= endRow; r++) {
+			const excelRow = worksheet.getRow(r);
+			for (let c = startCol; c <= endCol; c++) {
+				const excelCell = excelRow.getCell(c);
+				updateExcelCell(excelCell, write);
+			}
+		}
+		isDirty = true;
+	};
+
 	const operations: TransactOperations = {
 		listWorksheets,
 		tryFindWorksheet,
@@ -158,6 +179,7 @@ export default async function transactWorkbook(handle: Handle, context: Transact
 		updateCells,
 		insertCells,
 		deleteCells,
+		updateEachCell,
 	};
 
 	await context(operations);

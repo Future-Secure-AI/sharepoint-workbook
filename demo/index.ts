@@ -4,8 +4,8 @@ import { driveItemPath } from "microsoft-graph/driveItem";
 import { generateTempFileName } from "microsoft-graph/temporaryFiles";
 import optimizeWorkbook from "../src/tasks/optimizeWorkbook";
 import readWorkbookByPath from "../src/tasks/readWorkbookByPath";
+import transactWorkbook from "../src/tasks/transactWorkbook";
 import writeWorkbookByPath from "../src/tasks/writeWorkbookByPath";
-
 const readFile = "/yellow_tripdata_2019-03.csv" as DriveItemPath;
 const writeFile = driveItemPath(generateTempFileName("xlsx")) as DriveItemPath;
 
@@ -20,6 +20,21 @@ const handle = await readWorkbookByPath(driveRef, readFile, {
 	progress: (bytes) => {
 		console.info(`  Read ${formatBytes(bytes)}...`);
 	},
+});
+
+/*
+ * Do some work on the workbook. This sample will delete some columns and format the header row.
+ * You can do anything you want here, like adding formulas, formatting, etc. Just remember that
+ * up until this point the file hasn't needed to be in memory. `transact` requires sufficient memory
+ * to hold the whole workbook.
+ */
+console.info(`Modifying workbook...`);
+await transactWorkbook(handle, async ({ findWorksheet, deleteCells, updateEachCell }) => {
+	const sheet = findWorksheet("*");
+	deleteCells([sheet, "D", "R"], "Left");
+	updateEachCell([sheet, 1, 1], {
+		fontBold: true,
+	});
 });
 
 /*
