@@ -3,7 +3,7 @@
  * @module Workbook
  * @category Models
  */
-import type { Worksheet, WriteWorksheet } from "./Worksheet.ts";
+import type { Worksheet, WorksheetWrite } from "./Worksheet.ts";
 
 /**
  * Represents a workbook with worksheets.
@@ -20,7 +20,7 @@ export type Workbook = {
  * @property {string} name Name of the workbook.
  * @property {Iterable<WriteWorksheet> | AsyncIterable<WriteWorksheet>} worksheets Worksheets to write.
  */
-export type WriteWorkbook = {
+export type WorkbookWrite = {
 	name: string;
-	worksheets: Iterable<WriteWorksheet> | AsyncIterable<WriteWorksheet>;
+	worksheets: Iterable<WorksheetWrite> | AsyncIterable<WorksheetWrite>;
 };

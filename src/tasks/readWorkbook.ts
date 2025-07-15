@@ -16,7 +16,7 @@ import { createWriteStream } from "node:fs";
 import { extname } from "node:path";
 import { pipeline } from "node:stream/promises";
 import type { Handle } from "../models/Handle.ts";
-import type { ReadOptions } from "../models/ReadOptions.ts";
+import type { ReadOptions } from "../models/Options.ts";
 import { createHandleId, getNextRevisionFilePath } from "../services/workingFolder.ts";
 
 /**

@@ -1,6 +1,6 @@
 /**
- * Configuration for a read operation.
- * @module ReadOptions
+ * Options for operation.
+ * @module Options
  * @category Models
  */
 import type { WorkbookWorksheetName } from "microsoft-graph/dist/cjs/models/WorkbookWorksheet";
@@ -13,4 +13,16 @@ import type { WorkbookWorksheetName } from "microsoft-graph/dist/cjs/models/Work
 export type ReadOptions = {
 	defaultWorksheetName?: WorkbookWorksheetName;
 	progress?: (bytes: number) => void;
+};
+
+/**
+ * Options for writing a workbook file.
+ * @property {"fail" | "replace" | "rename"} [ifExists] Behavior if the file already exists.
+ * @property {(bytes: number): void} [progress] Progress callback, receives bytes processed.
+ * @property {number} [maxChunkSize] Maximum chunk size in bytes for writing.
+ */
+export type WriteOptions = {
+	ifExists?: "fail" | "replace" | "rename";
+	progress?: (bytes: number) => void;
+	maxChunkSize?: number;
 };

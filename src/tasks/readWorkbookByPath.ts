@@ -12,7 +12,7 @@ import getDriveItemByPath from "microsoft-graph/dist/cjs/operations/driveItem/ge
 import iterateDriveItems from "microsoft-graph/dist/cjs/tasks/iterateDriveItems";
 import picomatch from "picomatch";
 import type { Handle } from "../models/Handle.ts";
-import type { ReadOptions } from "../models/ReadOptions.ts";
+import type { ReadOptions } from "../models/Options.ts";
 import readWorkbook from "./readWorkbook.ts";
 
 /**

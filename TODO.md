@@ -1,12 +1,22 @@
 ```ts
-readWorkbookByPathWithFiltering(parentRef, path, ?mapping?, ?filter?): Promise<Handle> // Style not preserved
+await readWorkbookByPathWithFiltering(parentRef, path, ?mapping?, ?filter?): Promise<Handle> // Style not preserved
 ```
 
 ```ts
-updateWorkbook(workbookId, workbook => {
-    workbook.apply("sheet1!A1:B5", => {
+await transactWorkbook(workbookId, workbook => {
+    // TODO: Sane creation of cells with and without formatting
+    workbook.listWorkbooks()
 
-    })
-    const a = workbook.extract("sheet1:A1")
+    workbook.insertCells(origin: CellRef, direction: InsertDirection, cells: CellValue | Partial<Cell> | (CellValue | Partial<Cell>)[][]) // <=== Use ExcelJS's `Cell` directly?
+    workbook.updateCells(origin: CellRef, cells: CellValue | Partial<Cell> | (CellValue | Partial<Cell>)[][])
+    workbook.deleteCells(ref: PartialRef, direction: DeletionDirection)
+    const b = workbook.readCells(ref: PartialRef): Cell[][]
 })
 ```
+
+{
+    sheet: "Sheet1"
+    start: "A1
+    end: "B3"
+}
+[sheet, start, end]

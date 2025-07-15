@@ -11,7 +11,7 @@ import createDriveItemContent from "microsoft-graph/dist/cjs/operations/driveIte
 import { createReadStream, promises as fs } from "node:fs";
 import { extname } from "node:path";
 import type { Handle } from "../models/Handle.ts";
-import type { WriteOptions } from "../models/WriteOptions.ts";
+import type { WriteOptions } from "../models/Options.ts";
 import { streamHighWaterMark } from "../services/streamParameters.ts";
 import { getLatestRevisionFilePath } from "../services/workingFolder.ts";
 

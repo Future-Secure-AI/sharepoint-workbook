@@ -1,35 +1,35 @@
+import createWorkbook from "microsoft-graph/createWorkbook";
 import { getDefaultDriveRef } from "microsoft-graph/drive";
-import { describe, expect, it } from "vitest";
-import importWorkbook from "./importWorkbook";
+import { driveItemPath } from "microsoft-graph/driveItem";
+import { generateTempFileName } from "microsoft-graph/temporaryFiles";
+import tryDeleteDriveItem from "microsoft-graph/tryDeleteDriveItem";
+import { createWorkbookRangeRef } from "microsoft-graph/workbookRange";
+import { createDefaultWorkbookWorksheetRef } from "microsoft-graph/workbookWorksheet";
+import writeWorkbookRows from "microsoft-graph/writeWorkbookRows";
+import { describe, it } from "vitest";
+import readWorkbook from "./readWorkbook.ts";
 import writeWorkbook from "./writeWorkbook.ts";
-import type { DriveItemId } from "microsoft-graph/DriveItem";
 
-function getSmallSet() {
-	return [
-		[{ value: "A" }, { value: "B" }, { value: "C" }],
-		[{ value: "D" }, { value: "E" }, { value: "F" }],
-		[{ value: "G" }, { value: "H" }, { value: "I" }],
-	];
-}
+const rows = [
+	[{ value: "A" }, { value: "B" }, { value: "C" }],
+	[{ value: "D" }, { value: "E" }, { value: "F" }],
+	[{ value: "G" }, { value: "H" }, { value: "I" }],
+];
 
-describe("writeWorkbook", { timeout: 15 * 60 * 1000 }, () => {
+describe("writeWorkbook", () => {
 	it("creates small XLSX file", async () => {
-		const hdl = await importWorkbook([
-			{ name: "Sheet1", rows: getSmallSet() },
-			{ name: "Sheet2", rows: getSmallSet() },
-		]);
+		const workbookName = generateTempFileName("xlsx");
+		const workbookPath = driveItemPath(workbookName);
 		const driveRef = getDefaultDriveRef();
-		const itemId = "dummy-item-id" as unknown as DriveItemId;
-		const itemRef = { ...driveRef, itemId };
-		await expect(writeWorkbook({ ...hdl, itemRef })).resolves.toBeUndefined();
-	});
+		const item = await createWorkbook(driveRef, workbookPath);
+		const worksheetRef = createDefaultWorkbookWorksheetRef(item);
+		const rangeRef = createWorkbookRangeRef(worksheetRef, "A1");
+		await writeWorkbookRows(rangeRef, rows);
 
-	it("throws for unsupported file extension", async () => {
-		const worksheets = [{ name: "Sheet1", rows: getSmallSet() }];
-		const handle = await importWorkbook(worksheets);
-		const driveRef = getDefaultDriveRef();
-		const itemId = "dummy-item-id" as unknown as DriveItemId;
-		const itemRef = { ...driveRef, itemId };
-		await expect(writeWorkbook({ ...handle, itemRef })).rejects.toThrow(/Unsupported file extension/);
+		const hdl = await readWorkbook(item);
+
+		await writeWorkbook(hdl);
+
+		await tryDeleteDriveItem(item);
 	});
 });

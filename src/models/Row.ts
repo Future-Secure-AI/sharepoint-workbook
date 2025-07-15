@@ -3,16 +3,14 @@
  * @module Row
  * @category Models
  */
-import type { Cell } from "microsoft-graph/dist/cjs/models/Cell";
 
+import type { Cell, CellValue, CellWrite } from "./Cell.ts";
 /**
  * Represents a row in a worksheet.
- * @typedef {Cell[]}
  */
 export type Row = Cell[];
 
 /**
  * Represents a row to be written to a worksheet (partial cells allowed).
- * @typedef {Partial<Cell>[]}
  */
-export type WriteRow = Partial<Cell>[];
+export type RowWrite = (CellValue | CellWrite)[];

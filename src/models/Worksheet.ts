@@ -3,7 +3,7 @@
  * @module Worksheet
  * @category Models
  */
-import type { WriteRow } from "./Row.ts";
+import type { RowWrite } from "./Row.ts";
 
 /**
  * Represents a worksheet in a workbook.
@@ -15,14 +15,16 @@ import type { WriteRow } from "./Row.ts";
 export type Worksheet = {
 	id: string;
 	state: "visible" | "hidden" | "veryHidden";
-} & WriteWorksheet;
+} & WorksheetWrite;
 
 /**
  * Represents a worksheet to be written.
  * @property {string} name Name of the worksheet.
  * @property {Iterable<WriteRow> | AsyncIterable<WriteRow>} rows Rows to write.
  */
-export type WriteWorksheet = {
+export type WorksheetWrite = {
 	name: string;
-	rows: Iterable<WriteRow> | AsyncIterable<WriteRow>;
+	rows: Iterable<RowWrite> | AsyncIterable<RowWrite>;
 };
+
+export type WorksheetName = string & { readonly __brand: unique symbol };

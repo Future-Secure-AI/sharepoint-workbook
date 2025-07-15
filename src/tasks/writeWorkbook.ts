@@ -7,10 +7,11 @@
 import type { DriveItemPath } from "microsoft-graph/dist/cjs/models/DriveItem";
 import createDriveItemContent from "microsoft-graph/dist/cjs/operations/driveItem/createDriveItemContent";
 import getDriveItem from "microsoft-graph/dist/cjs/operations/driveItem/getDriveItem";
+import { getDriveItemParent } from "microsoft-graph/driveItem";
 import { createReadStream } from "node:fs";
 import { stat } from "node:fs/promises";
 import type { Handle } from "../models/Handle.ts";
-import type { WriteOptions } from "../models/WriteOptions.ts";
+import type { WriteOptions } from "../models/Options.ts";
 import { streamHighWaterMark } from "../services/streamParameters.ts";
 import { getLatestRevisionFilePath } from "../services/workingFolder.ts";
 
@@ -28,16 +29,7 @@ export default async function writeWorkbook(hdl: Handle, options: WriteOptions =
 	}
 
 	const item = await getDriveItem(itemRef);
-
-	const parentId = item.parentReference?.id;
-	if (!parentId) {
-		throw new Error("Parent reference not found for the item.");
-	}
-
-	const parentRef = {
-		...itemRef,
-		id: parentId,
-	};
+	const parentRef = getDriveItemParent(item);
 
 	const name = item.name;
 	if (!name) {

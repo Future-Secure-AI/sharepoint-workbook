@@ -1,19 +1,18 @@
 import { describe, expect, it } from "vitest";
 import type { Handle } from "../models/Handle";
-import type { WriteWorksheet } from "../models/Worksheet";
-import { asRows } from "../services/rows";
+import type { WorksheetWrite } from "../models/Worksheet";
 import importWorkbook from "./importWorkbook";
 import optimizeWorkbook from "./optimizeWorkbook";
 
 describe("optimizeWorkbook", () => {
 	it("returns a valid ratio for a real workbook", async () => {
-		const worksheets: WriteWorksheet[] = [
+		const worksheets: WorksheetWrite[] = [
 			{
 				name: "Sheet1",
-				rows: asRows([
+				rows: [
 					[1, 2, 3],
 					[4, 5, 6],
-				]),
+				],
 			},
 		];
 		const hdl = await importWorkbook(worksheets);

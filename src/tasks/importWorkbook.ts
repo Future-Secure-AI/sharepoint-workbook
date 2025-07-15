@@ -7,16 +7,16 @@
 import ExcelJS from "exceljs";
 import { createWriteStream } from "node:fs";
 import type { Handle } from "../models/Handle.ts";
-import type { WriteWorksheet } from "../models/Worksheet.ts";
+import type { WorksheetWrite } from "../models/Worksheet.ts";
 import { appendRow } from "../services/excelJs.ts";
 import { createHandleId, getNextRevisionFilePath } from "../services/workingFolder.ts";
 
 /**
  * Imports worksheet content as a new open workbook.
- * @param {Iterable<WriteWorksheet> | AsyncIterable<WriteWorksheet>} worksheets Worksheet data to import.
+ * @param {Iterable<WorksheetWrite> | AsyncIterable<WorksheetWrite>} worksheets Worksheet data to import.
  * @returns {Promise<Handle>} Handle referencing the newly created workbook.
  */
-export default async function importWorkbook(worksheets: Iterable<WriteWorksheet> | AsyncIterable<WriteWorksheet>): Promise<Handle> {
+export default async function importWorkbook(worksheets: Iterable<WorksheetWrite> | AsyncIterable<WorksheetWrite>): Promise<Handle> {
 	const id = createHandleId();
 	const file = await getNextRevisionFilePath(id);
 

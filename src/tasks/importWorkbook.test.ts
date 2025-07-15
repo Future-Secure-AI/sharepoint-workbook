@@ -3,8 +3,7 @@ import fs from "node:fs";
 import os from "node:os";
 import path from "node:path";
 import { afterEach, beforeEach, describe, expect, it } from "vitest";
-import type { WriteWorksheet } from "../models/Worksheet";
-import { asRows } from "../services/rows";
+import type { WorksheetWrite } from "../models/Worksheet";
 import { getLatestRevisionFilePath } from "../services/workingFolder";
 import importWorkbook from "./importWorkbook";
 
@@ -24,13 +23,13 @@ describe("importWorkbook integration", () => {
 	});
 
 	it("creates a workbook with a single worksheet", async () => {
-		const worksheets: WriteWorksheet[] = [
+		const worksheets: WorksheetWrite[] = [
 			{
 				name: "Sheet1",
-				rows: asRows([
+				rows: [
 					[1, 2, 3],
 					[4, 5, 6],
-				]),
+				],
 			},
 		];
 		const hdl = await importWorkbook(worksheets);
@@ -55,9 +54,9 @@ describe("importWorkbook integration", () => {
 	});
 
 	it("creates a workbook with multiple worksheets", async () => {
-		const worksheets: WriteWorksheet[] = [
-			{ name: "A", rows: asRows([[1], [2]]) },
-			{ name: "B", rows: asRows([[3], [4]]) },
+		const worksheets: WorksheetWrite[] = [
+			{ name: "A", rows: [[1], [2]] },
+			{ name: "B", rows: [[3], [4]] },
 		];
 
 		const handle = await importWorkbook(worksheets);
@@ -91,10 +90,10 @@ describe("importWorkbook integration", () => {
 		async function* worksheetGen() {
 			yield {
 				name: "AsyncSheet",
-				rows: asRows([
+				rows: [
 					[10, 20],
 					[30, 40],
-				]),
+				],
 			};
 		}
 		const handle = await importWorkbook(worksheetGen());

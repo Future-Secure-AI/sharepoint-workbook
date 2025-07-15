@@ -11,21 +11,19 @@ import importWorkbook from "./importWorkbook";
 import readWorkbook from "./readWorkbook";
 import writeWorkbookByPath from "./writeWorkbookByPath";
 
-function getSmallSet() {
-	return [
-		[{ value: "A" }, { value: "B" }, { value: "C" }],
-		[{ value: "D" }, { value: "E" }, { value: "F" }],
-		[{ value: "G" }, { value: "H" }, { value: "I" }],
-	];
-}
+const rows = [
+	["A", "B", "C"],
+	["D", "E", "F"],
+	["G", "H", "I"],
+];
 
 describe("readWorkbook", () => {
 	it("can read XLSX workbook", async () => {
 		const driveRef = getDefaultDriveRef();
 		const itemPath = driveItemPath(generateTempFileName("xlsx"));
 		const writeHandle = await importWorkbook([
-			{ name: "Sheet1", rows: getSmallSet() },
-			{ name: "Sheet2", rows: getSmallSet() },
+			{ name: "Sheet1", rows: rows },
+			{ name: "Sheet2", rows: rows },
 		]);
 		const item = await writeWorkbookByPath(writeHandle, driveRef, itemPath);
 		const readHandle = await readWorkbook(item);
@@ -42,11 +40,7 @@ describe("readWorkbook", () => {
 						.getSheetValues()
 						.slice(1)
 						.map((row) => (Array.isArray(row) ? row.slice(1) : [])),
-				).toEqual([
-					["A", "B", "C"],
-					["D", "E", "F"],
-					["G", "H", "I"],
-				]);
+				).toEqual(rows);
 			}
 		});
 		await tryDeleteDriveItem(item);
@@ -73,11 +67,7 @@ describe("readWorkbook", () => {
 				.getSheetValues()
 				.filter((row) => Array.isArray(row)) // filter out null/undefined
 				.map((row) => row.slice(1)); // remove first empty column
-			expect(values).toEqual([
-				["A", "B", "C"],
-				["D", "E", "F"],
-				["G", "H", "I"],
-			]);
+			expect(values).toEqual(rows);
 		}
 		await tryDeleteDriveItem(item);
 	});

@@ -51,7 +51,7 @@
 	"dependencies": {
 		"exceljs": "^4.4.0",
 		"fast-csv": "^5.0.2",
-		"microsoft-graph": "^3.9.6",
+		"microsoft-graph": "^3.10.5",
 		"picomatch": "^4.0.2",
 		"yauzl": "^3.2.0",
 		"yazl": "^3.3.1"
@@ -61,6 +61,26 @@
 			"import": "./dist/esm/index.js",
 			"require": "./dist/cjs/index.js",
 			"types": "./dist/esm/index.d.ts"
+		},
+		"./Cell": {
+			"import": "./dist/esm/models/Cell.js",
+			"require": "./dist/cjs/models/Cell.js",
+			"types": "./dist/esm/models/Cell.d.ts"
+		},
+		"./dist/cjs/models/Cell": {
+			"import": "./dist/esm/models/Cell.js",
+			"require": "./dist/cjs/models/Cell.js",
+			"types": "./dist/esm/models/Cell.d.ts"
+		},
+		"./Direction": {
+			"import": "./dist/esm/models/Direction.js",
+			"require": "./dist/cjs/models/Direction.js",
+			"types": "./dist/esm/models/Direction.d.ts"
+		},
+		"./dist/cjs/models/Direction": {
+			"import": "./dist/esm/models/Direction.js",
+			"require": "./dist/cjs/models/Direction.js",
+			"types": "./dist/esm/models/Direction.d.ts"
 		},
 		"./Handle": {
 			"import": "./dist/esm/models/Handle.js",
@@ -92,15 +112,25 @@
 			"require": "./dist/cjs/models/OptimizeOptions.js",
 			"types": "./dist/esm/models/OptimizeOptions.d.ts"
 		},
-		"./ReadOptions": {
-			"import": "./dist/esm/models/ReadOptions.js",
-			"require": "./dist/cjs/models/ReadOptions.js",
-			"types": "./dist/esm/models/ReadOptions.d.ts"
+		"./Options": {
+			"import": "./dist/esm/models/Options.js",
+			"require": "./dist/cjs/models/Options.js",
+			"types": "./dist/esm/models/Options.d.ts"
 		},
-		"./dist/cjs/models/ReadOptions": {
-			"import": "./dist/esm/models/ReadOptions.js",
-			"require": "./dist/cjs/models/ReadOptions.js",
-			"types": "./dist/esm/models/ReadOptions.d.ts"
+		"./dist/cjs/models/Options": {
+			"import": "./dist/esm/models/Options.js",
+			"require": "./dist/cjs/models/Options.js",
+			"types": "./dist/esm/models/Options.d.ts"
+		},
+		"./Ref": {
+			"import": "./dist/esm/models/Ref.js",
+			"require": "./dist/cjs/models/Ref.js",
+			"types": "./dist/esm/models/Ref.d.ts"
+		},
+		"./dist/cjs/models/Ref": {
+			"import": "./dist/esm/models/Ref.js",
+			"require": "./dist/cjs/models/Ref.js",
+			"types": "./dist/esm/models/Ref.d.ts"
 		},
 		"./Row": {
 			"import": "./dist/esm/models/Row.js",
@@ -131,16 +161,6 @@
 			"import": "./dist/esm/models/Worksheet.js",
 			"require": "./dist/cjs/models/Worksheet.js",
 			"types": "./dist/esm/models/Worksheet.d.ts"
-		},
-		"./WriteOptions": {
-			"import": "./dist/esm/models/WriteOptions.js",
-			"require": "./dist/cjs/models/WriteOptions.js",
-			"types": "./dist/esm/models/WriteOptions.d.ts"
-		},
-		"./dist/cjs/models/WriteOptions": {
-			"import": "./dist/esm/models/WriteOptions.js",
-			"require": "./dist/cjs/models/WriteOptions.js",
-			"types": "./dist/esm/models/WriteOptions.d.ts"
 		},
 		"./excelJs": {
 			"import": "./dist/esm/services/excelJs.js",
