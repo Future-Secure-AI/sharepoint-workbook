@@ -1,7 +1,7 @@
 export type CellWrite = Partial<
 	Omit<Cell, "text"> & {
-		mergeDown: number | null;
-		mergeRight: number | null;
+		// mergeDown: number | null;
+		// mergeRight: number | null;
 	}
 >;
 
@@ -19,7 +19,6 @@ export type Cell = {
 	fontItalic: boolean | null;
 	fontUnderline: FontUnderlineStyle | null;
 	fontStrike: boolean | null;
-	fontOutline: boolean | null;
 
 	alignmentHorizontal: AlignmentHorizontal | null;
 	alignmentVertical: AlignmentVertical | null;

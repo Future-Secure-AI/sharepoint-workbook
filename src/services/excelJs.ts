@@ -1,55 +1,25 @@
 import type ExcelJS from "exceljs";
-import InvalidArgumentError from "microsoft-graph/dist/cjs/errors/InvalidArgumentError";
-import type { CellValue, CellWrite } from "../models/Cell.ts";
-import type { RowWrite } from "../models/Row.ts";
+import NotFoundError from "microsoft-graph/NotFoundError";
+import type { Cell, CellWrite } from "../models/Cell.ts";
+import type { WorksheetName } from "../models/Worksheet.ts";
 
-export function appendRow(worksheet: ExcelJS.Worksheet, row: RowWrite): void {
-	const cells = row.map(normalizeCell);
-	const outRow = worksheet.addRow(cells.map((c) => c.value));
+export function updateExcelCell(excelCell: ExcelJS.Cell, write: CellWrite): void {
+	if (write.format !== undefined) excelCell.numFmt = write.format ?? "";
 
-	cells.forEach((cell, i) => {
-		const outCell = outRow.getCell(i + 1);
-		if (cell.format !== undefined) outCell.numFmt = cell.format ?? "";
-		if ((cell.mergeDown ?? 0) > 0 || (cell.mergeRight ?? 0) > 0) {
-			const startCol = i + 1;
-			const startRow = outRow.number;
-			worksheet.mergeCells(startRow, startCol, startRow + (cell.mergeDown ?? 0), startCol + (cell.mergeRight ?? 0));
-		}
-		const alignment = mapAlignment(cell);
-		if (alignment) outCell.alignment = alignment;
+	const alignment = mapAlignment(write);
+	if (alignment) excelCell.alignment = alignment;
 
-		const border = mapBorders(cell);
-		if (border) outCell.border = border;
+	const border = mapBorders(write);
+	if (border) excelCell.border = border;
 
-		const fill = mapFill(cell);
-		if (fill) outCell.fill = fill;
+	const fill = mapFill(write);
+	if (fill) excelCell.fill = fill;
 
-		const font = mapFont(cell);
-		if (font) outCell.font = font;
-	});
-	outRow.commit();
+	const font = mapFont(write);
+	if (font) excelCell.font = font;
 }
-/**
- * Returns the ExcelJS.Cell at the given row and column (1-based indices).
- * @param worksheet The ExcelJS.Worksheet instance
- * @param row The row number (1-based)
- * @param column The column number (1-based)
- * @returns The ExcelJS.Cell object
- */
-import type { Cell } from "../models/Cell.ts";
-import type { ColumnNumber, RowNumber } from "../models/Reference.ts";
 
-/**
- * Returns a Cell (our model) at the given row and column (1-based indices).
- * @param worksheet The ExcelJS.Worksheet instance
- * @param row The row number (1-based)
- * @param column The column number (1-based)
- * @returns The Cell object (from models/Cell.ts)
- */
-export function getCell(worksheet: ExcelJS.Worksheet, row: RowNumber, column: ColumnNumber): Cell {
-	const excelCell = worksheet.getRow(row).getCell(column);
-	// Map ExcelJS.Cell to our Cell type
-	// Only allow value if it matches CellValue (string | number | boolean | Date)
+export function fromExcelCell(excelCell: ExcelJS.Cell): Cell {
 	let value: Cell["value"] = null;
 	if (typeof excelCell.value === "string" || typeof excelCell.value === "number" || typeof excelCell.value === "boolean" || excelCell.value instanceof Date) {
 		value = excelCell.value;
@@ -61,6 +31,7 @@ export function getCell(worksheet: ExcelJS.Worksheet, row: RowNumber, column: Co
 	} else if (excelCell.note && typeof excelCell.note === "object" && "text" in excelCell.note) {
 		note = (excelCell.note as { text?: string }).text ?? null;
 	}
+
 	return {
 		value,
 		text: typeof excelCell.text === "string" ? excelCell.text : String(excelCell.text ?? ""),
@@ -73,9 +44,8 @@ export function getCell(worksheet: ExcelJS.Worksheet, row: RowNumber, column: Co
 		fontColor: excelCell.font?.color?.argb ?? null,
 		fontBold: excelCell.font?.bold ?? null,
 		fontItalic: excelCell.font?.italic ?? null,
-		fontUnderline: excelCell.font?.underline ? "single" : "none",
+		fontUnderline: excelCell.font?.underline === true ? "single" : excelCell.font?.underline === false ? "none" : (excelCell.font?.underline ?? null),
 		fontStrike: excelCell.font?.strike ?? null,
-		fontOutline: null, // ExcelJS does not support outline
 
 		alignmentHorizontal: excelCell.alignment?.horizontal ?? null,
 		alignmentVertical: excelCell.alignment?.vertical ?? null,
@@ -101,20 +71,13 @@ export function getCell(worksheet: ExcelJS.Worksheet, row: RowNumber, column: Co
 	};
 }
 
-function normalizeCell(cell: CellValue | CellWrite): CellWrite {
-	const type = typeof cell;
-	if (type === "string" || type === "number" || type === "boolean" || cell instanceof Date || cell === null) {
-		return {
-			value: cell as string | number | boolean | Date | null,
-		};
+export function getWorksheetByName(workbook: ExcelJS.Workbook, worksheetName: WorksheetName): ExcelJS.Worksheet {
+	const worksheet = workbook.getWorksheet(worksheetName);
+	if (!worksheet) {
+		throw new NotFoundError(`Worksheet not found: ${worksheetName}`);
 	}
-	if (type !== "object") {
-		throw new InvalidArgumentError(`Unsupported cell type '${type}'.`);
-	}
-
-	return cell as CellWrite;
+	return worksheet;
 }
-
 function mapAlignment(cell: import("../models/Cell.ts").CellWrite): Partial<ExcelJS.Alignment> | undefined {
 	const horizontalMap: Record<string, ExcelJS.Alignment["horizontal"]> = {
 		left: "left",
@@ -172,25 +135,20 @@ function mapBorders(cell: import("../models/Cell.ts").CellWrite): Partial<ExcelJ
 	}
 	return Object.keys(result).length > 0 ? result : undefined;
 }
-function colorToARGB(color: string): string {
-	// Only allow string color for now
-	if (typeof color === "string") return color;
-	throw new InvalidArgumentError("Unsupported color type for ExcelJS");
-}
 function mapFill(cell: import("../models/Cell.ts").CellWrite): ExcelJS.Fill | undefined {
 	if (!cell.fillForegroundColor) return undefined;
 	return {
 		type: "pattern",
 		pattern: "solid",
-		fgColor: { argb: colorToARGB(cell.fillForegroundColor) },
-		bgColor: cell.fillBackgroundColor ? { argb: colorToARGB(cell.fillBackgroundColor) } : undefined,
+		fgColor: { argb: cell.fillForegroundColor },
+		bgColor: cell.fillBackgroundColor ? { argb: cell.fillBackgroundColor } : undefined,
 	};
 }
 function mapFont(cell: import("../models/Cell.ts").CellWrite): Partial<ExcelJS.Font> | undefined {
 	const result: Partial<ExcelJS.Font> = {};
 	if (typeof cell.fontName === "string") result.name = cell.fontName;
 	if (typeof cell.fontSize === "number") result.size = cell.fontSize;
-	if (cell.fontColor) result.color = { argb: colorToARGB(cell.fontColor) };
+	if (cell.fontColor) result.color = { argb: cell.fontColor };
 	if (typeof cell.fontBold === "boolean") result.bold = cell.fontBold;
 	if (typeof cell.fontItalic === "boolean") result.italic = cell.fontItalic;
 	if (cell.fontUnderline && cell.fontUnderline !== "none") result.underline = true;
