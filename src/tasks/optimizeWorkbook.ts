@@ -14,15 +14,15 @@ import { getLatestRevisionFilePath, getNextRevisionFilePath } from "../services/
 
 /**
  * Optimizes an opened workbook by recompressing it.
- * @param {Handle} hdl Reference to the opened workbook.
+ * @param {Handle} handle Reference to the opened workbook.
  * @param {OptimizeOptions} options Options for optimization, including compression level.
  * @returns {Promise<number>} The ratio of the output file size to the input file size.
  * @throws {Error} If the optimization fails.
  */
-export default async function optimizeWorkbook(hdl: Handle, options: OptimizeOptions = {}): Promise<number> {
+export default async function optimizeWorkbook(handle: Handle, options: OptimizeOptions = {}): Promise<number> {
 	const { compressionLevel = 6 } = options;
-	const latestFile = await getLatestRevisionFilePath(hdl.id);
-	const nextFile = await getNextRevisionFilePath(hdl.id);
+	const latestFile = await getLatestRevisionFilePath(handle.id);
+	const nextFile = await getNextRevisionFilePath(handle.id);
 
 	await new Promise<void>((resolve, reject) => {
 		yauzl.open(latestFile, { lazyEntries: true, autoClose: true }, (err: Error | null, zipfile: YauzlZipFile | undefined) => {

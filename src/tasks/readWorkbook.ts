@@ -50,7 +50,8 @@ export default async function readWorkbook(itemRef: DriveItemRef & Partial<Drive
 
 	if (extension === ".xlsx") {
 		await pipeline(stream, createWriteStream(targetFileName));
-		return { id, itemRef };
+		const handle = { id, itemRef };
+		return handle;
 	}
 
 	if (extension === ".csv") {
@@ -67,7 +68,8 @@ export default async function readWorkbook(itemRef: DriveItemRef & Partial<Drive
 					resolve();
 				});
 		});
-		return { id };
+		const handle = { id };
+		return handle;
 	}
 
 	throw new InvalidArgumentError(`Unsupported file extension "${extension}".`);

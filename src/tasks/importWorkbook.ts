@@ -31,7 +31,8 @@ export default async function importWorkbook(worksheets: Iterable<WorksheetWrite
 	}
 	await xls.commit();
 
-	return {
+	const handle: Handle = {
 		id,
 	};
+	return handle;
 }

@@ -17,13 +17,13 @@ import { getLatestRevisionFilePath } from "../services/workingFolder.ts";
 
 /**
  * Write a locally opened workbook back to Microsoft SharePoint, overwriting the previous file.
- * @param {Handle} hdl Reference to the locally opened workbook, must include an itemRef for overwrite.
+ * @param {Handle} handle Reference to the locally opened workbook, must include an itemRef for overwrite.
  * @param {WriteOptions} [options] Options for writing, such as conflict behavior, chunk size, and progress callback.
  * @returns {Promise<void>} Resolves when the upload is complete.
  * @throws {Error} If the workbook cannot be overwritten or required metadata is missing.
  */
-export default async function writeWorkbook(hdl: Handle, options: WriteOptions = {}): Promise<void> {
-	const { itemRef } = hdl;
+export default async function writeWorkbook(handle: Handle, options: WriteOptions = {}): Promise<void> {
+	const { itemRef } = handle;
 	if (!itemRef) {
 		throw new Error("Workbook not over-writable. Use `writeWorkbookByPath` instead.");
 	}
@@ -38,7 +38,7 @@ export default async function writeWorkbook(hdl: Handle, options: WriteOptions =
 	const path = `/${name}` as DriveItemPath;
 
 	const { ifExists = "replace", maxChunkSize, progress } = options;
-	const { id } = hdl;
+	const { id } = handle;
 	const localPath = await getLatestRevisionFilePath(id);
 
 	const { size } = await stat(localPath);
