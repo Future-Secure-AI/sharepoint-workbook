@@ -28,3 +28,5 @@ export type WorksheetWrite = {
 };
 
 export type WorksheetName = string & { readonly __brand: unique symbol };
+
+export type WorksheetIndex = number;

@@ -34,6 +34,9 @@
 					},
 					"suspicious": {
 						"noConsole": "warn" // Logging is to be done through the logger, not directly to console
+					},
+					"complexity": {
+						"useLiteralKeys": "off" // I'm tired of fighting with this when using RegEx.
 					}
 				}
 			}

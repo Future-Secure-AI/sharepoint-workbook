@@ -29,6 +29,77 @@ export function appendRow(worksheet: ExcelJS.Worksheet, row: RowWrite): void {
 	});
 	outRow.commit();
 }
+/**
+ * Returns the ExcelJS.Cell at the given row and column (1-based indices).
+ * @param worksheet The ExcelJS.Worksheet instance
+ * @param row The row number (1-based)
+ * @param column The column number (1-based)
+ * @returns The ExcelJS.Cell object
+ */
+import type { Cell } from "../models/Cell.ts";
+import type { ColumnNumber, RowNumber } from "../models/Reference.ts";
+
+/**
+ * Returns a Cell (our model) at the given row and column (1-based indices).
+ * @param worksheet The ExcelJS.Worksheet instance
+ * @param row The row number (1-based)
+ * @param column The column number (1-based)
+ * @returns The Cell object (from models/Cell.ts)
+ */
+export function getCell(worksheet: ExcelJS.Worksheet, row: RowNumber, column: ColumnNumber): Cell {
+	const excelCell = worksheet.getRow(row).getCell(column);
+	// Map ExcelJS.Cell to our Cell type
+	// Only allow value if it matches CellValue (string | number | boolean | Date)
+	let value: Cell["value"] = null;
+	if (typeof excelCell.value === "string" || typeof excelCell.value === "number" || typeof excelCell.value === "boolean" || excelCell.value instanceof Date) {
+		value = excelCell.value;
+	}
+	// Note: If note is a string, use it; if it's a Comment, use its text property if available
+	let note: string | null = null;
+	if (typeof excelCell.note === "string") {
+		note = excelCell.note;
+	} else if (excelCell.note && typeof excelCell.note === "object" && "text" in excelCell.note) {
+		note = (excelCell.note as { text?: string }).text ?? null;
+	}
+	return {
+		value,
+		text: typeof excelCell.text === "string" ? excelCell.text : String(excelCell.text ?? ""),
+		format: excelCell.numFmt ?? null,
+		note,
+
+		fontName: excelCell.font?.name ?? null,
+		fontSize: excelCell.font?.size ?? null,
+		fontFamily: excelCell.font?.family ?? null,
+		fontColor: excelCell.font?.color?.argb ?? null,
+		fontBold: excelCell.font?.bold ?? null,
+		fontItalic: excelCell.font?.italic ?? null,
+		fontUnderline: excelCell.font?.underline ? "single" : "none",
+		fontStrike: excelCell.font?.strike ?? null,
+		fontOutline: null, // ExcelJS does not support outline
+
+		alignmentHorizontal: excelCell.alignment?.horizontal ?? null,
+		alignmentVertical: excelCell.alignment?.vertical ?? null,
+		alignmentWrapText: excelCell.alignment?.wrapText ?? null,
+		alignmentShrinkToFit: excelCell.alignment?.shrinkToFit ?? null,
+		alignmentIndent: excelCell.alignment?.indent ?? null,
+		alignmentTextRotation: excelCell.alignment?.textRotation ?? null,
+
+		borderTopStyle: excelCell.border?.top?.style ?? null,
+		borderTopColor: excelCell.border?.top?.color?.argb ?? null,
+		borderLeftStyle: excelCell.border?.left?.style ?? null,
+		borderLeftColor: excelCell.border?.left?.color?.argb ?? null,
+		borderBottomStyle: excelCell.border?.bottom?.style ?? null,
+		borderBottomColor: excelCell.border?.bottom?.color?.argb ?? null,
+		borderRightStyle: excelCell.border?.right?.style ?? null,
+		borderRightColor: excelCell.border?.right?.color?.argb ?? null,
+
+		fillForegroundColor: excelCell.fill && "fgColor" in excelCell.fill && excelCell.fill.fgColor ? (excelCell.fill.fgColor.argb ?? null) : null,
+		fillBackgroundColor: excelCell.fill && "bgColor" in excelCell.fill && excelCell.fill.bgColor ? (excelCell.fill.bgColor.argb ?? null) : null,
+
+		protectionLocked: excelCell.protection?.locked ?? null,
+		protectionHidden: excelCell.protection?.hidden ?? null,
+	};
+}
 
 function normalizeCell(cell: CellValue | CellWrite): CellWrite {
 	const type = typeof cell;
