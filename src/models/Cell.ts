@@ -6,9 +6,9 @@ export type CellWrite = Partial<
 >;
 
 export type Cell = {
-	value: CellValue | null;
+	value: CellValue;
 	text: string;
-	format: Format | null;
+	format: Format;
 	note: string | null;
 
 	fontName: FontName | null;

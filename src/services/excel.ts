@@ -1,9 +1,11 @@
 import type ExcelJS from "exceljs";
+import type { CellValue as ExcelJSCellValue } from "exceljs";
 import NotFoundError from "microsoft-graph/NotFoundError";
-import type { Cell, CellWrite } from "../models/Cell.ts";
+import type { Cell, CellValue, CellWrite } from "../models/Cell.ts";
 import type { WorksheetName } from "../models/Worksheet.ts";
 
 export function updateExcelCell(excelCell: ExcelJS.Cell, write: CellWrite): void {
+	if (write.value !== undefined) excelCell.value = toExcelValue(write.value);
 	if (write.format !== undefined) excelCell.numFmt = write.format ?? "";
 
 	const alignment = mapAlignment(write);
@@ -20,11 +22,7 @@ export function updateExcelCell(excelCell: ExcelJS.Cell, write: CellWrite): void
 }
 
 export function fromExcelCell(excelCell: ExcelJS.Cell): Cell {
-	let value: Cell["value"] = null;
-	if (typeof excelCell.value === "string" || typeof excelCell.value === "number" || typeof excelCell.value === "boolean" || excelCell.value instanceof Date) {
-		value = excelCell.value;
-	}
-	// Note: If note is a string, use it; if it's a Comment, use its text property if available
+	const value = fromExcelValue(excelCell.value);
 	let note: string | null = null;
 	if (typeof excelCell.note === "string") {
 		note = excelCell.note;
@@ -71,13 +69,35 @@ export function fromExcelCell(excelCell: ExcelJS.Cell): Cell {
 	};
 }
 
+export function toExcelValue(value: CellValue | undefined): ExcelJSCellValue {
+	if (value === undefined) return "";
+	if (typeof value === "string" && value.startsWith("=")) return { formula: value.slice(1) };
+
+	return value;
+}
+
+export function fromExcelValue(excelValue: ExcelJSCellValue): CellValue {
+	if (excelValue === null || excelValue === undefined) return "";
+
+	if (typeof excelValue === "number" || typeof excelValue === "boolean" || typeof excelValue === "string" || excelValue instanceof Date) return excelValue;
+
+	if (typeof excelValue === "object") {
+		if ("formula" in excelValue && typeof excelValue.formula === "string") return `=${excelValue.formula}`;
+		if ("sharedFormula" in excelValue && typeof excelValue.sharedFormula === "string") return `=${excelValue.sharedFormula}`;
+		if ("hyperlink" in excelValue && typeof excelValue.hyperlink === "string") return typeof excelValue.text === "string" ? excelValue.text : excelValue.hyperlink;
+		if ("richText" in excelValue && Array.isArray(excelValue.richText)) return excelValue.richText.map((rt) => rt.text).join("");
+		if ("error" in excelValue) return excelValue.error;
+	}
+
+	return ""; // TODO: Think more on fallback value. Should this be an exception instead?
+}
+
 export function getWorksheetByName(workbook: ExcelJS.Workbook, worksheetName: WorksheetName): ExcelJS.Worksheet {
 	const worksheet = workbook.getWorksheet(worksheetName);
-	if (!worksheet) {
-		throw new NotFoundError(`Worksheet not found: ${worksheetName}`);
-	}
+	if (!worksheet) throw new NotFoundError(`Worksheet not found: ${worksheetName}`);
 	return worksheet;
 }
+
 function mapAlignment(cell: import("../models/Cell.ts").CellWrite): Partial<ExcelJS.Alignment> | undefined {
 	const horizontalMap: Record<string, ExcelJS.Alignment["horizontal"]> = {
 		left: "left",
@@ -97,12 +117,10 @@ function mapAlignment(cell: import("../models/Cell.ts").CellWrite): Partial<Exce
 	};
 	let horizontal: ExcelJS.Alignment["horizontal"] | undefined;
 	let vertical: ExcelJS.Alignment["vertical"] | undefined;
-	if (cell.alignmentHorizontal && horizontalMap[cell.alignmentHorizontal]) {
-		horizontal = horizontalMap[cell.alignmentHorizontal];
-	}
-	if (cell.alignmentVertical && verticalMap[cell.alignmentVertical]) {
-		vertical = verticalMap[cell.alignmentVertical];
-	}
+	if (cell.alignmentHorizontal && horizontalMap[cell.alignmentHorizontal]) horizontal = horizontalMap[cell.alignmentHorizontal];
+
+	if (cell.alignmentVertical && verticalMap[cell.alignmentVertical]) vertical = verticalMap[cell.alignmentVertical];
+
 	const result: Partial<ExcelJS.Alignment> = {};
 	if (horizontal) result.horizontal = horizontal;
 	if (vertical) result.vertical = vertical;

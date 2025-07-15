@@ -9,7 +9,7 @@ import { createWriteStream } from "node:fs";
 import type { Handle } from "../models/Handle.ts";
 import type { WorksheetWrite } from "../models/Worksheet.ts";
 import { normalizeCellWrite } from "../services/cell.ts";
-import { updateExcelCell } from "../services/excelJs.ts";
+import { toExcelValue, updateExcelCell } from "../services/excel.ts";
 import { createHandleId, getNextRevisionFilePath } from "../services/workingFolder.ts";
 
 /**
@@ -27,7 +27,7 @@ export default async function importWorkbook(worksheets: Iterable<WorksheetWrite
 		const worksheet = xls.addWorksheet(name);
 		for await (const inputRow of rows) {
 			const inputCells = inputRow.map(normalizeCellWrite);
-			const excelRow = worksheet.addRow(inputCells.map((cell) => cell.value));
+			const excelRow = worksheet.addRow(inputCells.map((cell) => toExcelValue(cell.value)));
 
 			inputCells.forEach((cell, i) => {
 				const outputCell = excelRow.getCell(i + 1);

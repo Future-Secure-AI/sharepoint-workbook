@@ -10,7 +10,7 @@ import type { RowWrite } from "../models/Row.ts";
 import type { DeleteShift, InsertShift } from "../models/Shift.ts";
 import type { WorksheetName } from "../models/Worksheet.ts";
 import { normalizeCellWrite } from "../services/cell.ts";
-import { fromExcelCell, getWorksheetByName, updateExcelCell } from "../services/excelJs.ts";
+import { fromExcelCell, getWorksheetByName, toExcelValue, updateExcelCell } from "../services/excel.ts";
 import { parseCellReference, parseRangeReference } from "../services/reference.ts";
 import { getLatestRevisionFilePath, getNextRevisionFilePath } from "../services/workingFolder.ts";
 
@@ -35,7 +35,6 @@ export default async function transactWorkbook(handle: Handle, context: Transact
 	await workbook.xlsx.readFile(file);
 	// TODO: Named ranges
 	// TODO: Merging cells
-	// TODO: Formulas in values
 
 	const listWorksheets = () => workbook.worksheets.map((ws) => ws.name) as WorksheetName[];
 	const tryFindWorksheet = (search: string): WorksheetName | null => {
@@ -98,7 +97,7 @@ export default async function transactWorkbook(handle: Handle, context: Transact
 		const rows = await iterateToArray(cells, (row) => row.map(normalizeCellWrite));
 
 		if (shift === "Down") {
-			worksheet.spliceRows(row, 0, ...rows.map((r) => r.map((cell) => cell.value)));
+			worksheet.spliceRows(row, 0, ...rows.map((r) => r.map((cell) => toExcelValue(cell.value))));
 			rows.forEach((inputRow, r) => {
 				const excelRow = worksheet.getRow(row + r);
 
@@ -111,7 +110,7 @@ export default async function transactWorkbook(handle: Handle, context: Transact
 			const maxCols = Math.max(0, ...rows.map((r) => r.length));
 			rows.forEach((inputRow, r) => {
 				const excelRow = worksheet.getRow(row + r);
-				const insertVals = Array.from({ length: maxCols }, (_, cIdx) => inputRow[cIdx]?.value);
+				const insertVals = Array.from({ length: maxCols }, (_, cIdx) => toExcelValue(inputRow[cIdx]?.value));
 				excelRow.splice(col, 0, ...insertVals);
 				for (let c = 0; c < maxCols; c++) {
 					updateExcelCell(excelRow.getCell(col + c), inputRow[c] ?? {});
@@ -120,7 +119,7 @@ export default async function transactWorkbook(handle: Handle, context: Transact
 		} else {
 			throw new InvalidArgumentError(`Unsupported shift: ${shift}`);
 		}
-		
+
 		isDirty = true;
 	};
 
