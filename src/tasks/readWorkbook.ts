@@ -11,12 +11,14 @@ import InvalidArgumentError from "microsoft-graph/dist/cjs/errors/InvalidArgumen
 import type { DriveItemRef } from "microsoft-graph/dist/cjs/models/DriveItem";
 import getDriveItem from "microsoft-graph/dist/cjs/operations/driveItem/getDriveItem";
 import streamDriveItemContent from "microsoft-graph/dist/cjs/operations/driveItem/streamDriveItemContent";
-import { defaultWorkbookWorksheetName } from "microsoft-graph/dist/cjs/services/workbookWorksheet";
 import { createWriteStream } from "node:fs";
 import { extname } from "node:path";
 import { pipeline } from "node:stream/promises";
+import type { Readable } from "stream";
 import type { Handle } from "../models/Handle.ts";
+import type { LocalFilePath } from "../models/LocalFilePath.ts";
 import type { ReadOptions } from "../models/Options.ts";
+import type { WorksheetName } from "../models/Worksheet.ts";
 import { createHandleId, getNextRevisionFilePath } from "../services/workingFolder.ts";
 
 /**
@@ -27,7 +29,7 @@ import { createHandleId, getNextRevisionFilePath } from "../services/workingFold
  * @throws {InvalidArgumentError} If the file extension is not supported.
  */
 export default async function readWorkbook(itemRef: DriveItemRef & Partial<DriveItem>, options: ReadOptions = {}): Promise<Handle> {
-	const { defaultWorksheetName = defaultWorkbookWorksheetName, progress = () => {} } = options;
+	const { defaultWorksheetName = "Sheet1" as WorksheetName, progress = () => {} } = options;
 
 	const id = createHandleId();
 	let name = itemRef.name;
@@ -49,32 +51,43 @@ export default async function readWorkbook(itemRef: DriveItemRef & Partial<Drive
 	});
 
 	if (extension === ".xlsx") {
-		await pipeline(stream, createWriteStream(targetFileName));
+		await readWorkbookXls(stream, targetFileName);
 		const handle = { id, itemRef };
 		return handle;
 	}
 
 	if (extension === ".csv") {
-		const xlsx = new ExcelJS.stream.xlsx.WorkbookWriter({ filename: targetFileName });
-		const worksheet = xlsx.addWorksheet(defaultWorksheetName);
-
-		await new Promise<void>((resolve, reject) =>
-			stream
-				.pipe(parse())
-				.on("error", reject)
-				.on("data", (cells: string[]) => {
-					const row = worksheet.addRow(cells);
-					row.commit();
-				})
-				.on("end", resolve),
-		);
-
-		worksheet.commit();
-		await xlsx.commit();
-
+		await readWorkbookCsv(stream, targetFileName, defaultWorksheetName);
 		const handle = { id };
 		return handle;
 	}
 
 	throw new InvalidArgumentError(`Unsupported file extension "${extension}".`);
+}
+
+async function readWorkbookXls(stream: Readable, targetFileName: LocalFilePath) {
+	await pipeline(stream, createWriteStream(targetFileName));
+}
+
+async function readWorkbookCsv(stream: Readable, targetFileName: LocalFilePath, defaultWorksheetName: WorksheetName) {
+	const workbook = new ExcelJS.stream.xlsx.WorkbookWriter({ filename: targetFileName }); // useStyles: true, zip: { zlib: { level: 1 } }
+	const worksheet = workbook.addWorksheet(defaultWorksheetName);
+
+	await new Promise<void>((resolve, reject) =>
+		stream
+			.pipe(parse())
+			.on("error", reject)
+			.on("data", (cells: string[]) => {
+				const row = worksheet.addRow(cells);
+				row.commit();
+			})
+			.on("end", () => {
+				worksheet.commit();
+				resolve();
+			}),
+	);
+
+	await workbook.commit();
+
+	await new Promise((res) => stream.on("finish", res));
 }

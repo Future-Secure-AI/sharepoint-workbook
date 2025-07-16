@@ -3,7 +3,7 @@
  * @module Options
  * @category Models
  */
-import type { WorkbookWorksheetName } from "microsoft-graph/dist/cjs/models/WorkbookWorksheet";
+import type { WorksheetName } from "./Worksheet.ts";
 
 /**
  * Options for reading a workbook file.
@@ -11,7 +11,7 @@ import type { WorkbookWorksheetName } from "microsoft-graph/dist/cjs/models/Work
  * @property {(bytes: number): void} [progress] Progress callback, receives bytes processed.
  */
 export type ReadOptions = {
-	defaultWorksheetName?: WorkbookWorksheetName;
+	defaultWorksheetName?: WorksheetName;
 	progress?: (bytes: number) => void;
 };
 
