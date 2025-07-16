@@ -4,7 +4,7 @@
  * @category Tasks
  */
 
-import ExcelJS, { type CellValue } from "exceljs";
+import ExcelJS from "exceljs";
 import type { Handle } from "../models/Handle.ts";
 import { getLatestRevisionFilePath, getNextRevisionFilePath } from "../services/workingFolder.ts";
 
@@ -27,6 +27,8 @@ export type Filter = {
 	 * Return true to include the row, or false to omit it.
 	 */
 	rowFilter?: (cells: string[]) => boolean;
+
+	progress?: (rows: number) => void;
 };
 
 /**
@@ -36,38 +38,42 @@ export type Filter = {
  * @returns A promise that resolves when the filtering is complete.
  */
 export default async function filterWorkbook(handle: Handle, filter: Filter): Promise<void> {
-	const { skipRows = 0, columnFilter = () => true, rowFilter = () => true } = filter;
+	const { skipRows = 0, columnFilter = () => true, rowFilter = () => true, progress = () => {} } = filter;
 	const latestFile = await getLatestRevisionFilePath(handle.id);
 	const nextFile = await getNextRevisionFilePath(handle.id);
 
-	const reader = new ExcelJS.stream.xlsx.WorkbookReader(latestFile, { entries: "emit" });
+	const reader = new ExcelJS.stream.xlsx.WorkbookReader(latestFile, {});
 	const writer = new ExcelJS.stream.xlsx.WorkbookWriter({ filename: nextFile });
 
 	for await (const sheet of reader) {
-		const sheetName = (sheet as { name?: string }).name ?? "Sheet1";
-		const ws = writer.addWorksheet(sheetName);
-		let header: CellValue[] | null = null;
-		let colIndexes: number[] = [];
-		let i = 0;
+		const ws = writer.addWorksheet((sheet as { name?: string }).name ?? "Sheet1");
+		let colIndexes: number[] | null = null;
+		let lastProgressTime = 0;
 
+		let r = 0;
 		for await (const row of sheet) {
-			i++;
-			if (i <= skipRows) continue;
+			r++;
+			if (r <= skipRows) continue;
 			const values = Array.isArray(row.values) ? row.values : [];
 
-			if (!header) {
-				const headerRow = values;
-				header = headerRow;
-				colIndexes = headerRow.map((h, idx) => (columnFilter(String(h ?? ""), idx) ? idx : -1)).filter((idx) => idx !== -1);
-				ws.addRow(colIndexes.map((idx) => headerRow[idx])).commit();
-				continue;
+			if (colIndexes === null) {
+				colIndexes = values.map((h, idx) => (columnFilter(String(h ?? ""), idx) ? idx : -1)).filter((idx) => idx !== -1);
+				const row = ws.addRow(colIndexes.map((idx) => values[idx]));
+				row.commit();
+			} else {
+				const filtered = colIndexes.map((idx) => values[idx]);
+				if (rowFilter(filtered.map((cell) => String(cell ?? "")))) {
+					const row = ws.addRow(filtered);
+					row.commit();
+				}
 			}
 
-			const filtered = colIndexes.map((idx) => values[idx]);
-			if (rowFilter(filtered.map((cell) => String(cell ?? "")))) {
-				ws.addRow(filtered).commit();
+			if (Date.now() - lastProgressTime >= 1000) {
+				progress(r);
+				lastProgressTime = Date.now();
 			}
 		}
+		progress(r);
 		ws.commit();
 	}
 	await writer.commit();

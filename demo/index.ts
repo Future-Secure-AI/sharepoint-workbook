@@ -1,7 +1,10 @@
+/** biome-ignore-all lint/correctness/noUnusedFunctionParameters: We want these included for demonstration purposes. */
+
 import { getDefaultDriveRef } from "microsoft-graph/drive";
 import type { DriveItemPath } from "microsoft-graph/DriveItem";
 import { driveItemPath } from "microsoft-graph/driveItem";
 import { generateTempFileName } from "microsoft-graph/temporaryFiles";
+import filterWorkbook from "../src/tasks/filterWorkbook";
 import optimizeWorkbook from "../src/tasks/optimizeWorkbook";
 import readWorkbookByPath from "../src/tasks/readWorkbookByPath";
 import transactWorkbook from "../src/tasks/transactWorkbook";
@@ -15,7 +18,7 @@ const driveRef = getDefaultDriveRef();
 /*
  * Read an input file from Sharepoint. It could the CSV or XLSX, and it could be any size up to 250GB. This sample is about 730MB.
  */
-console.info(`Reading input CSV '${readFile}' from SharePoint...`);
+console.info(`Reading 700MB input CSV '${readFile}' from SharePoint...`);
 const handle = await readWorkbookByPath(driveRef, readFile, {
 	progress: (bytes) => {
 		console.info(`  Read ${formatBytes(bytes)}...`);
@@ -23,15 +26,26 @@ const handle = await readWorkbookByPath(driveRef, readFile, {
 });
 
 /*
- * Do some work on the workbook. This sample will delete some columns and format the header row.
- * You can do anything you want here, like adding formulas, formatting, etc. Just remember that
- * up until this point the file hasn't needed to be in memory. `transact` requires sufficient memory
- * to hold the whole workbook.
+ * Optionally filter out some columns or rows.
  */
-console.info(`Modifying workbook...`);
-await transactWorkbook(handle, async ({ findWorksheet, deleteCells, updateEachCell }) => {
+console.info(`Filtering workbook...`);
+await filterWorkbook(handle, {
+	skipRows: 0,
+	columnFilter: (header, index) => header === "tpep_dropoff_datetime" || header === "tolls_amount",
+	rowFilter: (cells) => true,
+	progress: (rows) => {
+		console.info(`  Processed ${rows.toLocaleString()} rows...`);
+	},
+});
+
+/*
+ * Do some work on the workbook. This sample just formats the header rows, but you can do anything you want here, like adding
+ * formulas, formatting, etc. Just remember that up until this point the file hasn't needed to be in memory. `transact` requires
+ * sufficient memory to hold the whole workbook.
+ */
+console.info(`Formatting workbook...`);
+await transactWorkbook(handle, async ({ findWorksheet, updateEachCell }) => {
 	const sheet = findWorksheet("*");
-	deleteCells([sheet, "D", "R"], "Left");
 	updateEachCell([sheet, 1, 1], {
 		fontBold: true,
 	});
