@@ -68,7 +68,7 @@ console.info(`  Reduced file size by ${Math.round((1 - ratio) * 100)}%`);
 console.info(`Writing output XLSX '${writeFile}' to SharePoint...`);
 await writeWorkbookByPath(handle, driveRef, writeFile, {
 	ifExists: "replace",
-	maxChunkSize: 15 * 1024 * 1024, // Best speed with 60MB chunks (max), but for this demo I'm using a smaller value to get more frequent progress updates.
+	maxChunkSize: 30 * 1024 * 1024, // Best speed with 60MB chunks (max), but for this demo I'm using a smaller value to get more frequent progress updates.
 	progress: (bytes) => {
 		console.info(`  Written ${formatBytes(bytes)}...`);
 	},
