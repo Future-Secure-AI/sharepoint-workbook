@@ -5,8 +5,6 @@
  */
 
 import type { DriveItem } from "@microsoft/microsoft-graph-types";
-import ExcelJS from "exceljs";
-import { parse } from "fast-csv";
 import InvalidArgumentError from "microsoft-graph/dist/cjs/errors/InvalidArgumentError";
 import type { DriveItemRef } from "microsoft-graph/dist/cjs/models/DriveItem";
 import getDriveItem from "microsoft-graph/dist/cjs/operations/driveItem/getDriveItem";
@@ -14,11 +12,10 @@ import streamDriveItemContent from "microsoft-graph/dist/cjs/operations/driveIte
 import { createWriteStream } from "node:fs";
 import { extname } from "node:path";
 import { pipeline } from "node:stream/promises";
-import type { Readable } from "stream";
 import type { Handle } from "../models/Handle.ts";
-import type { LocalFilePath } from "../models/LocalFilePath.ts";
 import type { ReadOptions } from "../models/Options.ts";
 import type { WorksheetName } from "../models/Worksheet.ts";
+import { csvToExcel } from "../services/csvToExcel.ts";
 import { createHandleId, getNextRevisionFilePath } from "../services/workingFolder.ts";
 
 /**
@@ -51,43 +48,16 @@ export default async function readWorkbook(itemRef: DriveItemRef & Partial<Drive
 	});
 
 	if (extension === ".xlsx") {
-		await readWorkbookXls(stream, targetFileName);
+		await pipeline(stream, createWriteStream(targetFileName));
 		const handle = { id, itemRef };
 		return handle;
 	}
 
 	if (extension === ".csv") {
-		await readWorkbookCsv(stream, targetFileName, defaultWorksheetName);
+		await csvToExcel(stream, targetFileName, { worksheetName: defaultWorksheetName });
 		const handle = { id };
 		return handle;
 	}
 
 	throw new InvalidArgumentError(`Unsupported file extension "${extension}".`);
-}
-
-async function readWorkbookXls(stream: Readable, targetFileName: LocalFilePath) {
-	await pipeline(stream, createWriteStream(targetFileName));
-}
-
-async function readWorkbookCsv(stream: Readable, targetFileName: LocalFilePath, defaultWorksheetName: WorksheetName) {
-	const workbook = new ExcelJS.stream.xlsx.WorkbookWriter({ filename: targetFileName }); // useStyles: true, zip: { zlib: { level: 1 } }
-	const worksheet = workbook.addWorksheet(defaultWorksheetName);
-
-	await new Promise<void>((resolve, reject) =>
-		stream
-			.pipe(parse())
-			.on("error", reject)
-			.on("data", (cells: string[]) => {
-				const row = worksheet.addRow(cells);
-				row.commit();
-			})
-			.on("end", () => {
-				worksheet.commit();
-				resolve();
-			}),
-	);
-
-	await workbook.commit();
-
-	await new Promise((res) => stream.on("finish", res));
 }
