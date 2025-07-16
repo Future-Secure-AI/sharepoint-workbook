@@ -37,6 +37,7 @@ export type Filter = {
  * @param filter Filter options to apply (skipRows, column, row).
  * @returns A promise that resolves when the filtering is complete.
  */
+
 export default async function filterWorkbook(handle: Handle, filter: Filter): Promise<void> {
 	const { skipRows = 0, columnFilter = () => true, rowFilter = () => true, progress = () => {} } = filter;
 	const latestFile = await getLatestRevisionFilePath(handle.id);

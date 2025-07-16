@@ -57,17 +57,21 @@ export default async function readWorkbook(itemRef: DriveItemRef & Partial<Drive
 	if (extension === ".csv") {
 		const xlsx = new ExcelJS.stream.xlsx.WorkbookWriter({ filename: targetFileName });
 		const worksheet = xlsx.addWorksheet(defaultWorksheetName);
-		await new Promise<void>((resolve, reject) => {
+
+		await new Promise<void>((resolve, reject) =>
 			stream
-				.pipe(parse({ headers: false }))
+				.pipe(parse())
 				.on("error", reject)
-				.on("data", (row: unknown[]) => worksheet.addRow(row).commit())
-				.on("end", async () => {
-					worksheet.commit();
-					await xlsx.commit();
-					resolve();
-				});
-		});
+				.on("data", (cells: string[]) => {
+					const row = worksheet.addRow(cells);
+					row.commit();
+				})
+				.on("end", resolve),
+		);
+
+		worksheet.commit();
+		await xlsx.commit();
+
 		const handle = { id };
 		return handle;
 	}

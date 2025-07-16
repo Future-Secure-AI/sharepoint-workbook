@@ -9,6 +9,7 @@ import optimizeWorkbook from "../src/tasks/optimizeWorkbook";
 import readWorkbookByPath from "../src/tasks/readWorkbookByPath";
 import transactWorkbook from "../src/tasks/transactWorkbook";
 import writeWorkbookByPath from "../src/tasks/writeWorkbookByPath";
+import { getLatestRevisionFilePath } from "../src/services/workingFolder";
 const readFile = "/yellow_tripdata_2019-03.csv" as DriveItemPath;
 const writeFile = driveItemPath(generateTempFileName("xlsx")) as DriveItemPath;
 
@@ -25,6 +26,9 @@ const handle = await readWorkbookByPath(driveRef, readFile, {
 	},
 });
 
+const file =await getLatestRevisionFilePath(handle.id);
+console.log(file)
+process.exit()
 /*
  * Optionally filter out some columns or rows.
  */
