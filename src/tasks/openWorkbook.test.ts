@@ -26,9 +26,8 @@ describe("openWorkbook", () => {
 		await closeWorkbookSession(workbook);
 		await sleep(1000);
 
-		const readHandle = await openWorkbook(driveRef, itemPath);
+		const wb = await openWorkbook(driveRef, itemPath);
 
-		const wb = readHandle.workbook;
 		const ws = wb.worksheets.get(0);
 		expect(ws.name).toBe(defaultWorkbookWorksheetName);
 		expect(ws).toBeTruthy();

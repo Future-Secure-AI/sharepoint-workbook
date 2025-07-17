@@ -1,11 +1,11 @@
 import { describe, expect, it } from "vitest";
-import type { Handle } from "../models/Handle";
+import type { Workbook } from "../models/Workbook";
+import createWorkbook from "./createWorkbook";
 import filterWorkbook from "./filterWorkbook";
-import importWorkbook from "./importWorkbook";
 
 describe("filterWorkbook integration", () => {
 	it("filters columns and rows", async () => {
-		const handle = await importWorkbook({
+		const handle = await createWorkbook({
 			Sheet1: [
 				["A", "B", "C", "D"],
 				["1", "2", "3", "4"],
@@ -26,7 +26,7 @@ describe("filterWorkbook integration", () => {
 	});
 
 	it("skips header rows", async () => {
-		const handle = await importWorkbook({
+		const handle = await createWorkbook({
 			Sheet1: [
 				["skip1", "skip2"],
 				["A", "B"],
@@ -44,7 +44,7 @@ describe("filterWorkbook integration", () => {
 	});
 
 	it("keeps all if no filters", async () => {
-		const handle = await importWorkbook({
+		const handle = await createWorkbook({
 			Sheet1: [
 				["A", "B"],
 				["1", "2"],
@@ -61,9 +61,8 @@ describe("filterWorkbook integration", () => {
 	});
 });
 
-async function readSheetRows(handle: Handle): Promise<string[][]> {
-	const wb = handle.workbook;
-	const ws = wb.worksheets.get(0);
+async function readSheetRows(workbook: Workbook): Promise<string[][]> {
+	const ws = workbook.worksheets.get(0);
 	if (!ws) return [];
 	const rows: string[][] = [];
 	for (let r = 0; r <= ws.cells.maxDataRow; r++) {

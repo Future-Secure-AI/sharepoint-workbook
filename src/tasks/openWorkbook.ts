@@ -17,44 +17,36 @@ import { unlink } from "node:fs/promises";
 import { extname } from "node:path";
 import { pipeline } from "node:stream/promises";
 import picomatch from "picomatch";
-import type { Handle } from "../models/Handle.ts";
 import type { LocalFilePath } from "../models/LocalFilePath.ts";
 import type { ReadOptions } from "../models/Options.ts";
+import type { Workbook } from "../models/Workbook.ts";
 import { getTemporaryFilePath } from "../services/temporaryFile.ts";
 
 /**
  * Reads a workbook file from a SharePoint drive by its path, supporting wildcards in the filename.
  * @param {DriveRef | DriveItemRef} parentRef - Reference to the parent drive or folder.
  * @param {DriveItemPath} itemPath - Path to the file, may include wildcards in the filename.
- * @returns {Promise<Handle>} Reference to the locally opened workbook.
+ * @returns {Promise<Workbook>} Reference to the locally opened workbook.
  * @throws {Error} If the file path is invalid or no matching file is found.
  */
-export default async function openWorkbook(parentRef: DriveRef | DriveItemRef, itemPath: DriveItemPath, options: ReadOptions = {}): Promise<Handle> {
+export default async function openWorkbook(parentRef: DriveRef | DriveItemRef, itemPath: DriveItemPath, options: ReadOptions = {}): Promise<Workbook> {
 	const { progress = () => {} } = options;
 
 	const { folderPath, fileName: filePattern } = decomposePath(itemPath);
 	const folder = await getDriveItemByPath(parentRef, folderPath);
 	const items = iterateDriveItems(folder);
-	const remoteItemRef = await matchFile(filePattern, items);
+	const remoteItem = await matchFile(filePattern, items);
 
-	const name = remoteItemRef.name ?? "";
+	const name = remoteItem.name ?? "";
 	const extension = extname(name).toLowerCase();
 
 	const tempFile = await getTemporaryFilePath(extension);
-	await downloadFile(remoteItemRef, tempFile, progress);
-	const workbook = openFile(tempFile, extension);
+	await downloadFile(remoteItem, tempFile, progress);
+	const workbook = openFile(tempFile, extension) as Workbook;
 	await unlink(tempFile);
 
-	if (extension === ".xlsx") {
-		return {
-			workbook,
-			remoteItemRef, // Only xlsx files can be logically overwritten, other formats will have the incorrect file extension
-		};
-	} else {
-		return {
-			workbook,
-		};
-	}
+	workbook.remoteItem = remoteItem;
+	return workbook as Workbook;
 }
 
 function decomposePath(itemPath: DriveItemPath): { folderPath: DriveItemPath; fileName: DriveItemName } {

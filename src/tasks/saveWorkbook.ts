@@ -6,35 +6,34 @@
 
 import type { DriveItem } from "@microsoft/microsoft-graph-types";
 import type { DriveItemPath, DriveItemRef } from "microsoft-graph/dist/cjs/models/DriveItem";
-import getDriveItem from "microsoft-graph/dist/cjs/operations/driveItem/getDriveItem";
 import { getDriveItemParent } from "microsoft-graph/driveItem";
-import type { Handle } from "../models/Handle.ts";
+import InvalidArgumentError from "microsoft-graph/InvalidArgumentError";
 import type { WriteOptions } from "../models/Options.ts";
+import type { Workbook } from "../models/Workbook.ts";
 import saveWorkbookAs from "./saveWorkbookAs.ts";
 
 /**
  * Write a locally opened workbook back to Microsoft SharePoint, overwriting the previous file.
- * @param {Handle} handle Reference to the locally opened workbook, must include an itemRef for overwrite.
+ * @param {Workbook} handle Reference to the locally opened workbook, must include an itemRef for overwrite.
  * @param {WriteOptions} [options] Options for writing, such as conflict behavior, chunk size, and progress callback.
  * @returns {Promise<void>} Resolves when the upload is complete.
  * @throws {Error} If the workbook cannot be overwritten or required metadata is missing.
  */
-export default async function saveWorkbook(handle: Handle, options: WriteOptions = {}): Promise<DriveItemRef & DriveItem> {
-	const { remoteItemRef: itemRef } = handle;
-	if (!itemRef) {
-		throw new Error("Workbook not over-writable. Use `writeWorkbookByPath` instead.");
-	}
-
-	const item = await getDriveItem(itemRef);
-	const parentRef = getDriveItemParent(item);
-
-	const name = item.name;
-	if (!name) {
-		throw new Error("Item name not found.");
-	}
-	const path = `/${name}` as DriveItemPath;
-
+export default async function saveWorkbook(handle: Workbook, options: WriteOptions = {}): Promise<DriveItemRef & DriveItem> {
 	const { ifExists = "replace", maxChunkSize, progress } = options;
 
+	const remoteItem = handle.remoteItem;
+	if (!remoteItem) throw new Error("Workbook not over-writable. Use `saveWorkbookAs` instead.");
+
+	const parentRef = getDriveItemParent(remoteItem);
+	const path = getDriveItemPathWithinParent(remoteItem);
+
 	return await saveWorkbookAs(handle, parentRef, path, { ifExists, maxChunkSize, progress });
+}
+
+function getDriveItemPathWithinParent(remoteItem: DriveItem): DriveItemPath {
+	const name = remoteItem.name;
+	if (!name) throw new InvalidArgumentError("Missing drive item name.");
+	const path = `/${name}` as DriveItemPath;
+	return path;
 }

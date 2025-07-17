@@ -1,16 +1,25 @@
 import { describe, expect, it } from "vitest";
-import importWorkbook from "./importWorkbook";
+import createWorkbook from "./createWorkbook.ts";
 
-describe("importWorkbook", () => {
+describe("createWorkbook", () => {
+	it("creates a workbook with no worksheets if called with no arguments", async () => {
+		const workbook = await createWorkbook();
+		expect(workbook.worksheets.count).toBe(0);
+	});
+
+	it("creates a workbook with no worksheets if called with an empty object", async () => {
+		const workbook = await createWorkbook({});
+		expect(workbook.worksheets.count).toBe(0);
+	});
+
 	it("can import single worksheet", async () => {
-		const handle = await importWorkbook({
+		const workbook = await createWorkbook({
 			Sheet1: [
 				[1, 2, 3],
 				[4, 5, 6],
 			],
 		});
 
-		const workbook = handle.workbook;
 		const worksheet = workbook.worksheets.get("Sheet1");
 		expect(worksheet).toBeTruthy();
 		if (worksheet) {
@@ -30,12 +39,11 @@ describe("importWorkbook", () => {
 	});
 
 	it("can import multiple worksheets", async () => {
-		const handle = await importWorkbook({
+		const workbook = await createWorkbook({
 			A: [[1], [2]],
 			B: [[3], [4]],
 		});
 
-		const workbook = handle.workbook;
 		const wsA = workbook.worksheets.get("A");
 		const wsB = workbook.worksheets.get("B");
 		expect(wsA).toBeTruthy();
@@ -65,10 +73,9 @@ describe("importWorkbook", () => {
 	});
 
 	it("can import string values", async () => {
-		const handle = await importWorkbook({
+		const workbook = await createWorkbook({
 			StringSheet: [["hello"]],
 		});
-		const workbook = handle.workbook;
 		const ws = workbook.worksheets.get("StringSheet");
 		expect(ws).toBeTruthy();
 		if (ws) {
@@ -77,10 +84,9 @@ describe("importWorkbook", () => {
 	});
 
 	it("can import number values", async () => {
-		const handle = await importWorkbook({
+		const workbook = await createWorkbook({
 			NumberSheet: [[123]],
 		});
-		const workbook = handle.workbook;
 		const ws = workbook.worksheets.get("NumberSheet");
 		expect(ws).toBeTruthy();
 		if (ws) {
@@ -89,10 +95,9 @@ describe("importWorkbook", () => {
 	});
 
 	it("can import boolean values", async () => {
-		const handle = await importWorkbook({
+		const workbook = await createWorkbook({
 			BooleanSheet: [[true, false]],
 		});
-		const workbook = handle.workbook;
 		const ws = workbook.worksheets.get("BooleanSheet");
 		expect(ws).toBeTruthy();
 		if (ws) {
@@ -103,10 +108,9 @@ describe("importWorkbook", () => {
 
 	it("can import date values", async () => {
 		const testDate = new Date("2023-01-01T12:34:56Z");
-		const handle = await importWorkbook({
+		const workbook = await createWorkbook({
 			DateSheet: [[testDate]],
 		});
-		const workbook = handle.workbook;
 		const ws = workbook.worksheets.get("DateSheet");
 		expect(ws).toBeTruthy();
 		if (ws) {
@@ -116,10 +120,9 @@ describe("importWorkbook", () => {
 	});
 
 	it("can import formulas", async () => {
-		const handle = await importWorkbook({
+		const workbook = await createWorkbook({
 			FormulaSheet: [["=SUM(1,2,3)"]],
 		});
-		const workbook = handle.workbook;
 		const ws = workbook.worksheets.get("FormulaSheet");
 		expect(ws).toBeTruthy();
 		if (ws) {

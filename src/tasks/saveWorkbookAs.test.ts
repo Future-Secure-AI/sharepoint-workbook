@@ -7,7 +7,7 @@ import getWorkbookWorksheetUsedRange from "microsoft-graph/getWorkbookWorksheetU
 import { generateTempFileName } from "microsoft-graph/temporaryFiles";
 import { defaultWorkbookWorksheetName } from "microsoft-graph/workbookWorksheet";
 import { describe, expect, it } from "vitest";
-import type { Handle } from "../models/Handle";
+import type { Workbook } from "../models/Workbook";
 import saveWorkbookAs from "./saveWorkbookAs";
 
 const rows = [
@@ -21,7 +21,7 @@ describe("saveWorkbookAs", () => {
 		const driveRef = getDefaultDriveRef();
 		const remoteItemPath = driveItemPath(generateTempFileName("xlsx"));
 
-		const workbook = new AsposeCells.Workbook();
+		const workbook = new AsposeCells.Workbook() as Workbook;
 		const worksheet = workbook.worksheets.get(0);
 		worksheet.name = defaultWorkbookWorksheetName;
 		for (let r = 0; r < rows.length; r++) {
@@ -29,11 +29,8 @@ describe("saveWorkbookAs", () => {
 				worksheet.cells.get(r, c).putValue(rows[r][c]);
 			}
 		}
-		const handle: Handle = {
-			workbook,
-		};
 
-		const remoteItemRef = await saveWorkbookAs(handle, driveRef, remoteItemPath);
+		const remoteItemRef = await saveWorkbookAs(workbook, driveRef, remoteItemPath);
 
 		const remoteWorksheetRef = await getWorkbookWorksheetByName(remoteItemRef, defaultWorkbookWorksheetName);
 		const usedRange = await getWorkbookWorksheetUsedRange(remoteWorksheetRef);

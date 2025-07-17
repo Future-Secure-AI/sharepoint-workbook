@@ -8,8 +8,8 @@ import getWorkbookWorksheetUsedRange from "microsoft-graph/getWorkbookWorksheetU
 import { generateTempFileName } from "microsoft-graph/temporaryFiles";
 import { defaultWorkbookWorksheetName } from "microsoft-graph/workbookWorksheet";
 import { describe, expect, it } from "vitest";
-import type { Handle } from "../models/Handle.ts";
-import writeWorkbook from "./writeWorkbook.ts";
+import type { Workbook } from "../models/Workbook";
+import saveWorkbook from "./saveWorkbook.ts";
 
 const rows = [
 	["A", "B", "C"],
@@ -18,29 +18,31 @@ const rows = [
 ];
 
 describe("writeWorkbook", () => {
-	it("can write workbook", async () => {
+	it("can save workbook", async () => {
 		const driveRef = getDefaultDriveRef();
 		const remoteItemPath = driveItemPath(generateTempFileName("xlsx"));
-		let remoteItemRef = await createWorkbook(driveRef, remoteItemPath);
+		let remoteItem = await createWorkbook(driveRef, remoteItemPath);
 
-		const workbook = new AsposeCells.Workbook();
+		const workbook = new AsposeCells.Workbook() as Workbook;
 		const worksheet = workbook.worksheets.get(0);
 		for (let r = 0; r < rows.length; r++) {
 			for (let c = 0; c < rows[r].length; c++) {
 				worksheet.cells.get(r, c).putValue(rows[r][c]);
 			}
 		}
-		const handle: Handle = {
-			workbook,
-			remoteItemRef,
-		};
+		workbook.remoteItem = remoteItem;
 
-		remoteItemRef = await writeWorkbook(handle);
+		remoteItem = await saveWorkbook(workbook);
 
-		const remoteWorksheetRef = await getWorkbookWorksheetByName(remoteItemRef, defaultWorkbookWorksheetName);
+		const remoteWorksheetRef = await getWorkbookWorksheetByName(remoteItem, defaultWorkbookWorksheetName);
 		const usedRange = await getWorkbookWorksheetUsedRange(remoteWorksheetRef);
 		expect(usedRange.values).toEqual(rows);
 
-		await deleteDriveItem(remoteItemRef);
+		await deleteDriveItem(remoteItem);
+	});
+
+	it("can not save if not savedAs before", async () => {
+		const workbook = new AsposeCells.Workbook() as Workbook;
+		await expect(saveWorkbook(workbook)).rejects.toThrow("Workbook not over-writable. Use `saveWorkbookAs` instead.");
 	});
 });

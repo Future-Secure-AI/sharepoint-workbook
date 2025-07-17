@@ -2,9 +2,9 @@ import InvalidArgumentError from "microsoft-graph/InvalidArgumentError";
 import picomatch from "picomatch";
 import type { Cell, CellValue } from "../models/Cell.ts";
 import type { DeepPartial } from "../models/DeepPartial.ts";
-import type { Handle } from "../models/Handle.ts";
 import type { CellRef, RangeRef } from "../models/Reference.ts";
 import type { DeleteShift, InsertShift } from "../models/Shift.ts";
+import type { Workbook } from "../models/Workbook.ts";
 import type { WorksheetName } from "../models/Worksheet.ts";
 import { parseCellReference, parseRangeReference } from "../services/reference.ts";
 
@@ -13,7 +13,7 @@ import { applyCell } from "../services/cell.ts";
 // TODO: Named ranges, tables, pivot tables
 // TODO: Merging cells
 
-export function listWorksheets({ workbook }: Handle): WorksheetName[] {
+export function listWorksheets({ workbook }: Workbook): WorksheetName[] {
 	const result: WorksheetName[] = [];
 	for (let i = 0; i < workbook.worksheets.count; i++) {
 		const ws = workbook.worksheets.get(i);
@@ -22,7 +22,7 @@ export function listWorksheets({ workbook }: Handle): WorksheetName[] {
 	return result;
 }
 
-export function tryFindWorksheet({ workbook }: Handle, search: string): WorksheetName | null {
+export function tryFindWorksheet({ workbook }: Workbook, search: string): WorksheetName | null {
 	const matcher = picomatch(search, { nocase: true });
 
 	for (let i = 0; i < workbook.worksheets.count; i++) {
@@ -34,7 +34,7 @@ export function tryFindWorksheet({ workbook }: Handle, search: string): Workshee
 	return null;
 }
 
-function getWorksheetByName({ workbook }: Handle, name: WorksheetName): AsposeCells.Worksheet {
+function getWorksheetByName({ workbook }: Workbook, name: WorksheetName): AsposeCells.Worksheet {
 	const worksheet = workbook.worksheets.get(name);
 	if (!worksheet) {
 		throw new InvalidArgumentError(`Worksheet not found: ${name}`);
@@ -43,20 +43,20 @@ function getWorksheetByName({ workbook }: Handle, name: WorksheetName): AsposeCe
 }
 
 // TODO: Following methods take a worksheet handle, and References are adjusted accordingly
-export function insertCells({ workbook }: Handle, origin: CellRef, shift: InsertShift, cells: (CellValue | DeepPartial<Cell>)[][]): void {
+export function insertCells({ workbook }: Workbook, origin: CellRef, shift: InsertShift, cells: (CellValue | DeepPartial<Cell>)[][]): void {
 	const [worksheetName, col, row] = parseCellReference(origin);
 	const worksheet = getWorksheetByName({ workbook }, worksheetName);
 
 	if (shift === "Down") {
 		// TODO: Insert shifting down
 	} else if (shift === "Right") {
-		// TODO: Insert shifting right
+		// TODO: Insert shi¬ting right
 	} else {
 		throw new InvalidArgumentError(`Unsupported shift: ${shift}`);
 	}
 }
 
-export function readCells({ workbook }: Handle, range: RangeRef): Cell[][] {
+export function readCells({ workbook }: Workbook, range: RangeRef): Cell[][] {
 	let [worksheetName, startCol, startRow, endCol, endRow] = parseRangeReference(range);
 	const worksheet = getWorksheetByName({ workbook }, worksheetName);
 
@@ -68,14 +68,14 @@ export function readCells({ workbook }: Handle, range: RangeRef): Cell[][] {
 	// TODO: Read cells
 }
 
-export function updateCells({ workbook }: Handle, origin: CellRef, cells: (CellValue | DeepPartial<Cell>)[][]): void {
+export function updateCells({ workbook }: Workbook, origin: CellRef, cells: (CellValue | DeepPartial<Cell>)[][]): void {
 	const [worksheetName, col, row] = parseCellReference(origin);
 	const worksheet = getWorksheetByName({ workbook }, worksheetName);
 
 	// TODO: Update cells
 }
 
-export function deleteCells({ workbook }: Handle, range: RangeRef, shift: DeleteShift): void {
+export function deleteCells({ workbook }: Workbook, range: RangeRef, shift: DeleteShift): void {
 	let [worksheetName, startCol, startRow, endCol, endRow] = parseRangeReference(range);
 	const worksheet = getWorksheetByName({ workbook }, worksheetName);
 
@@ -93,7 +93,7 @@ export function deleteCells({ workbook }: Handle, range: RangeRef, shift: Delete
 	}
 }
 
-export function updateEachCell({ workbook }: Handle, range: RangeRef, write: CellValue | DeepPartial<Cell>): void {
+export function updateEachCell({ workbook }: Workbook, range: RangeRef, write: CellValue | DeepPartial<Cell>): void {
 	let [worksheetName, startCol, startRow, endCol, endRow] = parseRangeReference(range);
 	const worksheet = getWorksheetByName({ workbook }, worksheetName);
 

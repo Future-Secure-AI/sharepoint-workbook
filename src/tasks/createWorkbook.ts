@@ -1,19 +1,49 @@
 /**
- * Filter out unwanted rows and columns from a workbook.
+ * Create a new workbook, optionally with specified worksheets.
  * @module createWorkbook
  * @category Tasks
  */
 
 import AsposeCells from "aspose.cells.node";
-import type { Handle } from "../models/Handle.ts";
+import type { Cell, CellValue } from "../models/Cell.ts";
+import type { DeepPartial } from "../models/DeepPartial.ts";
+import type { Workbook } from "../models/Workbook.ts";
+import { applyCell } from "../services/cell.ts";
 
 /**
- * Create a new blank workbook.
+ * Create a new workbook, optionally with specified worksheets.
+ * @param {Record<string, Iterable<RowValues> | AsyncIterable<RowValues>>} worksheets An object whose keys are worksheet names and values are iterables or async iterables of row values.
+ * @returns {Promise<Handle>} Handle referencing the newly created workbook.
+ * @example
+ * const handle = await createWorkbook({
+ *   Sheet1: [
+ *     [1, 2, 3],
+ *     [4, 5, 6],
+ *   ],
+ *   Sheet2: [
+ *     ["A", "B", "C"],
+ *     ["D", "E", "F"],
+ *   ],
+ * });
  */
-export function createWorkbook(): Handle {
+export default async function createWorkbook(worksheets?: Record<string, (CellValue | DeepPartial<Cell>)[][]>): Promise<Workbook> {
 	const workbook = new AsposeCells.Workbook();
+	workbook.worksheets.removeAt(0); // Remove the default empty worksheet
 
-	return {
-		workbook,
-	};
+	if (worksheets) {
+		for (const [name, rows] of Object.entries(worksheets)) {
+			const worksheet = workbook.worksheets.add(name);
+			let r = 0;
+			for (const row of rows) {
+				let c = 0;
+				for (const cellOrValue of row) {
+					applyCell(worksheet, r, c, cellOrValue);
+					c++;
+				}
+				r++;
+			}
+		}
+	}
+
+	return workbook;
 }

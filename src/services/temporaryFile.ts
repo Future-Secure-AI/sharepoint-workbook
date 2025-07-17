@@ -1,5 +1,5 @@
 import { getEnvironmentVariable } from "microsoft-graph/dist/cjs/services/environmentVariable";
-import { mkdir } from "node:fs/promises";
+import { mkdir, unlink } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import type { LocalFilePath } from "../models/LocalFilePath.ts";
@@ -10,4 +10,11 @@ export async function getTemporaryFilePath(extension: string = ".tmp"): Promise<
 	const fileName = `${crypto.randomUUID()}${extension}`;
 	const tempFilePath = join(rootFolder, fileName) as LocalFilePath;
 	return tempFilePath;
+}
+
+export async function withTemporaryFile(extension: string, context: (file: string) => Promise<void>): Promise<void> {
+	const tempFilePath = await getTemporaryFilePath(extension);
+
+	await context(tempFilePath);
+	await unlink(tempFilePath);
 }

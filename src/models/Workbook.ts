@@ -1,26 +1,18 @@
 /**
- * Workbook models.
- * @module Workbook
+ * Reference to an opened workbook.
+ * @module Handle
  * @category Models
  */
-import type { Worksheet, WorksheetWrite } from "./Worksheet.ts";
+
+import type { DriveItem } from "@microsoft/microsoft-graph-types";
+import type AsposeCells from "aspose.cells.node";
+import type { DriveItemRef } from "microsoft-graph/dist/cjs/models/DriveItem";
 
 /**
- * Represents a workbook with worksheets.
- * @property {string} name Name of the workbook.
- * @property {Iterable<Worksheet> | AsyncIterable<Worksheet>} worksheets Worksheets in the workbook.
+ * A reference to an opened workbook.
+ * @property localFilePath Unique identifier for the handle.
+ * @property remoteItemRef (Optional) Reference to the associated DriveItem in Microsoft Graph.
  */
-export type Workbook = {
-	name: string;
-	worksheets: Iterable<Worksheet> | AsyncIterable<Worksheet>;
-};
-
-/**
- * Represents a workbook to be written, with writeable worksheets.
- * @property {string} name Name of the workbook.
- * @property {Iterable<WriteWorksheet> | AsyncIterable<WriteWorksheet>} worksheets Worksheets to write.
- */
-export type WorkbookWrite = {
-	name: string;
-	worksheets: Iterable<WorksheetWrite> | AsyncIterable<WorksheetWrite>;
+export type Workbook = AsposeCells.Workbook & {
+	remoteItem?: DriveItem & DriveItemRef;
 };

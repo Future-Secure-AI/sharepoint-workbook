@@ -4,7 +4,7 @@
  * @category Tasks
  */
 
-import type { Handle } from "../models/Handle.ts";
+import type { Workbook } from "../models/Workbook.ts";
 
 /**
  * Filter options for filtering a workbook.
@@ -31,18 +31,16 @@ export type Filter = {
 
 /**
  * Filter out unwanted rows and columns from a workbook. All styling is lost when filtering.
- * @param handle Workbook handle to filter.
+ * @param workbook Workbook handle to filter.
  * @param filter Filter options to apply (skipRows, column, row).
  * @returns A promise that resolves when the filtering is complete.
  */
 
-export default async function filterWorkbook(handle: Handle, filter: Filter): Promise<void> {
+export default async function filterWorkbook(workbook: Workbook, filter: Filter): Promise<void> {
 	const skipRows = filter?.skipRows ?? 0;
 	const columnFilter = filter?.columnFilter ?? (() => true);
 	const rowFilter = filter?.rowFilter ?? (() => true);
 	const progress = filter?.progress ?? (() => {});
-
-	const workbook = handle.workbook;
 
 	let lastProgressTime = 0;
 	let processedRows = 0;
