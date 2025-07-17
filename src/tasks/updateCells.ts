@@ -2,7 +2,7 @@ import type { Worksheet } from "aspose.cells.node";
 import type { Cell, CellValue } from "../models/Cell.ts";
 import type { DeepPartial } from "../models/DeepPartial.ts";
 import type { CellRef } from "../models/Reference.ts";
-import { writeCell } from "../services/cell.ts";
+import { writeCell } from "../services/cellWriter.ts";
 import { ensureRectangularArray } from "../services/rectangularArray.ts";
 import { parseCellReference } from "../services/reference.ts";
 

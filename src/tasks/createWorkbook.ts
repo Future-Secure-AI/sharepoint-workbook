@@ -8,7 +8,7 @@ import AsposeCells from "aspose.cells.node";
 import type { Cell, CellValue } from "../models/Cell.ts";
 import type { DeepPartial } from "../models/DeepPartial.ts";
 import type { Workbook } from "../models/Workbook.ts";
-import { writeCell } from "../services/cell.ts";
+import { writeCell } from "../services/cellWriter.ts";
 
 /**
  * Create a new workbook, optionally with specified worksheets.

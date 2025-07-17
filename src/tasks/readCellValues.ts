@@ -1,7 +1,7 @@
 import type { Worksheet } from "aspose.cells.node";
 import type { CellValue } from "../models/Cell.ts";
 import type { RangeRef } from "../models/Reference.ts";
-import { readCellValue } from "../services/cell.ts";
+import { readCellValue } from "../services/cellReader.ts";
 import { parseRangeReferenceExact } from "../services/reference.ts";
 
 /**

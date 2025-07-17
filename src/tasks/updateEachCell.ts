@@ -2,7 +2,7 @@ import type { Worksheet } from "aspose.cells.node";
 import type { Cell, CellValue } from "../models/Cell.ts";
 import type { DeepPartial } from "../models/DeepPartial.ts";
 import type { RangeRef } from "../models/Reference.ts";
-import { writeCell } from "../services/cell.ts";
+import { writeCell } from "../services/cellWriter.ts";
 import { parseRangeReferenceExact } from "../services/reference.ts";
 
 export function updateEachCell(worksheet: Worksheet, range: RangeRef, write: CellValue | DeepPartial<Cell>): void {

@@ -1,6 +1,6 @@
 import type { Cell } from "../models/Cell.ts";
 import type { RangeRef } from "../models/Reference.ts";
-import { readCell } from "../services/cell.ts";
+import { readCell } from "../services/cellReader.ts";
 import { parseRangeReferenceExact } from "../services/reference.ts";
 
 import type { Worksheet } from "aspose.cells.node";

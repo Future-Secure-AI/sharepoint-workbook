@@ -1,7 +1,5 @@
 import AsposeCells from "aspose.cells.node";
-import InvalidArgumentError from "microsoft-graph/InvalidArgumentError";
 import type { Cell, CellMerge, CellValue } from "../models/Cell.ts";
-import type { DeepPartial } from "../models/DeepPartial.ts";
 
 export function readCellValue(worksheet: AsposeCells.Worksheet, r: number, c: number): CellValue {
 	const cell = worksheet.cells.get(r, c);
@@ -55,8 +53,20 @@ export function readCell(worksheet: AsposeCells.Worksheet, r: number, c: number)
 	const comment = cell.comment?.note || "";
 
 	let merge: CellMerge = null;
-	const mergedAreas = worksheet.cells.getMergedAreas();
-	for (const { startRow, startColumn, endRow, endColumn } of mergedAreas) {
+	let mergedAreas = worksheet.cells.getMergedAreas();
+	// Aspose.Cells getMergedAreas may return a collection, not a JS array
+	if (mergedAreas && typeof mergedAreas[Symbol.iterator] !== "function") {
+		// Try to convert to array if possible
+		if (typeof mergedAreas.toArray === "function") {
+			mergedAreas = mergedAreas.toArray();
+		} else if (typeof Array.from === "function" && typeof mergedAreas.count === "number" && typeof mergedAreas.get === "function") {
+			mergedAreas = Array.from({ length: mergedAreas.count }, (_, i) => mergedAreas.get(i));
+		} else {
+			mergedAreas = [];
+		}
+	}
+	for (const area of mergedAreas) {
+		const { startRow, startColumn, endRow, endColumn } = area;
 		if (!(r >= startRow && r <= endRow && c >= startColumn && c <= endColumn)) continue;
 		if (r > startRow && c > startColumn) {
 			merge = "up-left";
@@ -99,78 +109,39 @@ export function readCell(worksheet: AsposeCells.Worksheet, r: number, c: number)
 		comment,
 	};
 }
-
-export function writeCell(worksheet: AsposeCells.Worksheet, r: number, c: number, cellOrValue: CellValue | DeepPartial<Cell>) {
-	const output = worksheet.cells.get(r, c);
-
-	// TODO. Make sure to use `setCellValue` if `cellOrValue` is a `DeepPartial<Cell>` or `setAmbigiousCellValue` if `cellOrValue` is a `CellValue`
-}
-
-function setCellValue(cell: AsposeCells.Cell, value: CellValue) {
-	if (typeof value === "number") {
-		cell.putValue(value);
-	} else if (typeof value === "boolean") {
-		cell.putValue(value);
-	} else if (typeof value === "string") {
-		cell.putValue(value);
-	} else if (value instanceof Date) {
-		cell.putValue(value); // Aspose will handle Date properly
-	} else {
-		throw new InvalidArgumentError(`Unsupported cell value type: ${typeof value}. Expected number, boolean, string, or Date.`);
-	}
-}
-
-function setAmbigiousCellValue(cell: AsposeCells.Cell, value: CellValue) {
-	if (typeof value === "number") {
-		cell.putValue(value);
-	} else if (typeof value === "boolean") {
-		cell.putValue(value);
-	} else if (typeof value === "string") {
-		if (value.startsWith("=")) {
-			cell.putValue("");
-			cell.formula = value;
-		} else {
-			cell.putValue(value);
-		}
-	} else if (value instanceof Date) {
-		cell.putValue(value); // Aspose will handle Date properly
-	} else {
-		throw new InvalidArgumentError(`Unsupported cell value type: ${typeof value}. Expected number, boolean, string, or Date.`);
-	}
-}
 function getCellValue(cell: AsposeCells.Cell): CellValue {
 	const value = cell.value;
-	if (value.isString()) return value.toString();
-	if (value.isNumber()) return value.toNumber();
-	if (value.isBool()) return value.toBool();
-	if (value.isDate()) return value.toDate();
-
+	if (value === null || value === undefined) return "";
+	if (typeof value === "string") return value;
+	if (typeof value === "number") return value;
+	if (typeof value === "boolean") return value;
+	if (value instanceof Date) return value;
 	return "";
 }
-
-function encodeColor(hex: string): AsposeCells.Color {
-	let color = hex.trim();
-	if (color.startsWith("#")) {
-		color = color.slice(1);
+function decodeCellBorderType(lineStyle: AsposeCells.CellBorderType): Cell["borderTopStyle"] {
+	switch (lineStyle) {
+		case AsposeCells.CellBorderType.Thin:
+			return "thin";
+		case AsposeCells.CellBorderType.Medium:
+			return "medium";
+		case AsposeCells.CellBorderType.Thick:
+			return "thick";
+		case AsposeCells.CellBorderType.Dashed:
+			return "dashed";
+		case AsposeCells.CellBorderType.Dotted:
+			return "dotted";
+		case AsposeCells.CellBorderType.Double:
+			return "double";
+		default:
+			return "thin"; // TODO
 	}
-
-	if (!/^[0-9a-fA-F]{6}$/.test(color)) {
-		throw new InvalidArgumentError(`Invalid color string: '${hex}'. Expected a 6-digit hexadecimal string optionally prefixed with '#'.`);
-	}
-
-	const r = parseInt(color.slice(0, 2), 16);
-	const g = parseInt(color.slice(2, 4), 16);
-	const b = parseInt(color.slice(4, 6), 16);
-	return new AsposeCells.Color(r, g, b);
 }
-
 function decodeColor(color: AsposeCells.Color): string {
 	const r = color.r.toString(16).padStart(2, "0");
 	const g = color.g.toString(16).padStart(2, "0");
 	const b = color.b.toString(16).padStart(2, "0");
 	return (r + g + b).toUpperCase();
 }
-
 function decodeHorizontalAlignment(val: AsposeCells.TextAlignmentType): Cell["horizontalAlignment"] {
 	switch (val) {
 		case AsposeCells.TextAlignmentType.Left:
@@ -193,24 +164,5 @@ function decodeVerticalAlignment(val: AsposeCells.TextAlignmentType): Cell["vert
 			return "bottom";
 		default:
 			return "top"; // TODO
-	}
-}
-
-function decodeCellBorderType(lineStyle: AsposeCells.CellBorderType): Cell["borderTopStyle"] {
-	switch (lineStyle) {
-		case AsposeCells.CellBorderType.Thin:
-			return "thin";
-		case AsposeCells.CellBorderType.Medium:
-			return "medium";
-		case AsposeCells.CellBorderType.Thick:
-			return "thick";
-		case AsposeCells.CellBorderType.Dashed:
-			return "dashed";
-		case AsposeCells.CellBorderType.Dotted:
-			return "dotted";
-		case AsposeCells.CellBorderType.Double:
-			return "double";
-		default:
-			return "thin"; // TODO
 	}
 }
