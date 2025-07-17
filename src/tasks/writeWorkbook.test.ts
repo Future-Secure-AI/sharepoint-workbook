@@ -1,35 +1,46 @@
+import AsposeCells from "aspose.cells.node";
 import createWorkbook from "microsoft-graph/createWorkbook";
+import deleteDriveItem from "microsoft-graph/deleteDriveItem";
+import getWorkbookWorksheetByName from "microsoft-graph/dist/cjs/operations/workbookWorksheet/getWorkbookWorksheetByName";
 import { getDefaultDriveRef } from "microsoft-graph/drive";
 import { driveItemPath } from "microsoft-graph/driveItem";
+import getWorkbookWorksheetUsedRange from "microsoft-graph/getWorkbookWorksheetUsedRange";
 import { generateTempFileName } from "microsoft-graph/temporaryFiles";
-import tryDeleteDriveItem from "microsoft-graph/tryDeleteDriveItem";
-import { createWorkbookRangeRef } from "microsoft-graph/workbookRange";
-import { createDefaultWorkbookWorksheetRef } from "microsoft-graph/workbookWorksheet";
-import writeWorkbookRows from "microsoft-graph/writeWorkbookRows";
-import { describe, it } from "vitest";
-import readWorkbook from "./readWorkbook.ts";
+import { defaultWorkbookWorksheetName } from "microsoft-graph/workbookWorksheet";
+import { describe, expect, it } from "vitest";
+import type { Handle } from "../models/Handle.ts";
 import writeWorkbook from "./writeWorkbook.ts";
 
 const rows = [
-	[{ value: "A" }, { value: "B" }, { value: "C" }],
-	[{ value: "D" }, { value: "E" }, { value: "F" }],
-	[{ value: "G" }, { value: "H" }, { value: "I" }],
+	["A", "B", "C"],
+	["D", "E", "F"],
+	["G", "H", "I"],
 ];
 
 describe("writeWorkbook", () => {
-	it("creates small XLSX file", async () => {
-		const workbookName = generateTempFileName("xlsx");
-		const workbookPath = driveItemPath(workbookName);
+	it("can write workbook", async () => {
 		const driveRef = getDefaultDriveRef();
-		const item = await createWorkbook(driveRef, workbookPath);
-		const worksheetRef = createDefaultWorkbookWorksheetRef(item);
-		const rangeRef = createWorkbookRangeRef(worksheetRef, "A1");
-		await writeWorkbookRows(rangeRef, rows);
+		const remoteItemPath = driveItemPath(generateTempFileName("xlsx"));
+		let remoteItemRef = await createWorkbook(driveRef, remoteItemPath);
 
-		const hdl = await readWorkbook(item);
+		const workbook = new AsposeCells.Workbook();
+		const worksheet = workbook.worksheets.get(0);
+		for (let r = 0; r < rows.length; r++) {
+			for (let c = 0; c < rows[r].length; c++) {
+				worksheet.cells.get(r, c).putValue(rows[r][c]);
+			}
+		}
+		const handle: Handle = {
+			workbook,
+			remoteItemRef,
+		};
 
-		await writeWorkbook(hdl);
+		remoteItemRef = await writeWorkbook(handle);
 
-		await tryDeleteDriveItem(item);
+		const remoteWorksheetRef = await getWorkbookWorksheetByName(remoteItemRef, defaultWorkbookWorksheetName);
+		const usedRange = await getWorkbookWorksheetUsedRange(remoteWorksheetRef);
+		expect(usedRange.values).toEqual(rows);
+
+		await deleteDriveItem(remoteItemRef);
 	});
 });

@@ -3,21 +3,16 @@
  * @module Handle
  * @category Models
  */
+
+import type AsposeCells from "aspose.cells.node";
 import type { DriveItemRef } from "microsoft-graph/dist/cjs/models/DriveItem";
 
 /**
  * A reference to an opened workbook.
- * @property id Unique identifier for the handle.
- * @property itemRef (Optional) Reference to the associated DriveItem in Microsoft Graph.
+ * @property localFilePath Unique identifier for the handle.
+ * @property remoteItemRef (Optional) Reference to the associated DriveItem in Microsoft Graph.
  */
 export type Handle = {
-	id: HandleId;
-	itemRef?: DriveItemRef;
-};
-
-/**
- * Unique Handle identifier.
- */
-export type HandleId = string & {
-	readonly __brand: unique symbol;
+	workbook: AsposeCells.Workbook;
+	remoteItemRef?: DriveItemRef;
 };

@@ -1,51 +1,27 @@
-import ExcelJS from "exceljs";
-import fs from "node:fs";
-import os from "node:os";
-import path from "node:path";
-import { afterEach, beforeEach, describe, expect, it } from "vitest";
-import type { WorksheetWrite } from "../models/Worksheet";
-import { getLatestRevisionFilePath } from "../services/workingFolder";
+import { describe, expect, it } from "vitest";
 import importWorkbook from "./importWorkbook";
 
-describe("importWorkbook integration", () => {
-	let tempDir: string;
-	let origEnv: string | undefined;
+describe("importWorkbook", () => {
+	it("can import single worksheet", async () => {
+		const handle = await importWorkbook({
+			Sheet1: [
+				[1, 2, 3],
+				[4, 5, 6],
+			],
+		});
 
-	beforeEach(() => {
-		tempDir = fs.mkdtempSync(path.join(os.tmpdir(), "importWorkbook-test-"));
-		origEnv = process.env.WORKING_FOLDER;
-		process.env.WORKING_FOLDER = tempDir;
-	});
-
-	afterEach(() => {
-		process.env.WORKING_FOLDER = origEnv;
-		fs.rmSync(tempDir, { recursive: true, force: true });
-	});
-
-	it("creates a workbook with a single worksheet", async () => {
-		const worksheets: WorksheetWrite[] = [
-			{
-				name: "Sheet1",
-				rows: [
-					[1, 2, 3],
-					[4, 5, 6],
-				],
-			},
-		];
-		const hdl = await importWorkbook(worksheets);
-		const file = await getLatestRevisionFilePath(hdl.id);
-
-		const xls = new ExcelJS.Workbook();
-		await xls.xlsx.readFile(file);
-
-		const workbook = xls.getWorksheet("Sheet1");
-		expect(workbook).toBeTruthy();
-
-		if (workbook) {
-			const values = workbook
-				.getSheetValues()
-				.slice(1)
-				.map((row) => (Array.isArray(row) ? row.slice(1) : []));
+		const workbook = handle.workbook;
+		const worksheet = workbook.worksheets.get("Sheet1");
+		expect(worksheet).toBeTruthy();
+		if (worksheet) {
+			const values: unknown[][] = [];
+			for (let r = 0; r < worksheet.cells.maxDataRow + 1; r++) {
+				const row: unknown[] = [];
+				for (let c = 0; c < worksheet.cells.maxDataColumn + 1; c++) {
+					row.push(worksheet.cells.get(r, c).value);
+				}
+				values.push(row);
+			}
 			expect(values).toEqual([
 				[1, 2, 3],
 				[4, 5, 6],
@@ -53,66 +29,106 @@ describe("importWorkbook integration", () => {
 		}
 	});
 
-	it("creates a workbook with multiple worksheets", async () => {
-		const worksheets: WorksheetWrite[] = [
-			{ name: "A", rows: [[1], [2]] },
-			{ name: "B", rows: [[3], [4]] },
-		];
+	it("can import multiple worksheets", async () => {
+		const handle = await importWorkbook({
+			A: [[1], [2]],
+			B: [[3], [4]],
+		});
 
-		const handle = await importWorkbook(worksheets);
-		const file = await getLatestRevisionFilePath(handle.id);
-		expect(file).toBeTruthy();
-		const wb = new ExcelJS.Workbook();
-		await wb.xlsx.readFile(file);
-		const wsA = wb.getWorksheet("A");
-		const wsB = wb.getWorksheet("B");
+		const workbook = handle.workbook;
+		const wsA = workbook.worksheets.get("A");
+		const wsB = workbook.worksheets.get("B");
 		expect(wsA).toBeTruthy();
 		expect(wsB).toBeTruthy();
 		if (wsA) {
-			expect(
-				wsA
-					.getSheetValues()
-					.slice(1)
-					.map((row) => (Array.isArray(row) ? row.slice(1) : [])),
-			).toEqual([[1], [2]]);
+			const valuesA: unknown[][] = [];
+			for (let r = 0; r < wsA.cells.maxDataRow + 1; r++) {
+				const row: unknown[] = [];
+				for (let c = 0; c < wsA.cells.maxDataColumn + 1; c++) {
+					row.push(wsA.cells.get(r, c).value);
+				}
+				valuesA.push(row);
+			}
+			expect(valuesA).toEqual([[1], [2]]);
 		}
 		if (wsB) {
-			expect(
-				wsB
-					.getSheetValues()
-					.slice(1)
-					.map((row) => (Array.isArray(row) ? row.slice(1) : [])),
-			).toEqual([[3], [4]]);
+			const valuesB: unknown[][] = [];
+			for (let r = 0; r < wsB.cells.maxDataRow + 1; r++) {
+				const row: unknown[] = [];
+				for (let c = 0; c < wsB.cells.maxDataColumn + 1; c++) {
+					row.push(wsB.cells.get(r, c).value);
+				}
+				valuesB.push(row);
+			}
+			expect(valuesB).toEqual([[3], [4]]);
 		}
 	});
 
-	it("supports async iterable worksheets and rows", async () => {
-		async function* worksheetGen() {
-			yield {
-				name: "AsyncSheet",
-				rows: [
-					[10, 20],
-					[30, 40],
-				],
-			};
-		}
-		const handle = await importWorkbook(worksheetGen());
-		const file = await getLatestRevisionFilePath(handle.id);
-		expect(file).toBeTruthy();
-		const wb = new ExcelJS.Workbook();
-		await wb.xlsx.readFile(file);
-		const ws = wb.getWorksheet("AsyncSheet");
+	it("can import string values", async () => {
+		const handle = await importWorkbook({
+			StringSheet: [["hello"]],
+		});
+		const workbook = handle.workbook;
+		const ws = workbook.worksheets.get("StringSheet");
 		expect(ws).toBeTruthy();
 		if (ws) {
-			expect(
-				ws
-					.getSheetValues()
-					.slice(1)
-					.map((row) => (Array.isArray(row) ? row.slice(1) : [])),
-			).toEqual([
-				[10, 20],
-				[30, 40],
-			]);
+			expect(ws.cells.get(0, 0).value).toBe("hello");
+		}
+	});
+
+	it("can import number values", async () => {
+		const handle = await importWorkbook({
+			NumberSheet: [[123]],
+		});
+		const workbook = handle.workbook;
+		const ws = workbook.worksheets.get("NumberSheet");
+		expect(ws).toBeTruthy();
+		if (ws) {
+			expect(ws.cells.get(0, 0).value).toBe(123);
+		}
+	});
+
+	it("can import boolean values", async () => {
+		const handle = await importWorkbook({
+			BooleanSheet: [[true, false]],
+		});
+		const workbook = handle.workbook;
+		const ws = workbook.worksheets.get("BooleanSheet");
+		expect(ws).toBeTruthy();
+		if (ws) {
+			expect(ws.cells.get(0, 0).value).toBe(true);
+			expect(ws.cells.get(0, 1).value).toBe(false);
+		}
+	});
+
+	it("can import date values", async () => {
+		const testDate = new Date("2023-01-01T12:34:56Z");
+		const handle = await importWorkbook({
+			DateSheet: [[testDate]],
+		});
+		const workbook = handle.workbook;
+		const ws = workbook.worksheets.get("DateSheet");
+		expect(ws).toBeTruthy();
+		if (ws) {
+			const cell = ws.cells.get(0, 0).value;
+			expect(cell instanceof Date || typeof cell === "number").toBe(true);
+		}
+	});
+
+	it("can import formulas", async () => {
+		const handle = await importWorkbook({
+			FormulaSheet: [["=SUM(1,2,3)"]],
+		});
+		const workbook = handle.workbook;
+		const ws = workbook.worksheets.get("FormulaSheet");
+		expect(ws).toBeTruthy();
+		if (ws) {
+			const formulaCell = ws.cells.get(0, 0);
+			if (formulaCell.isFormula) {
+				expect(formulaCell.formula).toBe("=SUM(1,2,3)");
+			} else {
+				throw new Error("Formula cell not imported as formula");
+			}
 		}
 	});
 });

@@ -5,15 +5,17 @@
  */
 
 import type { DriveItem } from "@microsoft/microsoft-graph-types";
+import AsposeCells from "aspose.cells.node";
 import type { DriveRef } from "microsoft-graph/dist/cjs/models/Drive";
 import type { DriveItemPath, DriveItemRef } from "microsoft-graph/dist/cjs/models/DriveItem";
 import createDriveItemContent from "microsoft-graph/dist/cjs/operations/driveItem/createDriveItemContent";
 import { createReadStream, promises as fs } from "node:fs";
+import { unlink } from "node:fs/promises";
 import { extname } from "node:path";
 import type { Handle } from "../models/Handle.ts";
 import type { WriteOptions } from "../models/Options.ts";
 import { streamHighWaterMark } from "../services/streamParameters.ts";
-import { getLatestRevisionFilePath } from "../services/workingFolder.ts";
+import { getTemporaryFilePath } from "../services/temporaryFile.ts";
 
 /**
  * Writes a workbook file to Microsoft SharePoint at a given location.
@@ -25,20 +27,20 @@ import { getLatestRevisionFilePath } from "../services/workingFolder.ts";
  */
 export default async function writeWorkbookByPath(handle: Handle, parentRef: DriveRef | DriveItemRef, path: DriveItemPath, options: WriteOptions = {}): Promise<DriveItem & DriveItemRef> {
 	const extension = extname(path).toLowerCase();
-	if (extension !== ".xlsx") {
-		throw new Error(`Unsupported file extension: "${extension}". Only .xlsx supported.`);
-	}
 
 	const { ifExists = "fail", maxChunkSize, progress } = options;
-	const { id } = handle;
-	const localPath = await getLatestRevisionFilePath(id);
 
-	const { size } = await fs.stat(localPath);
-	const stream = createReadStream(localPath, { highWaterMark: streamHighWaterMark });
+	const localFilePath = await getTemporaryFilePath(extension);
+	handle.workbook.save(localFilePath, AsposeCells.SaveFormat.Auto);
+
+	const { size } = await fs.stat(localFilePath);
+	const stream = createReadStream(localFilePath, { highWaterMark: streamHighWaterMark });
 	const item = await createDriveItemContent(parentRef, path, stream, size, {
 		conflictBehavior: ifExists,
 		maxChunkSize,
 		progress,
 	});
+
+	await unlink(localFilePath);
 	return item;
 }

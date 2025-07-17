@@ -12,7 +12,7 @@ import type { WorksheetName } from "../models/Worksheet.ts";
 import { normalizeCellWrite } from "../services/cell.ts";
 import { fromExcelCell, getWorksheetByName, toExcelValue, updateExcelCell } from "../services/excel.ts";
 import { parseCellReference, parseRangeReference } from "../services/reference.ts";
-import { getLatestRevisionFilePath, getNextRevisionFilePath } from "../services/workingFolder.ts";
+import { getLatestRevisionFilePath, getNextRevisionFilePath } from "../services/temporaryFile.ts";
 
 type TransactContext = (operations: TransactOperations) => Promise<void>;
 
@@ -30,7 +30,7 @@ type TransactOperations = {
 };
 
 export default async function transactWorkbook(handle: Handle, context: TransactContext): Promise<void> {
-	const file = await getLatestRevisionFilePath(handle.id);
+	const file = await getLatestRevisionFilePath(handle.localFilePath);
 	let isDirty = false;
 	const workbook = new ExcelJS.Workbook();
 
@@ -185,7 +185,7 @@ export default async function transactWorkbook(handle: Handle, context: Transact
 	await context(operations);
 
 	if (isDirty) {
-		const nextFile = await getNextRevisionFilePath(handle.id);
+		const nextFile = await getNextRevisionFilePath(handle.localFilePath);
 		await workbook.xlsx.writeFile(nextFile);
 	}
 }

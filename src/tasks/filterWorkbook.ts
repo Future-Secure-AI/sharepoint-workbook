@@ -4,9 +4,7 @@
  * @category Tasks
  */
 
-import ExcelJS from "exceljs";
 import type { Handle } from "../models/Handle.ts";
-import { getLatestRevisionFilePath, getNextRevisionFilePath } from "../services/workingFolder.ts";
 
 /**
  * Filter options for filtering a workbook.
@@ -39,43 +37,56 @@ export type Filter = {
  */
 
 export default async function filterWorkbook(handle: Handle, filter: Filter): Promise<void> {
-	const { skipRows = 0, columnFilter = () => true, rowFilter = () => true, progress = () => {} } = filter;
-	const latestFile = await getLatestRevisionFilePath(handle.id);
-	const nextFile = await getNextRevisionFilePath(handle.id);
+	const skipRows = filter?.skipRows ?? 0;
+	const columnFilter = filter?.columnFilter ?? (() => true);
+	const rowFilter = filter?.rowFilter ?? (() => true);
+	const progress = filter?.progress ?? (() => {});
 
-	const reader = new ExcelJS.stream.xlsx.WorkbookReader(latestFile, {});
-	const writer = new ExcelJS.stream.xlsx.WorkbookWriter({ filename: nextFile });
+	const workbook = handle.workbook;
 
-	for await (const sheet of reader) {
-		const ws = writer.addWorksheet((sheet as { name?: string }).name ?? "Sheet1");
-		let colIndexes: number[] | null = null;
-		let lastProgressTime = 0;
+	let lastProgressTime = 0;
+	let processedRows = 0;
+	for (let s = 0; s < workbook.worksheets.count; s++) {
+		const worksheet = workbook.worksheets.get(s);
 
-		let r = 0;
-		for await (const row of sheet) {
-			r++;
-			if (r <= skipRows) continue;
-			const values = Array.isArray(row.values) ? row.values : [];
-
-			if (colIndexes === null) {
-				colIndexes = values.map((h, idx) => (columnFilter(String(h ?? ""), idx) ? idx : -1)).filter((idx) => idx !== -1);
-				const row = ws.addRow(colIndexes.map((idx) => values[idx]));
-				row.commit();
-			} else {
-				const filtered = colIndexes.map((idx) => values[idx]);
-				if (rowFilter(filtered.map((cell) => String(cell ?? "")))) {
-					const row = ws.addRow(filtered);
-					row.commit();
-				}
+		// Delete skipped rows from the top (before any filtering)
+		if (skipRows > 0) {
+			for (let i = 0; i < skipRows; i++) {
+				worksheet.cells.deleteRow(0);
 			}
+		}
 
+		// Get header row and determine columns to keep
+		const maxCol = worksheet.cells.maxDataColumn;
+		const headerRowIdx = 0;
+		const headerCells = Array.from({ length: maxCol + 1 }, (_, c) => {
+			const v = worksheet.cells.get(headerRowIdx, c)?.value;
+			return typeof v === "string" || typeof v === "number" || typeof v === "boolean" ? String(v) : "";
+		});
+		const colIndexes = headerCells.map((header, idx) => (columnFilter(header, idx) ? idx : -1)).filter((idx) => idx !== -1);
+
+		// Delete columns not in colIndexes (right to left)
+		const removeCols = Array.from({ length: maxCol + 1 }, (_, i) => i)
+			.filter((idx) => !colIndexes.includes(idx))
+			.sort((a, b) => b - a);
+		for (const colIdx of removeCols) worksheet.cells.deleteColumn(colIdx);
+
+		// Filter rows
+		const rowsToDelete: number[] = [];
+		for (let i = 0; i <= worksheet.cells.maxDataRow; i++) {
+			processedRows++;
+			const rowCells = colIndexes.map((c) => {
+				const v = worksheet.cells.get(i, c)?.value;
+				return typeof v === "string" || typeof v === "number" || typeof v === "boolean" ? v : "";
+			});
+			if (!rowFilter(rowCells.map((cell) => String(cell ?? "")))) rowsToDelete.push(i);
 			if (Date.now() - lastProgressTime >= 1000) {
-				progress(r);
+				progress(processedRows);
 				lastProgressTime = Date.now();
 			}
 		}
-		progress(r);
-		ws.commit();
+		// Delete rows in reverse order
+		rowsToDelete.sort((a, b) => b - a).forEach((rowIdx) => worksheet.cells.deleteRow(rowIdx));
+		progress(processedRows);
 	}
-	await writer.commit();
 }

@@ -1,62 +1,49 @@
-export type CellWrite = Partial<
-	Omit<Cell, "text"> & {
-		// mergeDown: number | null;
-		// mergeRight: number | null;
-	}
->;
+export type CellValue = string | number | boolean | Date;
 
 export type Cell = {
 	value: CellValue;
-	text: string;
-	format: Format;
-	note: string | null;
-
-	fontName: FontName | null;
-	fontSize: number | null;
-	fontFamily: number | null;
-	fontColor: RgbaColor | null;
-	fontBold: boolean | null;
-	fontItalic: boolean | null;
-	fontUnderline: FontUnderlineStyle | null;
-	fontStrike: boolean | null;
-
-	alignmentHorizontal: AlignmentHorizontal | null;
-	alignmentVertical: AlignmentVertical | null;
-	alignmentWrapText: boolean | null;
-	alignmentShrinkToFit: boolean | null;
-	alignmentIndent: number | null;
-	alignmentTextRotation: AlignmentRotation | null;
-
-	borderTopStyle: BorderStyle | null;
-	borderTopColor: RgbaColor | null;
-	borderLeftStyle: BorderStyle | null;
-	borderLeftColor: RgbaColor | null;
-	borderBottomStyle: BorderStyle | null;
-	borderBottomColor: RgbaColor | null;
-	borderRightStyle: BorderStyle | null;
-	borderRightColor: RgbaColor | null;
-
-	fillForegroundColor: RgbaColor | null;
-	fillBackgroundColor: RgbaColor | null;
-
-	protectionLocked: boolean | null;
-	protectionHidden: boolean | null;
+	formula: string;
+	style: CellStyle;
+	merge: CellMerge;
+	comment: string;
 };
 
-export type CellValue = string | number | boolean | Date;
+export type CellStyle = {
+	font: CellFont;
+	backgroundColor: string;
+	horizontalAlignment: "left" | "center" | "right";
+	verticalAlignment: "top" | "middle" | "bottom";
+	borders: CellBorders;
+	numberFormat: string;
+	locked: boolean;
+	wrapText: boolean;
+};
 
-export type Format = string;
+export type CellBorder = {
+	style: "thin" | "medium" | "thick" | "dashed" | "dotted" | "double";
+	color: string;
+};
 
-export type FontName = string;
-export type FontUnderlineStyle = "none" | "single" | "double" | "singleAccounting" | "doubleAccounting";
+export type CellBorders = {
+	top: CellBorder;
+	bottom: CellBorder;
+	left: CellBorder;
+	right: CellBorder;
+};
 
-export type BorderStyle = "thin" | "dotted" | "hair" | "medium" | "double" | "thick" | "dashed" | "dashDot" | "dashDotDot" | "slantDashDot" | "mediumDashed" | "mediumDashDotDot" | "mediumDashDot";
-
-export type AlignmentHorizontal = "left" | "center" | "right" | "fill" | "justify" | "centerContinuous" | "distributed";
-export type AlignmentVertical = "top" | "middle" | "bottom" | "distributed" | "justify";
-export type AlignmentRotation = number | "vertical";
+export type CellFont = {
+	name: string;
+	size: number;
+	bold: boolean;
+	italic: boolean;
+	color: string;
+};
 
 /**
- * 8-character hex color string, e.g. "FF0000FF" for red with full opacity.
+ * If the cell is merged, and in what direction.
+ * "up" means the cell is merged with the cell above it,
+ * "left" means the cell is merged with the cell to the left,
+ * "up-left" means the cell is merged with the cell above and to the left,
+ * and null means the cell is not merged.
  */
-export type RgbaColor = string;
+export type CellMerge = "up" | "left" | "up-left" | null;

@@ -4,43 +4,46 @@
  * @category Tasks
  */
 
-import ExcelJS from "exceljs";
-import { createWriteStream } from "node:fs";
+import AsposeCells from "aspose.cells.node";
+import type { Cell, CellValue } from "../models/Cell.ts";
+import type { DeepPartial } from "../models/DeepPartial.ts";
 import type { Handle } from "../models/Handle.ts";
-import type { WorksheetWrite } from "../models/Worksheet.ts";
-import { normalizeCellWrite } from "../services/cell.ts";
-import { toExcelValue, updateExcelCell } from "../services/excel.ts";
-import { createHandleId, getNextRevisionFilePath } from "../services/workingFolder.ts";
+import { applyCell } from "../services/cell.ts";
 
 /**
  * Imports worksheet content as a new open workbook.
- * @param {Iterable<WorksheetWrite> | AsyncIterable<WorksheetWrite>} worksheets Worksheet data to import.
+ * @param {Record<string, Iterable<RowValues> | AsyncIterable<RowValues>>} worksheets An object whose keys are worksheet names and values are iterables or async iterables of row values.
  * @returns {Promise<Handle>} Handle referencing the newly created workbook.
+ * @example
+ * const handle = await importWorkbook({
+ *   Sheet1: [
+ *     [1, 2, 3],
+ *     [4, 5, 6],
+ *   ],
+ *   Sheet2: [
+ *     ["A", "B", "C"],
+ *     ["D", "E", "F"],
+ *   ],
+ * });
  */
-export default async function importWorkbook(worksheets: Iterable<WorksheetWrite> | AsyncIterable<WorksheetWrite>): Promise<Handle> {
-	const id = createHandleId();
-	const file = await getNextRevisionFilePath(id);
+export default async function importWorkbook(worksheets: Record<string, (CellValue | DeepPartial<Cell>)[][]>): Promise<Handle> {
+	const workbook = new AsposeCells.Workbook();
+	workbook.worksheets.removeAt(0); // Remove the default empty worksheet
 
-	const rawStream = createWriteStream(file);
-	const xls = new ExcelJS.stream.xlsx.WorkbookWriter({ stream: rawStream });
-	for await (const { name, rows } of worksheets) {
-		const worksheet = xls.addWorksheet(name);
-		for await (const inputRow of rows) {
-			const inputCells = inputRow.map(normalizeCellWrite);
-			const excelRow = worksheet.addRow(inputCells.map((cell) => toExcelValue(cell.value)));
-
-			inputCells.forEach((cell, i) => {
-				const outputCell = excelRow.getCell(i + 1);
-				updateExcelCell(outputCell, cell);
-			});
-			excelRow.commit();
+	for (const [name, rows] of Object.entries(worksheets)) {
+		const worksheet = workbook.worksheets.add(name);
+		let r = 0;
+		for (const row of rows) {
+			let c = 0;
+			for (const cellOrValue of row) {
+				applyCell(workbook, worksheet, r, c, cellOrValue);
+				c++;
+			}
+			r++;
 		}
-		worksheet.commit(); // Ensure worksheet data is flushed
 	}
-	await xls.commit();
 
-	const handle: Handle = {
-		id,
+	return {
+		workbook,
 	};
-	return handle;
 }

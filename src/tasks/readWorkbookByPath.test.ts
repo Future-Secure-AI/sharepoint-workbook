@@ -1,15 +1,16 @@
-import ExcelJS from "exceljs";
-import createDriveItemContent from "microsoft-graph/createDriveItemContent";
+import closeWorkbookSession from "microsoft-graph/closeWorkbookSession";
+import createWorkbookAndStartSession from "microsoft-graph/createWorkbookAndStartSession";
+import deleteDriveItem from "microsoft-graph/deleteDriveItem";
 import { getDefaultDriveRef } from "microsoft-graph/drive";
 import { driveItemPath } from "microsoft-graph/driveItem";
+import { sleep } from "microsoft-graph/sleep";
 import { generateTempFileName } from "microsoft-graph/temporaryFiles";
-import tryDeleteDriveItem from "microsoft-graph/tryDeleteDriveItem";
-import { Readable } from "node:stream";
+import updateWorkbookRange from "microsoft-graph/updateWorkbookRange";
+import { createWorkbookRangeRef } from "microsoft-graph/workbookRange";
+import { createWorkbookWorksheetRef, defaultWorkbookWorksheetId, defaultWorkbookWorksheetName } from "microsoft-graph/workbookWorksheet";
 import { describe, expect, it } from "vitest";
-import { getLatestRevisionFilePath } from "../services/workingFolder";
-import importWorkbook from "./importWorkbook";
 import readWorkbookByPath from "./readWorkbookByPath";
-import writeWorkbookByPath from "./writeWorkbookByPath";
+
 const rows = [
 	["A", "B", "C"],
 	["D", "E", "F"],
@@ -17,56 +18,24 @@ const rows = [
 ];
 
 describe("readWorkbookByPath", () => {
-	it("can read XLSX workbook by path", async () => {
+	it("can read workbook by path", async () => {
 		const driveRef = getDefaultDriveRef();
 		const itemPath = driveItemPath(generateTempFileName("xlsx"));
-		const writeHandle = await importWorkbook([
-			{ name: "Sheet1", rows: rows },
-			{ name: "Sheet2", rows: rows },
-		]);
-		const item = await writeWorkbookByPath(writeHandle, driveRef, itemPath);
+		const workbook = await createWorkbookAndStartSession(driveRef, itemPath);
+		await updateWorkbookRange(createWorkbookRangeRef(createWorkbookWorksheetRef(workbook, defaultWorkbookWorksheetId), "A1:C3"), { values: rows });
+		await closeWorkbookSession(workbook);
+		await sleep(1000);
+
 		const readHandle = await readWorkbookByPath(driveRef, itemPath);
 
-		const file = await getLatestRevisionFilePath(readHandle.id);
-		const wb = new ExcelJS.Workbook();
-		await wb.xlsx.readFile(file);
-		["Sheet1", "Sheet2"].forEach((sheet) => {
-			const ws = wb.getWorksheet(sheet);
-			expect(ws).toBeTruthy();
-			if (ws) {
-				expect(
-					ws
-						.getSheetValues()
-						.slice(1)
-						.map((row) => (Array.isArray(row) ? row.slice(1) : [])),
-				).toEqual(rows);
-			}
-		});
-		await tryDeleteDriveItem(item);
-	});
-	it("can read CSV workbook by path", async () => {
-		const driveRef = getDefaultDriveRef();
-		const itemPath = driveItemPath(generateTempFileName("csv"));
+		const wb = readHandle.workbook;
+		const ws = wb.worksheets.get(0);
+		expect(ws.name).toBe(defaultWorkbookWorksheetName);
+		expect(ws).toBeTruthy();
+		const values = Array.from({ length: ws.cells.maxDataRow + 1 }, (_, r) => Array.from({ length: ws.cells.maxDataColumn + 1 }, (_, c) => ws.cells.get(r, c).value));
+		expect(values).toEqual(rows);
 
-		const text = `A,B,C\nD,E,F\nG,H,I`;
-		const length = Buffer.byteLength(text, "utf8");
-		const stream = Readable.from([text]);
-		const item = await createDriveItemContent(driveRef, itemPath, stream, length);
-		const readHandle = await readWorkbookByPath(driveRef, itemPath);
-		const file = await getLatestRevisionFilePath(readHandle.id);
-		const workbook = new ExcelJS.Workbook();
-		await workbook.xlsx.readFile(file);
-		const worksheet = workbook.getWorksheet(1); // 1-based index
-		expect(worksheet).toBeTruthy();
-
-		if (worksheet) {
-			const values = worksheet
-				.getSheetValues()
-				.filter((row) => Array.isArray(row)) // filter out null/undefined
-				.map((row) => row.slice(1)); // remove first empty column
-			expect(values).toEqual(rows);
-		}
-		await tryDeleteDriveItem(item);
+		await deleteDriveItem(workbook);
 	});
 
 	it("throws for missing file", async () => {

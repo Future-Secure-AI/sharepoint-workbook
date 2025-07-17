@@ -4,13 +4,12 @@ import { getDefaultDriveRef } from "microsoft-graph/drive";
 import type { DriveItemPath } from "microsoft-graph/DriveItem";
 import { driveItemPath } from "microsoft-graph/driveItem";
 import { generateTempFileName } from "microsoft-graph/temporaryFiles";
-import filterWorkbook from "../src/tasks/filterWorkbook";
-import optimizeWorkbook from "../src/tasks/optimizeWorkbook";
+import console from "node:console";
+import { stat } from "node:fs/promises";
 import readWorkbookByPath from "../src/tasks/readWorkbookByPath";
-import transactWorkbook from "../src/tasks/transactWorkbook";
 import writeWorkbookByPath from "../src/tasks/writeWorkbookByPath";
-import { getLatestRevisionFilePath } from "../src/services/workingFolder";
-const readFile = "/yellow_tripdata_2019-03.csv" as DriveItemPath;
+
+const readFile = "/700MB.csv" as DriveItemPath;
 const writeFile = driveItemPath(generateTempFileName("xlsx")) as DriveItemPath;
 
 const start = Date.now();
@@ -19,52 +18,42 @@ const driveRef = getDefaultDriveRef();
 /*
  * Read an input file from Sharepoint. It could the CSV or XLSX, and it could be any size up to 250GB. This sample is about 730MB.
  */
-console.info(`Reading 700MB input CSV '${readFile}' from SharePoint...`);
+console.info(`Reading input CSV '${readFile}' from SharePoint...`);
 const handle = await readWorkbookByPath(driveRef, readFile, {
 	progress: (bytes) => {
 		console.info(`  Read ${formatBytes(bytes)}...`);
 	},
 });
 
-const file =await getLatestRevisionFilePath(handle.id);
-console.log(file)
-process.exit()
+const { size } = await stat(handle.localFilePath);
+console.info(handle.localFilePath, formatBytes(size));
+console.info(`Input read and optimized down to ${formatBytes(size)}.`);
+
 /*
  * Optionally filter out some columns or rows.
  */
-console.info(`Filtering workbook...`);
-await filterWorkbook(handle, {
-	skipRows: 0,
-	columnFilter: (header, index) => header === "tpep_dropoff_datetime" || header === "tolls_amount",
-	rowFilter: (cells) => true,
-	progress: (rows) => {
-		console.info(`  Processed ${rows.toLocaleString()} rows...`);
-	},
-});
+// console.info(`Filtering workbook...`);
+// await filterWorkbook(handle, {
+// 	skipRows: 0,
+// 	columnFilter: (header, index) => header === "tpep_dropoff_datetime" || header === "tolls_amount",
+// 	rowFilter: (cells) => true,
+// 	progress: (rows) => {
+// 		console.info(`  Processed ${rows.toLocaleString()} rows...`);
+// 	},
+// });
 
 /*
  * Do some work on the workbook. This sample just formats the header rows, but you can do anything you want here, like adding
  * formulas, formatting, etc. Just remember that up until this point the file hasn't needed to be in memory. `transact` requires
  * sufficient memory to hold the whole workbook.
  */
-console.info(`Formatting workbook...`);
-await transactWorkbook(handle, async ({ findWorksheet, updateEachCell }) => {
-	const sheet = findWorksheet("*");
-	updateEachCell([sheet, 1, 1], {
-		fontBold: true,
-	});
-});
-
-/*
- * Recompress the workbook to reduce it's size. Effectively you're spending CPU to save upload time, storage space, and perhaps getting the
- * file under the 100MB SharePoint web size limit. This is completely optional, and there is an option to set the compression level. I don't
- * recommend anything but 6, as it can take a long time to compress and doesn't save much more space. But if every byte counts, go for 9.
- */
-console.info(`Optimizing workbook... (may take a while)`);
-const ratio = await optimizeWorkbook(handle, {
-	compressionLevel: 6,
-});
-console.info(`  Reduced file size by ${Math.round((1 - ratio) * 100)}%`);
+// console.info(`Formatting workbook...`);
+// await transactWorkbook(handle, async ({ findWorksheet, updateEachCell }) => {
+// 	const sheet = findWorksheet("*");
+// 	updateEachCell([sheet, 1, 1], {
+// 		fontBold: true,
+// 	});
+// });
 
 /*
  * Write the workbook back to SharePoint in a location of your choosing. Only writing XLSX is supported.

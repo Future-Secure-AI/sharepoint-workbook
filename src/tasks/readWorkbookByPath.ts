@@ -27,6 +27,7 @@ export default async function readWorkbookByPath(parentRef: DriveRef | DriveItem
 	const folder = await getDriveItemByPath(parentRef, folderPath);
 	const items = iterateDriveItems(folder);
 	const item = await matchFile(filePattern, items);
+	
 	return await readWorkbook(item, options);
 }
 

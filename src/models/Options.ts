@@ -3,7 +3,6 @@
  * @module Options
  * @category Models
  */
-import type { WorksheetName } from "./Worksheet.ts";
 
 /**
  * Options for reading a workbook file.
@@ -11,7 +10,6 @@ import type { WorksheetName } from "./Worksheet.ts";
  * @property {(bytes: number): void} [progress] Progress callback, receives bytes processed.
  */
 export type ReadOptions = {
-	defaultWorksheetName?: WorksheetName;
 	progress?: (bytes: number) => void;
 };
 

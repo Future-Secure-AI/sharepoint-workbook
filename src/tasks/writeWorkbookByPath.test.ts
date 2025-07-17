@@ -1,9 +1,13 @@
+import AsposeCells from "aspose.cells.node";
+import deleteDriveItem from "microsoft-graph/deleteDriveItem";
+import getWorkbookWorksheetByName from "microsoft-graph/dist/cjs/operations/workbookWorksheet/getWorkbookWorksheetByName";
 import { getDefaultDriveRef } from "microsoft-graph/drive";
 import { driveItemPath } from "microsoft-graph/driveItem";
+import getWorkbookWorksheetUsedRange from "microsoft-graph/getWorkbookWorksheetUsedRange";
 import { generateTempFileName } from "microsoft-graph/temporaryFiles";
-import tryDeleteDriveItem from "microsoft-graph/tryDeleteDriveItem";
+import { defaultWorkbookWorksheetName } from "microsoft-graph/workbookWorksheet";
 import { describe, expect, it } from "vitest";
-import importWorkbook from "./importWorkbook";
+import type { Handle } from "../models/Handle";
 import writeWorkbookByPath from "./writeWorkbookByPath";
 
 const rows = [
@@ -13,25 +17,28 @@ const rows = [
 ];
 
 describe("writeWorkbookByPath", () => {
-	it("writes a small XLSX file to a path", async () => {
+	it("can write by path", async () => {
 		const driveRef = getDefaultDriveRef();
-		const itemPath = driveItemPath(generateTempFileName("xlsx"));
+		const remoteItemPath = driveItemPath(generateTempFileName("xlsx"));
 
-		const handle = await importWorkbook([
-			{ name: "Sheet1", rows: rows },
-			{ name: "Sheet2", rows: rows },
-		]);
+		const workbook = new AsposeCells.Workbook();
+		const worksheet = workbook.worksheets.get(0);
+		worksheet.name = defaultWorkbookWorksheetName;
+		for (let r = 0; r < rows.length; r++) {
+			for (let c = 0; c < rows[r].length; c++) {
+				worksheet.cells.get(r, c).putValue(rows[r][c]);
+			}
+		}
+		const handle: Handle = {
+			workbook,
+		};
 
-		const item = await writeWorkbookByPath(handle, driveRef, itemPath);
+		const remoteItemRef = await writeWorkbookByPath(handle, driveRef, remoteItemPath);
 
-		await tryDeleteDriveItem(item);
-	});
+		const remoteWorksheetRef = await getWorkbookWorksheetByName(remoteItemRef, defaultWorkbookWorksheetName);
+		const usedRange = await getWorkbookWorksheetUsedRange(remoteWorksheetRef);
+		expect(usedRange.values).toEqual(rows);
 
-	it("throws for unsupported file extension", async () => {
-		const driveRef = getDefaultDriveRef();
-		const itemPath = driveItemPath(generateTempFileName("txt"));
-
-		const handle = await importWorkbook([{ name: "Sheet1", rows: rows }]);
-		await expect(writeWorkbookByPath(handle, driveRef, itemPath)).rejects.toThrow(/Unsupported file extension/);
+		await deleteDriveItem(remoteItemRef);
 	});
 });
