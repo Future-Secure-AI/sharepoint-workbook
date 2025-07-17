@@ -37,7 +37,7 @@ export default async function importWorkbook(worksheets: Record<string, (CellVal
 		for (const row of rows) {
 			let c = 0;
 			for (const cellOrValue of row) {
-				applyCell(workbook, worksheet, r, c, cellOrValue);
+				applyCell(worksheet, r, c, cellOrValue);
 				c++;
 			}
 			r++;

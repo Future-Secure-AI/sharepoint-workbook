@@ -3,7 +3,7 @@ import InvalidArgumentError from "microsoft-graph/InvalidArgumentError";
 import type { Cell, CellValue } from "../models/Cell.ts";
 import type { DeepPartial } from "../models/DeepPartial.ts";
 
-export function applyCell(workbook: AsposeCells.Workbook, worksheet: AsposeCells.Worksheet, r: number, c: number, cellOrValue: CellValue | DeepPartial<Cell> | Date) {
+export function applyCell(worksheet: AsposeCells.Worksheet, r: number, c: number, cellOrValue: CellValue | DeepPartial<Cell>) {
 	const output = worksheet.cells.get(r, c);
 
 	if (typeof cellOrValue === "object" && !(cellOrValue instanceof Date)) {
@@ -28,7 +28,7 @@ export function applyCell(workbook: AsposeCells.Workbook, worksheet: AsposeCells
 		}
 
 		if (cell.style !== undefined) {
-			const style = workbook.createStyle();
+			const style = worksheet.workbook.createStyle();
 			style.copy(output.getStyle());
 
 			if (cell.style.font !== undefined) {
