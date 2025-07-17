@@ -4,7 +4,7 @@ import type { Cell, CellHorizontalAlignment, CellValue } from "../models/Cell.ts
 import type { DeepPartial } from "../models/DeepPartial.ts";
 
 export function writeCell(worksheet: AsposeCells.Worksheet, r: number, c: number, cellOrValue: CellValue | DeepPartial<Cell>) {
-	const cell = worksheet.cells.get(r, c);
+	let cell = worksheet.cells.get(r, c);
 
 	if (isCellValue(cellOrValue)) {
 		setCellValueWithFormula(cell, cellOrValue);
@@ -75,7 +75,7 @@ export function writeCell(worksheet: AsposeCells.Worksheet, r: number, c: number
 	cell.setStyle(style);
 
 	if (merge === "up" || merge === "left" || merge === "up-left") {
-		const mergedAreas = worksheet.cells.getMergedAreas();
+		const mergedAreas = worksheet.cells.getMergedAreas() || [];
 		const mergeConfigs = {
 			up: { dr: -1, dc: 0, rows: 2, cols: 1 },
 			left: { dr: 0, dc: -1, rows: 1, cols: 2 },
@@ -96,6 +96,10 @@ export function writeCell(worksheet: AsposeCells.Worksheet, r: number, c: number
 		if (!found) {
 			worksheet.cells.merge(targetR, targetC, config.rows, config.cols);
 		}
+
+		// After merging, always set the value on the top-left cell of the merged area
+		cell = worksheet.cells.get(targetR, targetC);
+		if (value !== undefined) setCellValue(cell, value);
 	}
 
 	if (comment !== undefined) {
@@ -108,8 +112,8 @@ export function writeCell(worksheet: AsposeCells.Worksheet, r: number, c: number
 		}
 	}
 }
-function isCellValue(cellOrValue: string | number | boolean | Date | DeepPartial<Cell>) {
-	return typeof cellOrValue === "string" || typeof cellOrValue === "number" || typeof cellOrValue === "boolean" || cellOrValue instanceof Date;
+function isCellValue(cellOrValue: string | number | boolean | Date | null | DeepPartial<Cell>) {
+	return cellOrValue === null || typeof cellOrValue === "string" || typeof cellOrValue === "number" || typeof cellOrValue === "boolean" || cellOrValue instanceof Date;
 }
 
 function encodeCellBorderType(style: string): AsposeCells.CellBorderType {
