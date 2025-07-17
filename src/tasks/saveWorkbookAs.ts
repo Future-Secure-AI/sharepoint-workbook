@@ -30,17 +30,17 @@ export default async function saveWorkbookAs(handle: Handle, parentRef: DriveRef
 
 	const { ifExists = "fail", maxChunkSize, progress } = options;
 
-	const localFilePath = await getTemporaryFilePath(extension);
-	handle.workbook.save(localFilePath, AsposeCells.SaveFormat.Auto);
+	const tempFilePath = await getTemporaryFilePath(extension);
+	handle.workbook.save(tempFilePath, AsposeCells.SaveFormat.Auto);
 
-	const { size } = await fs.stat(localFilePath);
-	const stream = createReadStream(localFilePath, { highWaterMark: streamHighWaterMark });
+	const { size } = await fs.stat(tempFilePath);
+	const stream = createReadStream(tempFilePath, { highWaterMark: streamHighWaterMark });
 	const item = await createDriveItemContent(parentRef, path, stream, size, {
 		conflictBehavior: ifExists,
 		maxChunkSize,
 		progress,
 	});
 
-	await unlink(localFilePath);
+	await unlink(tempFilePath);
 	return item;
 }

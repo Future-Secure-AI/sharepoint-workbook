@@ -6,11 +6,9 @@
 
 import type { DriveItem } from "@microsoft/microsoft-graph-types";
 import AsposeCells from "aspose.cells.node";
-import InvalidArgumentError from "microsoft-graph/dist/cjs/errors/InvalidArgumentError";
 import NotFoundError from "microsoft-graph/dist/cjs/errors/NotFoundError";
 import type { DriveRef } from "microsoft-graph/dist/cjs/models/Drive";
 import type { DriveItemName, DriveItemPath, DriveItemRef } from "microsoft-graph/dist/cjs/models/DriveItem";
-import getDriveItem from "microsoft-graph/dist/cjs/operations/driveItem/getDriveItem";
 import getDriveItemByPath from "microsoft-graph/dist/cjs/operations/driveItem/getDriveItemByPath";
 import streamDriveItemContent from "microsoft-graph/dist/cjs/operations/driveItem/streamDriveItemContent";
 import iterateDriveItems from "microsoft-graph/dist/cjs/tasks/iterateDriveItems";
@@ -39,12 +37,13 @@ export default async function openWorkbook(parentRef: DriveRef | DriveItemRef, i
 	const items = iterateDriveItems(folder);
 	const remoteItemRef = await matchFile(filePattern, items);
 
-	const extension = await getDriveItemFileExtension(remoteItemRef);
-	const localFilePath = await getTemporaryFilePath(extension);
+	const name = remoteItemRef.name ?? "";
+	const extension = extname(name).toLowerCase();
 
-	await downloadFile(remoteItemRef, localFilePath, progress);
-	const workbook = openFile(localFilePath, extension);
-	await unlink(localFilePath);
+	const tempFile = await getTemporaryFilePath(extension);
+	await downloadFile(remoteItemRef, tempFile, progress);
+	const workbook = openFile(tempFile, extension);
+	await unlink(tempFile);
 
 	if (extension === ".xlsx") {
 		return {
@@ -90,23 +89,6 @@ async function matchFile(filePattern: DriveItemName, items: AsyncIterable<DriveI
 	}
 
 	throw new NotFoundError(`No file matching pattern "${filePattern}" found in the specified folder.`);
-}
-
-async function getDriveItemFileExtension(remoteItemRef: DriveItemRef | (DriveItemRef & DriveItem)) {
-	let name: string | undefined;
-	if ("name" in remoteItemRef && typeof remoteItemRef.name === "string") {
-		name = remoteItemRef.name;
-	} else {
-		const driveItem = await getDriveItem(remoteItemRef);
-		name = driveItem?.name || "";
-	}
-
-	if (!name) throw new InvalidArgumentError("DriveItem does not have a valid 'name' property to determine file extension.");
-
-	const extension = extname(name).toLowerCase();
-	if (!extension) throw new InvalidArgumentError(`Could not determine file extension from name: '${name}'`);
-
-	return extension;
 }
 
 function openFile(localFilePath: LocalFilePath, extension: string): AsposeCells.Workbook {
