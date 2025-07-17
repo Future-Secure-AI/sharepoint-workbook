@@ -27,6 +27,7 @@ import { applyCell } from "../services/cell.ts";
  * });
  */
 export default async function importWorkbook(worksheets: Record<string, (CellValue | DeepPartial<Cell>)[][]>): Promise<Handle> {
+	// TODO: Update to `importWorksheet(handle, name, cells:)
 	const workbook = new AsposeCells.Workbook();
 	workbook.worksheets.removeAt(0); // Remove the default empty worksheet
 
