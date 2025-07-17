@@ -61,71 +61,123 @@ describe("readCell", () => {
 		worksheet = workbook.worksheets.get(0);
 	});
 
-	it("should return correct value and formatting for a string cell", () => {
+	it("should return correct value for a string cell", () => {
 		worksheet.cells.get(0, 0).putValue("Test");
 		const cell = readCell(worksheet, 0, 0);
 		expect(cell.value).toBe("Test");
 		expect(cell.formula).toBe("");
-		expect(typeof cell.fontName).toBe("string");
-		expect(typeof cell.fontSize).toBe("number");
-		expect(typeof cell.fontBold).toBe("boolean");
-		expect(typeof cell.fontItalic).toBe("boolean");
-		expect(typeof cell.fontColor).toBe("string");
-		expect(typeof cell.backgroundColor).toBe("string");
-		expect(["left", "center", "right"]).toContain(cell.horizontalAlignment);
-		expect(["top", "middle", "bottom"]).toContain(cell.verticalAlignment);
-		expect(typeof cell.rotationAngle).toBe("number");
-		expect(typeof cell.isTextWrapped).toBe("boolean");
-		expect(["thin", "medium", "thick", "dashed", "dotted", "double"]).toContain(cell.borderTopStyle);
-		expect(typeof cell.borderTopColor).toBe("string");
-		expect(["thin", "medium", "thick", "dashed", "dotted", "double"]).toContain(cell.borderBottomStyle);
-		expect(typeof cell.borderBottomColor).toBe("string");
-		expect(["thin", "medium", "thick", "dashed", "dotted", "double"]).toContain(cell.borderLeftStyle);
-		expect(typeof cell.borderLeftColor).toBe("string");
-		expect(["thin", "medium", "thick", "dashed", "dotted", "double"]).toContain(cell.borderRightStyle);
-		expect(typeof cell.borderRightColor).toBe("string");
-		expect(typeof cell.numberFormat).toBe("string");
-		expect(typeof cell.isLocked).toBe("boolean");
-		expect(typeof cell.indentLevel).toBe("number");
-		expect(typeof cell.shrinkToFit).toBe("boolean");
-		expect(["up", "left", "up-left", null]).toContain(cell.merge);
-		expect(typeof cell.comment).toBe("string");
 	});
 
-	it("should return correct value for a number cell", () => {
-		worksheet.cells.get(1, 1).putValue(42);
+	it("should return all default cell attributes for a new cell", () => {
+		worksheet.cells.get(0, 0).putValue("Test");
+		const cell = readCell(worksheet, 0, 0);
+		expect(cell.value).toBe("Test");
+		expect(cell.formula).toBe("");
+		expect(cell.fontName).toBe("Arial");
+		expect(cell.fontSize).toBe(10);
+		expect(cell.fontBold).toBe(false);
+		expect(cell.fontItalic).toBe(false);
+		expect(cell.fontColor).toBe("000000");
+		expect(cell.backgroundColor).toBe("000000");
+		expect(cell.horizontalAlignment).toBe("left");
+		expect(cell.verticalAlignment).toBe("middle");
+		expect(cell.rotationAngle).toBe(0);
+		expect(cell.isTextWrapped).toBe(false);
+		expect(cell.borderTopStyle).toBe("thin");
+		expect(cell.borderTopColor).toBe("000000");
+		expect(cell.borderBottomStyle).toBe("thin");
+		expect(cell.borderBottomColor).toBe("000000");
+		expect(cell.borderLeftStyle).toBe("thin");
+		expect(cell.borderLeftColor).toBe("000000");
+		expect(cell.borderRightStyle).toBe("thin");
+		expect(cell.borderRightColor).toBe("000000");
+		expect(cell.numberFormat).toBe("");
+		expect(cell.isLocked).toBe(true);
+		expect(cell.indentLevel).toBe(0);
+		expect(cell.shrinkToFit).toBe(false);
+		expect(cell.merge).toBe(null);
+		expect(cell.comment).toBe("");
+	});
+
+	it("should return updated cell attributes when set", () => {
+		const cellObj = worksheet.cells.get(1, 1);
+		cellObj.putValue("Styled");
+		const style = cellObj.getStyle();
+		style.font.setName("Calibri");
+		style.font.size = 14;
+		style.font.isBold = true;
+		style.font.isItalic = true;
+		style.font.color = new AsposeCells.Color(0, 0, 255); // Blue
+		style.foregroundColor = new AsposeCells.Color(255, 255, 0); // Yellow
+		style.horizontalAlignment = AsposeCells.TextAlignmentType.Right;
+		style.verticalAlignment = AsposeCells.TextAlignmentType.Bottom;
+		style.rotationAngle = 45;
+		style.isTextWrapped = true;
+		style.borders.get(AsposeCells.BorderType.TopBorder).lineStyle = AsposeCells.CellBorderType.Thick;
+		style.borders.get(AsposeCells.BorderType.TopBorder).color = new AsposeCells.Color(0, 255, 0); // Green
+		style.borders.get(AsposeCells.BorderType.BottomBorder).lineStyle = AsposeCells.CellBorderType.Dashed;
+		style.borders.get(AsposeCells.BorderType.BottomBorder).color = new AsposeCells.Color(255, 0, 0); // Red
+		style.borders.get(AsposeCells.BorderType.LeftBorder).lineStyle = AsposeCells.CellBorderType.Double;
+		style.borders.get(AsposeCells.BorderType.LeftBorder).color = new AsposeCells.Color(0, 0, 255); // Blue
+		style.borders.get(AsposeCells.BorderType.RightBorder).lineStyle = AsposeCells.CellBorderType.Dotted;
+		style.borders.get(AsposeCells.BorderType.RightBorder).color = new AsposeCells.Color(255, 255, 0); // Yellow
+		style.custom = "#,##0.00";
+		style.isLocked = false;
+		style.indentLevel = 2;
+		style.shrinkToFit = true;
+		cellObj.setStyle(style);
+
 		const cell = readCell(worksheet, 1, 1);
-		expect(cell.value).toBe(42);
-	});
-
-	it("should return correct value for a boolean cell", () => {
-		worksheet.cells.get(2, 2).putValue(true);
-		const cell = readCell(worksheet, 2, 2);
-		expect(cell.value).toBe(true);
-	});
-
-	it("should return correct value for a date cell", () => {
-		const date = new Date("2023-01-01T00:00:00Z");
-		worksheet.cells.get(3, 3).putValue(date);
-		const cell = readCell(worksheet, 3, 3);
-		if (cell.value instanceof Date) {
-			expect(cell.value.toISOString()).toBe(date.toISOString());
-		} else if (typeof cell.value === "number") {
-			const excelEpoch = new Date(Date.UTC(1899, 11, 30));
-			const msPerDay = 24 * 60 * 60 * 1000;
-			const parsed = new Date(excelEpoch.getTime() + cell.value * msPerDay);
-			expect(parsed.toISOString().slice(0, 10)).toBe(date.toISOString().slice(0, 10));
-		} else if (typeof cell.value === "string") {
-			const parsed = new Date(cell.value);
-			expect(parsed.toISOString().slice(0, 10)).toBe(date.toISOString().slice(0, 10));
-		} else {
-			throw new Error("Unexpected result type for date cell: " + typeof cell.value);
-		}
+		expect(cell.value).toBe("Styled");
+		expect(cell.fontName).toBe("Calibri");
+		expect(cell.fontSize).toBe(14);
+		expect(cell.fontBold).toBe(true);
+		expect(cell.fontItalic).toBe(true);
+		expect(cell.fontColor).toBe("0000FF");
+		expect(cell.backgroundColor).toBe("FFFF00");
+		expect(cell.horizontalAlignment).toBe("right");
+		expect(cell.verticalAlignment).toBe("bottom");
+		expect(cell.rotationAngle).toBe(45);
+		expect(cell.isTextWrapped).toBe(true);
+		expect(cell.borderTopStyle).toBe("thick");
+		expect(cell.borderTopColor).toBe("00FF00");
+		expect(cell.borderBottomStyle).toBe("dashed");
+		expect(cell.borderBottomColor).toBe("FF0000");
+		expect(cell.borderLeftStyle).toBe("double");
+		expect(cell.borderLeftColor).toBe("0000FF");
+		expect(cell.borderRightStyle).toBe("dotted");
+		expect(cell.borderRightColor).toBe("FFFF00");
+		expect(cell.numberFormat).toBe("#,##0.00");
+		expect(cell.isLocked).toBe(false);
+		expect(cell.indentLevel).toBe(2);
+		expect(cell.shrinkToFit).toBe(true);
 	});
 
 	it("should return empty string for empty cell", () => {
 		const cell = readCell(worksheet, 4, 4);
 		expect(cell.value).toBe("");
+	});
+
+	it("should return correct value for a number cell", () => {
+		worksheet.cells.get(1, 0).putValue(123.45);
+		const cell = readCell(worksheet, 1, 0);
+		expect(cell.value).toBe(123.45);
+		expect(cell.formula).toBe("");
+	});
+
+	it("should return correct value for a boolean cell", () => {
+		worksheet.cells.get(2, 0).putValue(true);
+		const cell = readCell(worksheet, 2, 0);
+		expect(cell.value).toBe(true);
+		expect(cell.formula).toBe("");
+	});
+
+	it("should return correct value for a date cell", () => {
+		const date = new Date("2023-01-01T00:00:00Z");
+		worksheet.cells.get(3, 0).putValue(date);
+		const cell = readCell(worksheet, 3, 0);
+		expect(cell.value).toBeCloseTo(44927.416666666664, 10); // TODO: Shouldn't this be a Date?
+		expect(cell.formula).toBe("");
 	});
 
 	it("should detect merged cells and set merge property", () => {

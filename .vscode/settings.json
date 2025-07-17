@@ -8,5 +8,5 @@
 	"[jsonc]": {
 		"editor.defaultFormatter": "biomejs.biome"
 	},
-	"cSpell.words": ["argb", "Aspose", "dropoff", "exceljs", "FSAI", "longstringvalue", "nocase", "rels", "tpep", "tripdata", "yazl"]
+	"cSpell.words": ["argb", "Aspose", "Calibri", "dropoff", "exceljs", "FSAI", "longstringvalue", "nocase", "rels", "tpep", "tripdata", "yazl"]
 }

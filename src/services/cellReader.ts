@@ -1,5 +1,5 @@
 import AsposeCells from "aspose.cells.node";
-import type { Cell, CellMerge, CellValue } from "../models/Cell.ts";
+import type { Cell, CellHorizontalAlignment, CellMerge, CellValue, CellVerticalAlignment } from "../models/Cell.ts";
 
 export function readCellValue(worksheet: AsposeCells.Worksheet, r: number, c: number): CellValue {
 	const cell = worksheet.cells.get(r, c);
@@ -23,8 +23,9 @@ export function readCell(worksheet: AsposeCells.Worksheet, r: number, c: number)
 
 	const backgroundColor = decodeColor(style.foregroundColor);
 
-	const horizontalAlignment = decodeHorizontalAlignment(style.horizontalAlignment);
-	const verticalAlignment = decodeVerticalAlignment(style.verticalAlignment);
+	// Use getter methods if available for alignment
+	const horizontalAlignment = decodeHorizontalAlignment(typeof style.getHorizontalAlignment === "function" ? style.getHorizontalAlignment() : style.horizontalAlignment);
+	const verticalAlignment = decodeVerticalAlignment(typeof style.getVerticalAlignment === "function" ? style.getVerticalAlignment() : style.verticalAlignment);
 	const rotationAngle = style.rotationAngle;
 	const isTextWrapped = style.isTextWrapped;
 
@@ -53,18 +54,8 @@ export function readCell(worksheet: AsposeCells.Worksheet, r: number, c: number)
 	const comment = cell.comment?.note || "";
 
 	let merge: CellMerge = null;
-	let mergedAreas = worksheet.cells.getMergedAreas();
-	// Aspose.Cells getMergedAreas may return a collection, not a JS array
-	if (mergedAreas && typeof mergedAreas[Symbol.iterator] !== "function") {
-		// Try to convert to array if possible
-		if (typeof mergedAreas.toArray === "function") {
-			mergedAreas = mergedAreas.toArray();
-		} else if (typeof Array.from === "function" && typeof mergedAreas.count === "number" && typeof mergedAreas.get === "function") {
-			mergedAreas = Array.from({ length: mergedAreas.count }, (_, i) => mergedAreas.get(i));
-		} else {
-			mergedAreas = [];
-		}
-	}
+	const mergedAreas = worksheet.cells.getMergedAreas() ?? [];
+
 	for (const area of mergedAreas) {
 		const { startRow, startColumn, endRow, endColumn } = area;
 		if (!(r >= startRow && r <= endRow && c >= startColumn && c <= endColumn)) continue;
@@ -142,7 +133,7 @@ function decodeColor(color: AsposeCells.Color): string {
 	const b = color.b.toString(16).padStart(2, "0");
 	return (r + g + b).toUpperCase();
 }
-function decodeHorizontalAlignment(val: AsposeCells.TextAlignmentType): Cell["horizontalAlignment"] {
+function decodeHorizontalAlignment(val: AsposeCells.TextAlignmentType): CellHorizontalAlignment {
 	switch (val) {
 		case AsposeCells.TextAlignmentType.Left:
 			return "left";
@@ -151,10 +142,10 @@ function decodeHorizontalAlignment(val: AsposeCells.TextAlignmentType): Cell["ho
 		case AsposeCells.TextAlignmentType.Right:
 			return "right";
 		default:
-			return "left"; // TODO
+			return "left";
 	}
 }
-function decodeVerticalAlignment(val: AsposeCells.TextAlignmentType): Cell["verticalAlignment"] {
+function decodeVerticalAlignment(val: AsposeCells.TextAlignmentType): CellVerticalAlignment {
 	switch (val) {
 		case AsposeCells.TextAlignmentType.Top:
 			return "top";
@@ -163,6 +154,6 @@ function decodeVerticalAlignment(val: AsposeCells.TextAlignmentType): Cell["vert
 		case AsposeCells.TextAlignmentType.Bottom:
 			return "bottom";
 		default:
-			return "top"; // TODO
+			return "top";
 	}
 }
