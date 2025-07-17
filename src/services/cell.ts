@@ -3,7 +3,177 @@ import InvalidArgumentError from "microsoft-graph/InvalidArgumentError";
 import type { Cell, CellValue } from "../models/Cell.ts";
 import type { DeepPartial } from "../models/DeepPartial.ts";
 
-export function applyCell(worksheet: AsposeCells.Worksheet, r: number, c: number, cellOrValue: CellValue | DeepPartial<Cell>) {
+// TODO: Heavy refactor required on this file.
+
+export function readCellValue(worksheet: AsposeCells.Worksheet, r: number, c: number): CellValue {
+	const cell = worksheet.cells.get(r, c);
+	const rawValue = cell.value;
+
+	if (typeof rawValue === "string" || typeof rawValue === "number" || typeof rawValue === "boolean") {
+		return rawValue;
+	} else if (rawValue instanceof Date) {
+		return rawValue;
+	} else {
+		return ""; // Default to empty string for unsupported types
+	}
+}
+
+export function readCell(worksheet: AsposeCells.Worksheet, r: number, c: number): Cell {
+	const cell = worksheet.cells.get(r, c);
+
+	// Value
+	let value: CellValue;
+	const rawValue = cell.value;
+	if (typeof rawValue === "string" || typeof rawValue === "number" || typeof rawValue === "boolean") {
+		value = rawValue;
+	} else if (rawValue instanceof Date) {
+		value = rawValue;
+	} else {
+		value = "";
+	}
+
+	// Formula
+	const formula = cell.isFormula ? cell.formula : "";
+
+	// Style
+	const styleObj = cell.getStyle();
+	const fontObj = styleObj.font;
+	function colorToHex(colorObj: unknown): string {
+		if (!colorObj || typeof colorObj !== "object") return "#000000";
+		// AsposeCells.Color has r, g, b properties
+		const r = (colorObj as { r?: number }).r ?? 0;
+		const g = (colorObj as { g?: number }).g ?? 0;
+		const b = (colorObj as { b?: number }).b ?? 0;
+		return `#${((1 << 24) + (r << 16) + (g << 8) + b).toString(16).slice(1)}`;
+	}
+	function getBorder(borderCollection: unknown, borderType: unknown) {
+		// @ts-expect-error: AsposeCells dynamic API
+		if (!borderCollection || typeof borderCollection !== "object" || typeof borderCollection.getCount !== "function") return null;
+		// @ts-expect-error: AsposeCells dynamic API
+		const count = borderCollection.getCount();
+		for (let i = 0; i < count; i++) {
+			// @ts-expect-error: AsposeCells dynamic API
+			const border = borderCollection.getBorder(i);
+			if (border && border.borderType === borderType) return border;
+		}
+		return null;
+	}
+	function borderStyleToString(style: number): "thin" | "medium" | "thick" | "dashed" | "dotted" | "double" {
+		switch (style) {
+			case AsposeCells.CellBorderType.Thin:
+				return "thin";
+			case AsposeCells.CellBorderType.Medium:
+				return "medium";
+			case AsposeCells.CellBorderType.Thick:
+				return "thick";
+			case AsposeCells.CellBorderType.Dashed:
+				return "dashed";
+			case AsposeCells.CellBorderType.Dotted:
+				return "dotted";
+			case AsposeCells.CellBorderType.Double:
+				return "double";
+			default:
+				return "thin";
+		}
+	}
+	const borders = styleObj.borders;
+	const topBorder = getBorder(borders, AsposeCells.BorderType.TopBorder);
+	const bottomBorder = getBorder(borders, AsposeCells.BorderType.BottomBorder);
+	const leftBorder = getBorder(borders, AsposeCells.BorderType.LeftBorder);
+	const rightBorder = getBorder(borders, AsposeCells.BorderType.RightBorder);
+	const style: Cell["style"] = {
+		font: {
+			name: typeof fontObj.getName === "function" ? fontObj.getName() : "",
+			size: fontObj.size ?? 11,
+			bold: fontObj.isBold ?? false,
+			italic: fontObj.isItalic ?? false,
+			color: colorToHex(fontObj.color),
+		},
+		backgroundColor: colorToHex(styleObj.foregroundColor),
+		horizontalAlignment: ((): "left" | "center" | "right" => {
+			switch (styleObj.horizontalAlignment) {
+				case AsposeCells.TextAlignmentType.Left:
+					return "left";
+				case AsposeCells.TextAlignmentType.Center:
+					return "center";
+				case AsposeCells.TextAlignmentType.Right:
+					return "right";
+				default:
+					return "left";
+			}
+		})(),
+		verticalAlignment: ((): "top" | "middle" | "bottom" => {
+			switch (styleObj.verticalAlignment) {
+				case AsposeCells.TextAlignmentType.Top:
+					return "top";
+				case AsposeCells.TextAlignmentType.Center:
+					return "middle";
+				case AsposeCells.TextAlignmentType.Bottom:
+					return "bottom";
+				default:
+					return "top";
+			}
+		})(),
+		borders: {
+			top: {
+				style: borderStyleToString(topBorder?.lineStyle ?? AsposeCells.CellBorderType.Thin),
+				color: colorToHex(topBorder?.color),
+			},
+			bottom: {
+				style: borderStyleToString(bottomBorder?.lineStyle ?? AsposeCells.CellBorderType.Thin),
+				color: colorToHex(bottomBorder?.color),
+			},
+			left: {
+				style: borderStyleToString(leftBorder?.lineStyle ?? AsposeCells.CellBorderType.Thin),
+				color: colorToHex(leftBorder?.color),
+			},
+			right: {
+				style: borderStyleToString(rightBorder?.lineStyle ?? AsposeCells.CellBorderType.Thin),
+				color: colorToHex(rightBorder?.color),
+			},
+		},
+		numberFormat: typeof styleObj.custom === "string" && styleObj.custom.length > 0 ? styleObj.custom : typeof styleObj.number === "string" ? styleObj.number : "",
+		locked: styleObj.isLocked ?? false,
+		wrapText: styleObj.isTextWrapped ?? false,
+	};
+
+	// Merge
+	let merge: Cell["merge"] = null;
+	const mergedAreas = worksheet.cells.getMergedAreas();
+	for (let i = 0; i < mergedAreas.length; i++) {
+		const region = mergedAreas[i];
+		if (!region) continue;
+		if (r >= region.startRow && r <= region.endRow && c >= region.startColumn && c <= region.endColumn) {
+			if (r > region.startRow && c > region.startColumn) {
+				merge = "up-left";
+			} else if (r > region.startRow) {
+				merge = "up";
+			} else if (c > region.startColumn) {
+				merge = "left";
+			} else {
+				merge = null;
+			}
+			break;
+		}
+	}
+
+	// Comment
+	let comment = "";
+	const comments = worksheet.comments;
+	if (comments && comments.getCount() > 0) {
+		for (let i = 0; i < comments.getCount(); i++) {
+			const cmt = comments.get(i);
+			if (cmt.row === r && cmt.column === c) {
+				comment = cmt.note || "";
+				break;
+			}
+		}
+	}
+
+	return { value, formula, style, merge, comment };
+}
+
+export function writeCell(worksheet: AsposeCells.Worksheet, r: number, c: number, cellOrValue: CellValue | DeepPartial<Cell>) {
 	const output = worksheet.cells.get(r, c);
 
 	if (typeof cellOrValue === "object" && !(cellOrValue instanceof Date)) {
@@ -193,7 +363,7 @@ export function applyCell(worksheet: AsposeCells.Worksheet, r: number, c: number
 	}
 }
 
-export function setCellValueAndFormula(cell: AsposeCells.Cell, value: CellValue) {
+function setCellValueAndFormula(cell: AsposeCells.Cell, value: CellValue) {
 	if (typeof value === "number") {
 		cell.putValue(value);
 	} else if (typeof value === "boolean") {
@@ -212,7 +382,7 @@ export function setCellValueAndFormula(cell: AsposeCells.Cell, value: CellValue)
 	}
 }
 
-export function parseColor(hex: string): AsposeCells.Color {
+function parseColor(hex: string): AsposeCells.Color {
 	let color = hex.trim();
 	if (color.startsWith("#")) {
 		color = color.slice(1);

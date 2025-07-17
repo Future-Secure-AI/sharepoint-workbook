@@ -2,15 +2,12 @@ type Letter = "A" | "B" | "C" | "D" | "E" | "F" | "G" | "H" | "I" | "J" | "K" | 
 
 /**
  * Represents a column in a worksheet.
- * @remarks Only single letter columns are supported here due to TypeScript having a meltdown with longer column refs.
+ * @remarks Only the first columns are covered by TypeScript type checking due to TypeScript complexity limitations, however all columns are supported at runtime.
  */
-export type ColumnComponent = `${Letter}`; // | `${Letter}${Letter}` | `${Letter}${Letter}${Letter}`;
-export type RowComponent = `${number}` | number;
-export type CellComponent = `${ColumnComponent}${RowComponent}`;
+export type ColumnRef = `${Letter}`; // | `${Letter}${Letter}` | `${Letter}${Letter}${Letter}`;
+export type RowRef = `${number}` | number;
+export type CellRef = `${ColumnRef}${RowRef}`;
+export type Ref = ColumnRef | RowRef | CellRef;
 
-export type CellRef = `${string}!${CellComponent}` | [worksheet: string, cell: CellComponent];
-export type RangeRef = `${string}!${ColumnComponent | RowComponent | CellComponent | ""}:${ColumnComponent | RowComponent | CellComponent | ""}` | [worksheetOrNamedRange: string, start: ColumnComponent | RowComponent | CellComponent | null, end: ColumnComponent | RowComponent | CellComponent | null];
-export type ExplicitRangeRef = `${string}!${CellComponent}:${CellComponent}` | [worksheet: string, start: CellComponent, end: CellComponent];
-
-export type ColumnNumber = number;
-export type RowNumber = number;
+export type RangeRef = `${Ref | ""}:${Ref | ""}` | [start: Ref | null, end: Ref | null];
+export type ExplicitRangeRef = `${CellRef}:${CellRef}` | [start: CellRef, end: CellRef];

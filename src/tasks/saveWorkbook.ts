@@ -8,6 +8,7 @@ import type { DriveItem } from "@microsoft/microsoft-graph-types";
 import type { DriveItemPath, DriveItemRef } from "microsoft-graph/dist/cjs/models/DriveItem";
 import { getDriveItemParent } from "microsoft-graph/driveItem";
 import InvalidArgumentError from "microsoft-graph/InvalidArgumentError";
+import MissingPathError from "../errors/MissingPathError.ts";
 import type { WriteOptions } from "../models/Options.ts";
 import type { Workbook } from "../models/Workbook.ts";
 import saveWorkbookAs from "./saveWorkbookAs.ts";
@@ -23,7 +24,7 @@ export default async function saveWorkbook(handle: Workbook, options: WriteOptio
 	const { ifExists = "replace", maxChunkSize, progress } = options;
 
 	const remoteItem = handle.remoteItem;
-	if (!remoteItem) throw new Error("Workbook not over-writable. Use `saveWorkbookAs` instead.");
+	if (!remoteItem) throw new MissingPathError("Workbook hasn't been 'saved as', so no path is known to overwrite. Use `saveWorkbookAs` instead.");
 
 	const parentRef = getDriveItemParent(remoteItem);
 	const path = getDriveItemPathWithinParent(remoteItem);

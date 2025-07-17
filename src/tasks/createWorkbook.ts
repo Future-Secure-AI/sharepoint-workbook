@@ -8,7 +8,7 @@ import AsposeCells from "aspose.cells.node";
 import type { Cell, CellValue } from "../models/Cell.ts";
 import type { DeepPartial } from "../models/DeepPartial.ts";
 import type { Workbook } from "../models/Workbook.ts";
-import { applyCell } from "../services/cell.ts";
+import { writeCell } from "../services/cell.ts";
 
 /**
  * Create a new workbook, optionally with specified worksheets.
@@ -37,7 +37,7 @@ export default async function createWorkbook(worksheets?: Record<string, (CellVa
 			for (const row of rows) {
 				let c = 0;
 				for (const cellOrValue of row) {
-					applyCell(worksheet, r, c, cellOrValue);
+					writeCell(worksheet, r, c, cellOrValue);
 					c++;
 				}
 				r++;
