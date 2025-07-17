@@ -1,33 +1,43 @@
 /**
- * Open workbook from Microsoft SharePoint.
- * @module openWorkbook
+ * Reading a workbook from SharePoint by path.
+ * @module openWorkbookByPath
  * @category Tasks
  */
 
 import type { DriveItem } from "@microsoft/microsoft-graph-types";
 import AsposeCells from "aspose.cells.node";
 import InvalidArgumentError from "microsoft-graph/dist/cjs/errors/InvalidArgumentError";
-import type { DriveItemRef } from "microsoft-graph/dist/cjs/models/DriveItem";
+import NotFoundError from "microsoft-graph/dist/cjs/errors/NotFoundError";
+import type { DriveRef } from "microsoft-graph/dist/cjs/models/Drive";
+import type { DriveItemName, DriveItemPath, DriveItemRef } from "microsoft-graph/dist/cjs/models/DriveItem";
 import getDriveItem from "microsoft-graph/dist/cjs/operations/driveItem/getDriveItem";
+import getDriveItemByPath from "microsoft-graph/dist/cjs/operations/driveItem/getDriveItemByPath";
 import streamDriveItemContent from "microsoft-graph/dist/cjs/operations/driveItem/streamDriveItemContent";
+import iterateDriveItems from "microsoft-graph/dist/cjs/tasks/iterateDriveItems";
 import { createWriteStream } from "node:fs";
 import { unlink } from "node:fs/promises";
 import { extname } from "node:path";
 import { pipeline } from "node:stream/promises";
+import picomatch from "picomatch";
 import type { Handle } from "../models/Handle.ts";
 import type { LocalFilePath } from "../models/LocalFilePath.ts";
 import type { ReadOptions } from "../models/Options.ts";
 import { getTemporaryFilePath } from "../services/temporaryFile.ts";
 
 /**
- * Reads a workbook file (.xlsx or .csv) from a Microsoft Graph.
- * @param {DriveItemRef & Partial<DriveItem>} remoteItemRef - Reference to the DriveItem to read from.
- * @param {ReadOptions} [options] - Options for reading, such as default worksheet name for CSV.
+ * Reads a workbook file from a SharePoint drive by its path, supporting wildcards in the filename.
+ * @param {DriveRef | DriveItemRef} parentRef - Reference to the parent drive or folder.
+ * @param {DriveItemPath} itemPath - Path to the file, may include wildcards in the filename.
  * @returns {Promise<Handle>} Reference to the locally opened workbook.
- * @throws {InvalidArgumentError} If the file extension is not supported.
+ * @throws {Error} If the file path is invalid or no matching file is found.
  */
-export default async function openWorkbook(remoteItemRef: DriveItemRef | (DriveItemRef & DriveItem), options: ReadOptions = {}): Promise<Handle> {
+export default async function openWorkbook(parentRef: DriveRef | DriveItemRef, itemPath: DriveItemPath, options: ReadOptions = {}): Promise<Handle> {
 	const { progress = () => {} } = options;
+
+	const { folderPath, fileName: filePattern } = decomposePath(itemPath);
+	const folder = await getDriveItemByPath(parentRef, folderPath);
+	const items = iterateDriveItems(folder);
+	const remoteItemRef = await matchFile(filePattern, items);
 
 	const extension = await getDriveItemFileExtension(remoteItemRef);
 	const localFilePath = await getTemporaryFilePath(extension);
@@ -46,6 +56,40 @@ export default async function openWorkbook(remoteItemRef: DriveItemRef | (DriveI
 			workbook,
 		};
 	}
+}
+
+function decomposePath(itemPath: DriveItemPath): { folderPath: DriveItemPath; fileName: DriveItemName } {
+	if (itemPath === "/") {
+		throw new Error(`Invalid file path: "${itemPath}". It must not be just a forward slash ("/").`);
+	}
+	const pos = itemPath.lastIndexOf("/");
+	if (pos === -1) {
+		throw new Error(`Invalid file path: "${itemPath}". It must contain at least one forward slash ("/").`);
+	}
+	if (pos === itemPath.length - 1) {
+		throw new Error(`Invalid file path: "${itemPath}". It must not end with a forward slash ("/").`);
+	}
+
+	const folderPath = itemPath.slice(0, pos + 1) as DriveItemPath;
+	const fileName = itemPath.slice(pos + 1) as DriveItemName;
+
+	return {
+		folderPath,
+		fileName,
+	};
+}
+
+async function matchFile(filePattern: DriveItemName, items: AsyncIterable<DriveItem & DriveItemRef>): Promise<DriveItem & DriveItemRef> {
+	const isMatch = picomatch(filePattern, { nocase: true });
+
+	for await (const item of items) {
+		const name = item.name ?? "";
+		if (isMatch(name)) {
+			return item;
+		}
+	}
+
+	throw new NotFoundError(`No file matching pattern "${filePattern}" found in the specified folder.`);
 }
 
 async function getDriveItemFileExtension(remoteItemRef: DriveItemRef | (DriveItemRef & DriveItem)) {
