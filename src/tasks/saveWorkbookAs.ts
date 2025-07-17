@@ -1,6 +1,6 @@
 /**
  * Write workbook to Microsoft Sharepoint to a specific path.
- * @module writeWorkbookByPath
+ * @module saveWorkbookAs
  * @category Tasks
  */
 
@@ -25,7 +25,7 @@ import { getTemporaryFilePath } from "../services/temporaryFile.ts";
  * @param {WriteOptions} [options] Options for writing, such as progress callback.
  * @returns {Promise<void>} Resolves when the workbook has been written.
  */
-export default async function writeWorkbookByPath(handle: Handle, parentRef: DriveRef | DriveItemRef, path: DriveItemPath, options: WriteOptions = {}): Promise<DriveItem & DriveItemRef> {
+export default async function saveWorkbookAs(handle: Handle, parentRef: DriveRef | DriveItemRef, path: DriveItemPath, options: WriteOptions = {}): Promise<DriveItem & DriveItemRef> {
 	const extension = extname(path).toLowerCase();
 
 	const { ifExists = "fail", maxChunkSize, progress } = options;

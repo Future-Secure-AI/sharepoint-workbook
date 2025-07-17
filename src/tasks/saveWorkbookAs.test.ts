@@ -8,7 +8,7 @@ import { generateTempFileName } from "microsoft-graph/temporaryFiles";
 import { defaultWorkbookWorksheetName } from "microsoft-graph/workbookWorksheet";
 import { describe, expect, it } from "vitest";
 import type { Handle } from "../models/Handle";
-import writeWorkbookByPath from "./writeWorkbookByPath";
+import saveWorkbookAs from "./saveWorkbookAs";
 
 const rows = [
 	["A", "B", "C"],
@@ -16,7 +16,7 @@ const rows = [
 	["G", "H", "I"],
 ];
 
-describe("writeWorkbookByPath", () => {
+describe("saveWorkbookAs", () => {
 	it("can write by path", async () => {
 		const driveRef = getDefaultDriveRef();
 		const remoteItemPath = driveItemPath(generateTempFileName("xlsx"));
@@ -33,7 +33,7 @@ describe("writeWorkbookByPath", () => {
 			workbook,
 		};
 
-		const remoteItemRef = await writeWorkbookByPath(handle, driveRef, remoteItemPath);
+		const remoteItemRef = await saveWorkbookAs(handle, driveRef, remoteItemPath);
 
 		const remoteWorksheetRef = await getWorkbookWorksheetByName(remoteItemRef, defaultWorkbookWorksheetName);
 		const usedRange = await getWorkbookWorksheetUsedRange(remoteWorksheetRef);

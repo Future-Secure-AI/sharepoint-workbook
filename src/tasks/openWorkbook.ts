@@ -1,6 +1,6 @@
 /**
- * Read workbook from Microsoft SharePoint.
- * @module readWorkbook
+ * Open workbook from Microsoft SharePoint.
+ * @module openWorkbook
  * @category Tasks
  */
 
@@ -19,8 +19,6 @@ import type { LocalFilePath } from "../models/LocalFilePath.ts";
 import type { ReadOptions } from "../models/Options.ts";
 import { getTemporaryFilePath } from "../services/temporaryFile.ts";
 
-// TODO: Add support for other file types.
-
 /**
  * Reads a workbook file (.xlsx or .csv) from a Microsoft Graph.
  * @param {DriveItemRef & Partial<DriveItem>} remoteItemRef - Reference to the DriveItem to read from.
@@ -28,7 +26,7 @@ import { getTemporaryFilePath } from "../services/temporaryFile.ts";
  * @returns {Promise<Handle>} Reference to the locally opened workbook.
  * @throws {InvalidArgumentError} If the file extension is not supported.
  */
-export default async function readWorkbook(remoteItemRef: DriveItemRef | (DriveItemRef & DriveItem), options: ReadOptions = {}): Promise<Handle> {
+export default async function openWorkbook(remoteItemRef: DriveItemRef | (DriveItemRef & DriveItem), options: ReadOptions = {}): Promise<Handle> {
 	const { progress = () => {} } = options;
 
 	const extension = await getDriveItemFileExtension(remoteItemRef);
