@@ -29,13 +29,14 @@ export type Filter = {
 	progress?: (rows: number) => void;
 };
 
+// TODO: Split into filterWorksheetRows and filterWorksheetColumns !!!!!!!!!!!!!!!!!!!!
+
 /**
  * Filter out unwanted rows and columns from a workbook. All styling is lost when filtering.
  * @param workbook Workbook handle to filter.
  * @param filter Filter options to apply (skipRows, column, row).
  * @returns A promise that resolves when the filtering is complete.
  */
-
 export default async function filterWorkbook(workbook: Workbook, filter: Filter): Promise<void> {
 	const skipRows = filter?.skipRows ?? 0;
 	const columnFilter = filter?.columnFilter ?? (() => true);

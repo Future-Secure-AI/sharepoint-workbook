@@ -1,3 +1,9 @@
+/**
+ * Delete a rectangular block of cells from a worksheet, shifting remaining cells up or left.
+ * @module deleteCells
+ * @category Tasks
+ */
+
 import { type Worksheet, ShiftType } from "aspose.cells.node";
 import InvalidArgumentError from "microsoft-graph/InvalidArgumentError";
 import type { RangeRef } from "../models/Reference.ts";
