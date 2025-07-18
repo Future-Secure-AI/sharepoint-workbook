@@ -14,8 +14,9 @@ import streamDriveItemContent from "microsoft-graph/dist/cjs/operations/driveIte
 import iterateDriveItems from "microsoft-graph/dist/cjs/tasks/iterateDriveItems";
 import { createWriteStream } from "node:fs";
 import { unlink } from "node:fs/promises";
-import { extname } from "node:path";
+import { basename, extname } from "node:path";
 import { pipeline } from "node:stream/promises";
+import { createGunzip } from "node:zlib";
 import picomatch from "picomatch";
 import type { LocalFilePath } from "../models/LocalFilePath.ts";
 import type { Workbook } from "../models/Workbook.ts";
@@ -41,25 +42,22 @@ export type OpenWorkbookOptions = {
  * - No more than 4x amount of available server memory
  * - No more than the configured Node memory limit (default 4GB) less what's already used
  * - Is a supported file type https://docs.aspose.com/cells/cpp/supported-file-formats/
+ * - Optionally compressed with GZip (with a .gz extension)
  */
 export default async function openWorkbook(parentRef: DriveRef | DriveItemRef, itemPath: DriveItemPath, options: OpenWorkbookOptions = {}): Promise<Workbook> {
-	const { progress = () => {} } = options;
-
+	const { progress } = options;
 	const { folderPath, fileName: filePattern } = decomposePath(itemPath);
+
 	const folder = await getDriveItemByPath(parentRef, folderPath);
 	const items = iterateDriveItems(folder);
 	const remoteItem = await matchFile(filePattern, items);
 
-	const name = remoteItem.name ?? "";
-	const extension = extname(name).toLowerCase();
-
-	const tempFile = await getTemporaryFilePath(extension);
-	await downloadFile(remoteItem, tempFile, progress);
-	const workbook = openFile(tempFile, extension) as Workbook;
-	await unlink(tempFile);
+	const workingFile = await downloadFile(remoteItem, progress);
+	const workbook = openFile(workingFile) as Workbook;
+	await unlink(workingFile);
 
 	workbook.remoteItem = remoteItem;
-	return workbook as Workbook;
+	return workbook;
 }
 
 function decomposePath(itemPath: DriveItemPath): { folderPath: DriveItemPath; fileName: DriveItemName } {
@@ -96,20 +94,19 @@ async function matchFile(filePattern: DriveItemName, items: AsyncIterable<DriveI
 	throw new NotFoundError(`No file matching pattern "${filePattern}" found in the specified folder.`);
 }
 
-function openFile(localFilePath: LocalFilePath, extension: string): AsposeCells.Workbook {
-	if (extension === ".csv") {
-		return new AsposeCells.Workbook(localFilePath, new AsposeCells.TxtLoadOptions(AsposeCells.LoadFormat.Csv));
-	} else if (extension === ".tsv") {
-		return new AsposeCells.Workbook(localFilePath, new AsposeCells.TxtLoadOptions(AsposeCells.LoadFormat.Tsv));
-		// TODO: Probably more text files that need manual handling
-	} else {
-		return new AsposeCells.Workbook(localFilePath);
-	}
-}
+async function downloadFile(itemRef: DriveItemRef & DriveItem, progress?: (bytes: number) => void): Promise<LocalFilePath> {
+	let sourceStream = await streamDriveItemContent(itemRef);
+	const name = itemRef.name ?? "";
+	let extension = extname(name).toLowerCase();
 
-async function downloadFile(itemRef: DriveItemRef, localFilePath: LocalFilePath, progress?: (bytes: number) => void): Promise<void> {
-	const sourceStream = await streamDriveItemContent(itemRef);
+	if (extension === ".gz") {
+		extension = extname(basename(name, ".gz")).toLowerCase();
+		sourceStream = sourceStream.pipe(createGunzip());
+	}
+
+	const localFilePath = await getTemporaryFilePath(extension);
 	const destinationStream = createWriteStream(localFilePath);
+
 	let bytesProcessed = 0;
 	let lastProgressTime = 0;
 	if (progress) {
@@ -122,5 +119,20 @@ async function downloadFile(itemRef: DriveItemRef, localFilePath: LocalFilePath,
 			}
 		});
 	}
+
 	await pipeline(sourceStream, destinationStream);
+	return localFilePath;
+}
+
+function openFile(localFilePath: LocalFilePath): AsposeCells.Workbook {
+	const extension = extname(localFilePath).toLowerCase();
+
+	if (extension === ".csv") {
+		return new AsposeCells.Workbook(localFilePath, new AsposeCells.TxtLoadOptions(AsposeCells.LoadFormat.Csv));
+	} else if (extension === ".tsv") {
+		return new AsposeCells.Workbook(localFilePath, new AsposeCells.TxtLoadOptions(AsposeCells.LoadFormat.Tsv));
+		// TODO: Probably more text files that need manual handling
+	} else {
+		return new AsposeCells.Workbook(localFilePath);
+	}
 }

@@ -10,8 +10,10 @@ import openWorkbook from "../src/tasks/openWorkbook.ts";
 import saveWorkbookAs from "../src/tasks/saveWorkbookAs.ts";
 import updateEachCell from "../src/tasks/updateEachCell.ts";
 
+import AsposeCells from "aspose.cells.node";
+
 const readFile = "/700MB.csv" as DriveItemPath;
-const writeFile = driveItemPath(generateTempFileName("xls")) as DriveItemPath;
+const writeFile = driveItemPath(generateTempFileName("xlsb")) as DriveItemPath;
 
 const start = Date.now();
 const driveRef = getDefaultDriveRef();
@@ -38,10 +40,19 @@ updateEachCell(worksheet, "1", {
 	fontBold: true,
 });
 
+const pivotTables = worksheet.pivotTables;
+const pivotIndex = pivotTables.add("A:R", "V1", "PivotTable1");
+const pivotTable = pivotTables.get(pivotIndex);
+
+pivotTable.addFieldToArea(AsposeCells.PivotFieldType.Row, 0);
+pivotTable.addFieldToArea(AsposeCells.PivotFieldType.Data, 10);
+
+pivotTable.dataField[0].setFunction(AsposeCells.ConsolidationFunction.Sum);
+
 /*
  * Write the workbook back to SharePoint in a location of your choosing.
  */
-console.info(`Writing output '${writeFile}' to SharePoint...`); // XLSX - ~100MB
+console.info(`Writing output '${writeFile}' to SharePoint...`);
 await saveWorkbookAs(workbook, driveRef, writeFile, {
 	ifExists: "replace",
 	maxChunkSize: 30 * 1024 * 1024, // Best speed with 60MB chunks (max), but for this demo I'm using a smaller value to get more frequent progress updates.
