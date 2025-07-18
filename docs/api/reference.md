@@ -116,7 +116,7 @@ Converts a row reference (string or number) to a 0-based row index.
 
 | Parameter | Type | Description |
 | ------ | ------ | ------ |
-| `row` | [`RowRef`](Reference-1.md#rowref) | Row reference (number or string). |
+| `row` | `` `${number}` `` | Row reference (number or string). |
 
 #### Returns
 

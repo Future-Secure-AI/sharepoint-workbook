@@ -47,4 +47,4 @@
 | [saveWorkbook](saveWorkbook.md) | Write opened workbook back to Microsoft SharePoint. |
 | [saveWorkbookAs](saveWorkbookAs.md) | Write workbook to Microsoft Sharepoint to a specific path. |
 | [updateCells](updateCells.md) | Update a rectangular block of cells in a worksheet, starting at the given origin. |
-| [updateEachCell](updateEachCell.md) | Update every cell in a rectangular range to the same value or partial cell object. |
+| [updateEachCell](updateEachCell.md) | Applies an update to every cell in the specified range of a worksheet. |

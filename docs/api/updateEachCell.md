@@ -2,7 +2,7 @@
 
 # updateEachCell
 
-Update every cell in a rectangular range to the same value or partial cell object.
+Applies an update to every cell in the specified range of a worksheet.
 
 ## Functions
 
@@ -10,9 +10,9 @@ Update every cell in a rectangular range to the same value or partial cell objec
 
 > **updateEachCell**(`worksheet`, `range`, `write`): `void`
 
-Defined in: [src/tasks/updateEachCell.ts:19](https://github.com/Future-Secure-AI/sharepoint-workbook/blob/main/src/tasks/updateEachCell.ts#L19)
+Defined in: [src/tasks/updateEachCell.ts:25](https://github.com/Future-Secure-AI/sharepoint-workbook/blob/main/src/tasks/updateEachCell.ts#L25)
 
-Updates every cell in the specified rectangular range to the given value or partial cell object.
+Applies an update to every cell in the specified range of a worksheet.
 
 #### Parameters
 
@@ -25,3 +25,13 @@ Updates every cell in the specified rectangular range to the given value or part
 #### Returns
 
 `void`
+
+#### Example
+
+```ts
+// Updates every cell in the range A1:B2 to have a value of 42
+updateEachCell(worksheet, "A1:B2", 42);
+
+// Updates every cell in the first row to be bold
+updateEachCell(worksheet, "1", { fontBold: true });
+```

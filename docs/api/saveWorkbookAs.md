@@ -28,7 +28,7 @@ Options for writing a workbook file.
 
 > **saveWorkbookAs**(`workbook`, `parentRef`, `path`, `options?`): [`Promise`](https://developer.mozilla.org/docs/Web/JavaScript/Reference/Global_Objects/Promise)\<`DriveItem` & `SiteRef` & `object` & `object`\>
 
-Defined in: [src/tasks/saveWorkbookAs.ts:39](https://github.com/Future-Secure-AI/sharepoint-workbook/blob/main/src/tasks/saveWorkbookAs.ts#L39)
+Defined in: [src/tasks/saveWorkbookAs.ts:44](https://github.com/Future-Secure-AI/sharepoint-workbook/blob/main/src/tasks/saveWorkbookAs.ts#L44)
 
 Writes a workbook file to Microsoft SharePoint at a given location.
 
@@ -46,3 +46,11 @@ Writes a workbook file to Microsoft SharePoint at a given location.
 [`Promise`](https://developer.mozilla.org/docs/Web/JavaScript/Reference/Global_Objects/Promise)\<`DriveItem` & `SiteRef` & `object` & `object`\>
 
 Resolves when the workbook has been written.
+
+#### Remarks
+
+See https://docs.aspose.com/cells/cpp/supported-file-formats/ for supported file formats. It cannot exceed SharePoint's file size limit of 250GB.
+For size indication, a particular 700MB CSV file compresses down to about:
+ - ~100MB XLSX
+ - ~30MB XLSB
+ - ~12MB XLS

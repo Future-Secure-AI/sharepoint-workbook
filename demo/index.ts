@@ -12,7 +12,7 @@ import updateEachCell from "../src/tasks/updateEachCell.ts";
 
 import AsposeCells from "aspose.cells.node";
 
-const readFile = "/700MB.csv" as DriveItemPath;
+const readFile = "/700MB.csv.gz" as DriveItemPath;
 const writeFile = driveItemPath(generateTempFileName("xlsb")) as DriveItemPath;
 
 const start = Date.now();
@@ -47,7 +47,7 @@ const pivotTable = pivotTables.get(pivotIndex);
 pivotTable.addFieldToArea(AsposeCells.PivotFieldType.Row, 0);
 pivotTable.addFieldToArea(AsposeCells.PivotFieldType.Data, 10);
 
-pivotTable.dataField[0].setFunction(AsposeCells.ConsolidationFunction.Sum);
+// pivotTable.dataFields[0].function = AsposeCells.ConsolidationFunction.Average;
 
 /*
  * Write the workbook back to SharePoint in a location of your choosing.
@@ -62,7 +62,7 @@ await saveWorkbookAs(workbook, driveRef, writeFile, {
 });
 
 const elapsedMin = (Date.now() - start) / 1000 / 60;
-console.info(`Done in ${elapsedMin.toFixed(1)} min(s).`);
+console.info(`Done in ${elapsedMin.toFixed(1)} min(s).`); // Done in 2.0 min(s).
 
 function formatBytes(bytes: number): string {
 	return `${Math.round(bytes / 1024 / 1024).toLocaleString()} MB`;

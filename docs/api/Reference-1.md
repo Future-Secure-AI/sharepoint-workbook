@@ -62,7 +62,7 @@ Represents a worksheet reference, which can be a single column, row, cell, a ran
 
 ### RowRef
 
-> **RowRef** = `` `${number}` `` \| `number`
+> **RowRef** = `` `${number}` ``
 
 Defined in: [src/models/Reference.ts:18](https://github.com/Future-Secure-AI/sharepoint-workbook/blob/main/src/models/Reference.ts#L18)
 

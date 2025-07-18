@@ -37,12 +37,11 @@ export type OpenWorkbookOptions = {
  * @param {DriveItemPath} itemPath - Path to the file, may include wildcards in the filename.
  * @returns {Promise<Workbook>} Reference to the locally opened workbook.
  * @throws {Error} If the file path is invalid or no matching file is found.
- * @remarks It could be any file that is:
+ * @remarks Supported workbooks are:
+ * - Supported file type https://docs.aspose.com/cells/cpp/supported-file-formats/
  * - No more than 250GB
- * - No more than 4x amount of available server memory
- * - No more than the configured Node memory limit (default 4GB) less what's already used
- * - Is a supported file type https://docs.aspose.com/cells/cpp/supported-file-formats/
- * - Optionally compressed with GZip (with a .gz extension)
+ * - No more than 1/4 of the memory available to Node (increase physical memory and `--max-old-space-size` if needed)
+ * - Optionally compressed with GZip (with an appended .gz extension)
  */
 export default async function openWorkbook(parentRef: DriveRef | DriveItemRef, itemPath: DriveItemPath, options: OpenWorkbookOptions = {}): Promise<Workbook> {
 	const { progress } = options;
