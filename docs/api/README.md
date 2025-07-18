@@ -39,7 +39,8 @@
 | ------ | ------ |
 | [createWorkbook](createWorkbook.md) | Create a new workbook, optionally with specified worksheets. |
 | [deleteCells](deleteCells.md) | Delete a rectangular block of cells from a worksheet, shifting remaining cells up or left. |
-| [filterWorkbook](filterWorkbook.md) | Filter out unwanted rows and columns from a workbook. |
+| [filterWorkbookColumns](filterWorkbookColumns.md) | Filter out unwanted columns from a workbook. |
+| [filterWorkbookRows](filterWorkbookRows.md) | Filter out unwanted rows from a workbook. |
 | [findWorksheet](findWorksheet.md) | Find a worksheet in a workbook by name. |
 | [getWorksheet](getWorksheet.md) | Get a worksheet from a workbook by its exact name. |
 | [insertCells](insertCells.md) | Insert a rectangular block of cells into a worksheet, shifting existing cells down or right. |
