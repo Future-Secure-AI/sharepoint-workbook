@@ -27,6 +27,14 @@ export function parseCellReference(cell: CellRef): [ColumnIndex, RowIndex] {
  */
 export function parseRangeReference(range: RangeRef): [number | null, number | null, number | null, number | null] {
 	if (!Array.isArray(range)) {
+		// Try cell reference first
+		const cellMatch = range.match(cellPattern)?.groups;
+		if (cellMatch) {
+			const col = columnComponentToNumber(cellMatch["col"] as ColumnRef) + 1;
+			const row = rowComponentToNumber(cellMatch["row"] as RowRef) + 1;
+			return [col, row, col, row];
+		}
+		// Try range reference
 		const match = range.match(rangePattern)?.groups;
 		if (!match) throw new Error(`Invalid range reference format: ${range}`);
 		const startCol = match["startCol"] ? columnComponentToNumber(match["startCol"] as ColumnRef) : null;

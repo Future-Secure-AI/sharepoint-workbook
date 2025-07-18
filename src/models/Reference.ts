@@ -9,5 +9,5 @@ export type RowRef = `${number}` | number;
 export type CellRef = `${ColumnRef}${RowRef}`;
 export type Ref = ColumnRef | RowRef | CellRef;
 
-export type RangeRef = `${Ref | ""}:${Ref | ""}` | [start: Ref | null, end: Ref | null];
+export type RangeRef = CellRef | `${Ref | ""}:${Ref | ""}` | [start: Ref | null, end: Ref | null];
 export type ExplicitRangeRef = `${CellRef}:${CellRef}` | [start: CellRef, end: CellRef];

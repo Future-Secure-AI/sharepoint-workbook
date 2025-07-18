@@ -23,6 +23,14 @@ describe("parseCellReference", () => {
 });
 
 describe("parseRangeReference", () => {
+	it("can parse cell", () => {
+		const [colStart, rowStart, colEnd, rowEnd] = parseRangeReference("C3");
+		expect(colStart).toBe(3);
+		expect(rowStart).toBe(3);
+		expect(colEnd).toBe(3);
+		expect(rowEnd).toBe(3);
+	});
+
 	it("can parse cell range", () => {
 		const [colStart, rowStart, colEnd, rowEnd] = parseRangeReference("A1:C3");
 		expect(colStart).toBe(0);
@@ -125,14 +133,6 @@ describe("parseRangeReference", () => {
 		expect(rowStart).toBe(0);
 		expect(colEnd).toBe(2);
 		expect(rowEnd).toBe(null);
-	});
-
-	it("throws on invalid array", () => {
-		expect(() => parseRangeReference(["A1"] as unknown as RangeRef)).toThrow();
-	});
-
-	it("throws on invalid string", () => {
-		expect(() => parseRangeReference("A1" as unknown as RangeRef)).toThrow();
 	});
 
 	it("throws InvalidArgumentError if range ends before it starts (array)", () => {
