@@ -10,8 +10,8 @@ import type { WorksheetName } from "../models/Worksheet.ts";
 
 /**
  * Returns the worksheet with the given name from the workbook.
- * @param {Workbook} workbook The workbook to search.
- * @param {WorksheetName} name The exact name of the worksheet to retrieve.
+ * @param {Workbook} workbook Workbook to search.
+ * @param {WorksheetName} name Name of the worksheet to retrieve (case insensitive).
  * @returns {AsposeCells.Worksheet} The worksheet with the specified name.
  * @throws {InvalidArgumentError} If the worksheet is not found.
  */
