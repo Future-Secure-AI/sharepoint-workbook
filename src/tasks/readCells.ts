@@ -22,7 +22,7 @@ export function readCells(worksheet: Worksheet, range: Ref): Cell[][] {
 	const cells: Cell[][] = [];
 	for (let r = ar; r <= br; r++) {
 		const row: Cell[] = [];
-		for (let c = ac; c < bc; c++) {
+		for (let c = ac; c <= bc; c++) {
 			const cell = readCell(worksheet, r, c);
 			row.push(cell);
 		}
