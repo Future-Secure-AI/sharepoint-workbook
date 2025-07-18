@@ -107,37 +107,33 @@ describe("writeCell", () => {
 	});
 
 	it("merges cells up", () => {
-		writeCell(worksheet, 6, 0, { value: "A", merge: "up" });
+		writeCell(worksheet, 6, 0, { merge: "up" });
 		const mergedAreas = worksheet.cells.getMergedAreas();
 		expect(mergedAreas.length).toBe(1);
 		expect(mergedAreas[0].startRow).toBe(5);
 		expect(mergedAreas[0].endRow).toBe(6);
 		expect(mergedAreas[0].startColumn).toBe(0);
 		expect(mergedAreas[0].endColumn).toBe(0);
-		// Check merged cell value
-		expect(worksheet.cells.get(6, 0).value).toBe("A");
 	});
 
 	it("merges cells left", () => {
-		writeCell(worksheet, 0, 7, { value: "B", merge: "left" });
+		writeCell(worksheet, 0, 7, { merge: "left" });
 		const mergedAreas = worksheet.cells.getMergedAreas();
 		expect(mergedAreas.length).toBe(1);
 		expect(mergedAreas[0].startRow).toBe(0);
 		expect(mergedAreas[0].endRow).toBe(0);
 		expect(mergedAreas[0].startColumn).toBe(6);
 		expect(mergedAreas[0].endColumn).toBe(7);
-		expect(worksheet.cells.get(0, 7).value).toBe("B");
 	});
 
 	it("merges cells up-left", () => {
-		writeCell(worksheet, 8, 8, { value: "C", merge: "up-left" });
+		writeCell(worksheet, 8, 8, { merge: "up-left" });
 		const mergedAreas = worksheet.cells.getMergedAreas();
 		expect(mergedAreas.length).toBe(1);
 		expect(mergedAreas[0].startRow).toBe(7);
 		expect(mergedAreas[0].endRow).toBe(8);
 		expect(mergedAreas[0].startColumn).toBe(7);
 		expect(mergedAreas[0].endColumn).toBe(8);
-		expect(worksheet.cells.get(8, 8).value).toBe("C");
 	});
 
 	it("adds a comment to a cell", () => {

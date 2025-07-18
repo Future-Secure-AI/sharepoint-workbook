@@ -4,7 +4,7 @@ import type { Cell, CellHorizontalAlignment, CellValue } from "../models/Cell.ts
 import type { DeepPartial } from "../models/DeepPartial.ts";
 
 export function writeCell(worksheet: AsposeCells.Worksheet, r: number, c: number, cellOrValue: CellValue | DeepPartial<Cell>) {
-	let cell = worksheet.cells.get(r, c);
+	const cell = worksheet.cells.get(r, c);
 
 	if (isCellValue(cellOrValue)) {
 		setCellValueWithFormula(cell, cellOrValue);
@@ -40,6 +40,31 @@ export function writeCell(worksheet: AsposeCells.Worksheet, r: number, c: number
 		comment,
 	} = cellOrValue;
 
+	if (merge === "up" || merge === "left" || merge === "up-left") {
+		const mergedAreas = worksheet.cells.getMergedAreas() || [];
+		const mergeConfigs = {
+			up: { dr: -1, dc: 0, rows: 2, cols: 1 },
+			left: { dr: 0, dc: -1, rows: 1, cols: 2 },
+			"up-left": { dr: -1, dc: -1, rows: 2, cols: 2 },
+		} as const;
+		const config = mergeConfigs[merge];
+		const targetR = r + config.dr;
+		const targetC = c + config.dc;
+		let found = false;
+		for (const area of mergedAreas) {
+			if (targetR >= area.startRow && targetR <= area.endRow && targetC >= area.startColumn && targetC <= area.endColumn) {
+				worksheet.cells.unMerge(area.startRow, area.startColumn, area.endRow - area.startRow + 1, area.endColumn - area.startColumn + 1);
+				worksheet.cells.merge(Math.min(area.startRow, r), Math.min(area.startColumn, c), Math.abs(area.endRow - area.startRow + 1 + (r < area.startRow ? 1 : 0)), Math.abs(area.endColumn - area.startColumn + 1 + (c < area.startColumn ? 1 : 0)));
+				found = true;
+				break;
+			}
+		}
+		if (!found) {
+			worksheet.cells.merge(targetR, targetC, config.rows, config.cols);
+		}
+		return; // Merged cells can have nothing directly written to them;
+	}
+
 	if (value !== undefined) setCellValue(cell, value);
 	if (formula !== undefined) cell.formula = formula;
 
@@ -73,34 +98,6 @@ export function writeCell(worksheet: AsposeCells.Worksheet, r: number, c: number
 	if (shrinkToFit !== undefined) style.shrinkToFit = shrinkToFit;
 
 	cell.setStyle(style);
-
-	if (merge === "up" || merge === "left" || merge === "up-left") {
-		const mergedAreas = worksheet.cells.getMergedAreas() || [];
-		const mergeConfigs = {
-			up: { dr: -1, dc: 0, rows: 2, cols: 1 },
-			left: { dr: 0, dc: -1, rows: 1, cols: 2 },
-			"up-left": { dr: -1, dc: -1, rows: 2, cols: 2 },
-		} as const;
-		const config = mergeConfigs[merge];
-		const targetR = r + config.dr;
-		const targetC = c + config.dc;
-		let found = false;
-		for (const area of mergedAreas) {
-			if (targetR >= area.startRow && targetR <= area.endRow && targetC >= area.startColumn && targetC <= area.endColumn) {
-				worksheet.cells.unMerge(area.startRow, area.startColumn, area.endRow - area.startRow + 1, area.endColumn - area.startColumn + 1);
-				worksheet.cells.merge(Math.min(area.startRow, r), Math.min(area.startColumn, c), Math.abs(area.endRow - area.startRow + 1 + (r < area.startRow ? 1 : 0)), Math.abs(area.endColumn - area.startColumn + 1 + (c < area.startColumn ? 1 : 0)));
-				found = true;
-				break;
-			}
-		}
-		if (!found) {
-			worksheet.cells.merge(targetR, targetC, config.rows, config.cols);
-		}
-
-		// After merging, always set the value on the top-left cell of the merged area
-		cell = worksheet.cells.get(targetR, targetC);
-		if (value !== undefined) setCellValue(cell, value);
-	}
 
 	if (comment !== undefined) {
 		if (!cell.comment) {
