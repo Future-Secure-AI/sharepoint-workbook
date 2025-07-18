@@ -2,9 +2,9 @@
 
 import type { Worksheet } from "aspose.cells.node";
 import InvalidArgumentError from "microsoft-graph/InvalidArgumentError";
-import type { ColumnNumber } from "../models/Column.ts";
+import type { ColumnIndex } from "../models/Column.ts";
 import type { CellRef, ColumnRef, RangeRef, Ref, RowRef } from "../models/Reference.ts";
-import type { RowNumber } from "../models/Row.ts";
+import type { RowIndex } from "../models/Row.ts";
 
 // Matches cell refs like A1, Z99, etc.
 const cellPattern = /^(?<col>[A-Z]{1,3})(?<row>\d{1,7})$/;
@@ -12,16 +12,16 @@ const cellPattern = /^(?<col>[A-Z]{1,3})(?<row>\d{1,7})$/;
 const rangePattern = /^(?<startCol>[A-Z]+)?(?<startRow>\d+)?:(?<endCol>[A-Z]+)?(?<endRow>\d+)?$/;
 
 /**
- * Parses a cell reference (e.g., "A1") into [col, row] numbers.
+ * Parses a cell reference (e.g., "A1") into [col, row] numbers (0-based).
  */
-export function parseCellReference(cell: CellRef): [ColumnNumber, RowNumber] {
+export function parseCellReference(cell: CellRef): [ColumnIndex, RowIndex] {
 	const match = cell.toString().match(cellPattern)?.groups;
 	if (!match) throw new Error(`Invalid cell reference format: '${cell}'`);
 	return [columnComponentToNumber(match["col"] as ColumnRef), rowComponentToNumber(match["row"] as RowRef)];
 }
 
 /**
- * Converts a RangeRef to an array: [startCol, startRow, endCol, endRow].
+ * Converts a RangeRef to an array: [startCol, startRow, endCol, endRow] (0-based).
  * @param range RangeRef (array or string)
  * @returns [startCol, startRow, endCol, endRow]
  */
@@ -101,22 +101,22 @@ export function parseRangeReferenceExact(range: RangeRef, worksheet: Worksheet):
 }
 
 /**
- * Converts a column reference (e.g., "A", "Z") to its number (1-based).
+ * Converts a column reference (e.g., "A", "Z") to its number (0-based).
  */
-export function columnComponentToNumber(column: ColumnRef): ColumnNumber {
+export function columnComponentToNumber(column: ColumnRef): ColumnIndex {
 	let num = 0;
 	for (let i = 0; i < column.length; i++) {
 		num = num * 26 + (column.charCodeAt(i) - 65 + 1);
 	}
-	return num as ColumnNumber;
+	return (num - 1) as ColumnIndex;
 }
 
 /**
- * Converts a row reference (string or number) to a number.
+ * Converts a row reference (string or number) to a number (0-based).
  */
-export function rowComponentToNumber(row: RowRef): RowNumber {
-	if (typeof row === "number") return row;
+export function rowComponentToNumber(row: RowRef): RowIndex {
+	if (typeof row === "number") return (row - 1) as RowIndex;
 	const parsed = parseInt(row, 10);
 	if (Number.isNaN(parsed)) throw new Error(`Invalid row component: ${row}`);
-	return parsed as RowNumber;
+	return (parsed - 1) as RowIndex;
 }

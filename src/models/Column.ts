@@ -1,1 +1,1 @@
-export type ColumnNumber = number;
+export type ColumnIndex = number & { readonly __brand: unique symbol };
