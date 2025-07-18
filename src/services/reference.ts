@@ -158,8 +158,7 @@ export function resolveColumnIndex(column: ColumnRef): ColumnIndex {
  * @throws {Error} If the row reference is invalid.
  */
 export function resolveRowIndex(row: RowRef): RowIndex {
-	if (typeof row === "number") return (row - 1) as RowIndex;
-	const parsed = parseInt(row, 10);
+	const parsed = Number.parseInt(row, 10);
 	if (Number.isNaN(parsed)) throw new Error(`Invalid row component: ${row}`);
 	return (parsed - 1) as RowIndex;
 }

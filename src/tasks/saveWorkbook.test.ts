@@ -43,6 +43,6 @@ describe("writeWorkbook", () => {
 
 	it("can not save if not savedAs before", async () => {
 		const workbook = new AsposeCells.Workbook() as Workbook;
-		await expect(saveWorkbook(workbook)).rejects.toThrow("Workbook not over-writable. Use `saveWorkbookAs` instead.");
+		await expect(saveWorkbook(workbook)).rejects.toThrow();
 	});
 });

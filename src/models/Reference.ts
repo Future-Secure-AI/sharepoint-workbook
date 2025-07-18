@@ -13,9 +13,9 @@ export type ColumnRef = `${Letter}`; // | `${Letter}${Letter}` | `${Letter}${Let
 
 /**
  * Represents a row in a worksheet. Can be a string or number.
- * @typedef {string|number} RowRef
+ * @typedef {string} RowRef
  */
-export type RowRef = `${number}` | number;
+export type RowRef = `${number}`;
 
 /**
  * Represents a cell reference in a worksheet (e.g., "A1").
