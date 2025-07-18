@@ -1,13 +1,36 @@
+/**
+ * Utilities for reading values and formatting from worksheet cells.
+ * @module cellReader
+ * @category Services
+ */
 import AsposeCells from "aspose.cells.node";
 import type { Cell, CellHorizontalAlignment, CellMerge, CellValue, CellVerticalAlignment } from "../models/Cell.ts";
+import type { ColumnIndex } from "../models/Column.ts";
+import type { RowIndex } from "../models/Row.ts";
 
-export function readCellValue(worksheet: AsposeCells.Worksheet, r: number, c: number): CellValue {
+/**
+ * Reads the value of a cell from a worksheet.
+ *
+ * @param {AsposeCells.Worksheet} worksheet Worksheet instance.
+ * @param {RowIndex} r Row index (0-based).
+ * @param {ColumnIndex} c Column index (0-based).
+ * @returns {CellValue} Value of the cell (string, number, boolean, Date, or empty string).
+ */
+export function readCellValue(worksheet: AsposeCells.Worksheet, r: RowIndex, c: ColumnIndex): CellValue {
 	const cell = worksheet.cells.get(r, c);
 
 	return getCellValue(cell);
 }
 
-export function readCell(worksheet: AsposeCells.Worksheet, r: number, c: number): Cell {
+export function readCell(worksheet: AsposeCells.Worksheet, r: RowIndex, c: ColumnIndex): Cell {
+	/**
+	 * Reads all properties and formatting of a cell from a worksheet.
+	 *
+	 * @param {AsposeCells.Worksheet} worksheet Worksheet instance.
+	 * @param {RowIndex} r Row index (0-based).
+	 * @param {ColumnIndex} c Column index (0-based).
+	 * @returns {Cell} Cell object with value, formatting, merge, and comment info.
+	 */
 	const cell = worksheet.cells.get(r, c);
 
 	const value = getCellValue(cell);

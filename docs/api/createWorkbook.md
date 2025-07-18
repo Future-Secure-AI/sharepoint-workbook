@@ -10,7 +10,7 @@ Create a new workbook, optionally with specified worksheets.
 
 > **createWorkbook**(`worksheets?`): [`Promise`](https://developer.mozilla.org/docs/Web/JavaScript/Reference/Global_Objects/Promise)\<[`Workbook`](Handle.md#workbook)\>
 
-Defined in: [src/tasks/createWorkbook.ts:29](https://github.com/Future-Secure-AI/sharepoint-workbook/blob/main/src/tasks/createWorkbook.ts#L29)
+Defined in: [src/tasks/createWorkbook.ts:31](https://github.com/Future-Secure-AI/sharepoint-workbook/blob/main/src/tasks/createWorkbook.ts#L31)
 
 Create a new workbook, optionally with specified worksheets.
 
@@ -18,7 +18,7 @@ Create a new workbook, optionally with specified worksheets.
 
 | Parameter | Type | Description |
 | ------ | ------ | ------ |
-| `worksheets?` | [`Record`](https://www.typescriptlang.org/docs/handbook/utility-types.html#recordkeys-type)\<`string`, ([`CellValue`](models/Cell.md#cellvalue-1) \| [`DeepPartial`](models/DeepPartial.md#deeppartial)\<[`Cell`](models/Cell.md#cell)\>)[][]\> | An object whose keys are worksheet names and values are iterables or async iterables of row values. |
+| `worksheets?` | [`Record`](https://www.typescriptlang.org/docs/handbook/utility-types.html#recordkeys-type)\<`string`, ([`CellValue`](Cell.md#cellvalue-1) \| [`DeepPartial`](DeepPartial.md#deeppartial)\<[`Cell`](Cell.md#cell)\>)[][]\> | An object whose keys are worksheet names and values are iterables or async iterables of row values. |
 
 #### Returns
 

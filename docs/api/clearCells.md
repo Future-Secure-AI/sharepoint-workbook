@@ -10,7 +10,7 @@ Clear all values and formatting in a specified range of cells in a worksheet.
 
 > **clearCells**(`worksheet`, `range`): `void`
 
-Defined in: src/tasks/clearCells.ts:16
+Defined in: [src/tasks/clearCells.ts:16](https://github.com/Future-Secure-AI/sharepoint-workbook/blob/main/src/tasks/clearCells.ts#L16)
 
 Clear all values and formatting in a specified range of cells in a worksheet.
 
@@ -19,7 +19,7 @@ Clear all values and formatting in a specified range of cells in a worksheet.
 | Parameter | Type | Description |
 | ------ | ------ | ------ |
 | `worksheet` | `Worksheet` |  |
-| `range` | [`Ref`](models/Reference.md#ref) |  |
+| `range` | [`Ref`](Reference-1.md#ref) |  |
 
 #### Returns
 

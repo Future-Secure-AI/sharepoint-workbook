@@ -18,8 +18,8 @@ Returns the worksheet with the given name from the workbook.
 
 | Parameter | Type | Description |
 | ------ | ------ | ------ |
-| `workbook` | [`Workbook`](Handle.md#workbook) | The workbook to search. |
-| `name` | [`WorksheetName`](Worksheet.md#worksheetname) | The exact name of the worksheet to retrieve. |
+| `workbook` | [`Workbook`](Handle.md#workbook) | Workbook to search. |
+| `name` | [`WorksheetName`](Worksheet.md#worksheetname) | Name of the worksheet to retrieve (case insensitive). |
 
 #### Returns
 

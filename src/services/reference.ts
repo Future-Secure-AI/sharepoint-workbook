@@ -1,3 +1,8 @@
+/**
+ * Utilities for parsing and resolving cell, row, column, and range references in worksheets.
+ * @module reference
+ * @category Services
+ */
 /** biome-ignore-all lint/complexity/useLiteralKeys: Impossible to avoid with RegEx */
 
 import type { Worksheet } from "aspose.cells.node";
@@ -8,11 +13,14 @@ import type { RowIndex } from "../models/Row.ts";
 
 // Matches cell refs like A1, Z99, etc.
 const cellPattern = /^(?<col>[A-Z]{1,3})(?<row>\d{1,7})$/;
-// Matches range refs like A1:C3
+// Matches range refs like A1:C3, 1:5, A:C, etc.
 const rangePattern = /^(?<startCol>[A-Z]+)?(?<startRow>\d+)?:(?<endCol>[A-Z]+)?(?<endRow>\d+)?$/;
 
 /**
- * Parses a cell reference (e.g., "A1") into [col, row] numbers (0-based).
+ * Parses a cell reference (e.g., "A1") into a tuple of 0-based column and row indices.
+ * @param {CellRef} cell Reference string such as "B2".
+ * @returns {[ColumnIndex, RowIndex]} 0-based column and row indices.
+ * @throws {Error} If the cell reference format is invalid.
  */
 export function parseCellRef(cell: CellRef): [ColumnIndex, RowIndex] {
 	const match = cell.toString().match(cellPattern)?.groups;
@@ -21,11 +29,13 @@ export function parseCellRef(cell: CellRef): [ColumnIndex, RowIndex] {
 }
 
 /**
- * Converts a RangeRef to an array: [startCol, startRow, endCol, endRow] (0-based).
- * @param range RangeRef (array or string)
- * @returns [startCol, startRow, endCol, endRow]
+ * Converts a range reference (string or array) to a tuple of 0-based indices: [startCol, startRow, endCol, endRow].
+ * Accepts cell, row, column, or range references in string or array form.
+ * @param {Ref} range Reference such as "A1:C3", ["A", "C"], [1, 5], etc.
+ * @returns {[number | null, number | null, number | null, number | null]} Resolved indices (null if not specified).
+ * @throws {InvalidArgumentError|Error} If the reference is invalid or the range ends before it starts.
  */
-export function parseRef(range: Ref): [number | null, number | null, number | null, number | null] {
+export function parseRef(range: Ref): [ColumnIndex | null, RowIndex | null, ColumnIndex | null, RowIndex | null] {
 	if (!Array.isArray(range)) {
 		// Handle single column reference (e.g., "C")
 		if (typeof range === "string" && /^[A-Z]+$/.test(range)) {
@@ -111,19 +121,27 @@ export function parseRef(range: Ref): [number | null, number | null, number | nu
 	return [startCol, startRow, endCol, endRow];
 }
 
-export function parseRefResolved(range: Ref, worksheet: Worksheet): [number, number, number, number] {
+/**
+ * Resolves a range reference to concrete 0-based indices, filling in worksheet bounds for omitted values.
+ * @param {Ref} range Reference to resolve.
+ * @param {Worksheet} worksheet Worksheet to use for bounds.
+ * @returns {[number, number, number, number]} Fully resolved indices: [startCol, startRow, endCol, endRow].
+ */
+export function parseRefResolved(range: Ref, worksheet: Worksheet): [ColumnIndex, RowIndex, ColumnIndex, RowIndex] {
 	let [ac, ar, bc, br] = parseRef(range);
 
-	ac = ac ?? worksheet.cells.minDataColumn;
-	ar = ar ?? worksheet.cells.minDataRow;
-	bc = bc ?? worksheet.cells.maxDataColumn;
-	br = br ?? worksheet.cells.maxDataRow;
+	ac = ac ?? (worksheet.cells.minDataColumn as ColumnIndex);
+	ar = ar ?? (worksheet.cells.minDataRow as RowIndex);
+	bc = bc ?? (worksheet.cells.maxDataColumn as ColumnIndex);
+	br = br ?? (worksheet.cells.maxDataRow as RowIndex);
 
 	return [ac, ar, bc, br];
 }
 
 /**
- * Converts a column reference (e.g., "A", "Z") to its number (0-based).
+ * Converts a column reference (e.g., "A", "Z", "AA") to its 0-based column index.
+ * @param {ColumnRef} column Column reference string.
+ * @returns {ColumnIndex} 0-based column index.
  */
 export function resolveColumnIndex(column: ColumnRef): ColumnIndex {
 	let num = 0;
@@ -134,7 +152,10 @@ export function resolveColumnIndex(column: ColumnRef): ColumnIndex {
 }
 
 /**
- * Converts a row reference (string or number) to a number (0-based).
+ * Converts a row reference (string or number) to a 0-based row index.
+ * @param {RowRef} row Row reference (number or string).
+ * @returns {RowIndex} 0-based row index.
+ * @throws {Error} If the row reference is invalid.
  */
 export function resolveRowIndex(row: RowRef): RowIndex {
 	if (typeof row === "number") return (row - 1) as RowIndex;

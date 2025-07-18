@@ -10,28 +10,24 @@
 
 | Module | Description |
 | ------ | ------ |
+| [Cell](Cell.md) | Cells and its properties in a worksheet. |
+| [Column](Column.md) | Columns. |
+| [DeepPartial](DeepPartial.md) | Making all properties of a type optional, recursively. |
 | [Handle](Handle.md) | Reference to an opened workbook. |
 | [LocalFilePath](LocalFilePath.md) | Local file path. |
-| [OptimizeOptions](OptimizeOptions.md) | Options for optimizing a workbook. |
-| [Options](Options.md) | Options for operation. |
-| [Worksheet](Worksheet.md) | Worksheet models. |
+| [Reference](Reference-1.md) | References to one or more cells in a worksheet. |
+| [Row](Row.md) | Rows. |
+| [Worksheet](Worksheet.md) | Worksheets. |
 
-## Other
+## Services
 
 | Module | Description |
 | ------ | ------ |
-| [models/Cell](models/Cell.md) | - |
-| [models/Column](models/Column.md) | - |
-| [models/DeepPartial](models/DeepPartial.md) | - |
-| [models/Reference](models/Reference.md) | - |
-| [models/Row](models/Row.md) | - |
-| [models/Shift](models/Shift.md) | - |
-| [services/cellReader](services/cellReader.md) | - |
-| [services/cellWriter](services/cellWriter.md) | - |
-| [services/rectangularArray](services/rectangularArray.md) | - |
-| [services/reference](services/reference.md) | - |
-| [services/streamParameters](services/streamParameters.md) | - |
-| [services/temporaryFile](services/temporaryFile.md) | - |
+| [cellReader](cellReader.md) | Utilities for reading values and formatting from worksheet cells. |
+| [cellWriter](cellWriter.md) | Utilities for writing values and formatting to worksheet cells. |
+| [reference](reference.md) | Utilities for parsing and resolving cell, row, column, and range references in worksheets. |
+| [streamParameters](streamParameters.md) | Streaming parameter utilities for workbook operations. |
+| [temporaryFile](temporaryFile.md) | Utilities for creating temporary file paths for workbook operations. |
 
 ## Tasks
 

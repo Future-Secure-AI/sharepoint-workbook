@@ -6,7 +6,9 @@
 
 import AsposeCells from "aspose.cells.node";
 import type { Cell, CellValue } from "../models/Cell.ts";
+import type { ColumnIndex } from "../models/Column.ts";
 import type { DeepPartial } from "../models/DeepPartial.ts";
+import type { RowIndex } from "../models/Row.ts";
 import type { Workbook } from "../models/Workbook.ts";
 import { writeCell } from "../services/cellWriter.ts";
 
@@ -33,9 +35,9 @@ export default async function createWorkbook(worksheets?: Record<string, (CellVa
 	if (worksheets) {
 		for (const [name, rows] of Object.entries(worksheets)) {
 			const worksheet = workbook.worksheets.add(name);
-			let r = 0;
+			let r = 0 as RowIndex;
 			for (const row of rows) {
-				let c = 0;
+				let c = 0 as ColumnIndex;
 				for (const cellOrValue of row) {
 					writeCell(worksheet, r, c, cellOrValue);
 					c++;

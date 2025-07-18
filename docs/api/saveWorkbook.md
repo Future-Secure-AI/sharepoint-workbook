@@ -10,7 +10,7 @@ Write opened workbook back to Microsoft SharePoint.
 
 > **saveWorkbook**(`handle`, `options?`): [`Promise`](https://developer.mozilla.org/docs/Web/JavaScript/Reference/Global_Objects/Promise)\<`SiteRef` & `object` & `object` & `DriveItem`\>
 
-Defined in: [src/tasks/saveWorkbook.ts:23](https://github.com/Future-Secure-AI/sharepoint-workbook/blob/main/src/tasks/saveWorkbook.ts#L23)
+Defined in: [src/tasks/saveWorkbook.ts:22](https://github.com/Future-Secure-AI/sharepoint-workbook/blob/main/src/tasks/saveWorkbook.ts#L22)
 
 Write a locally opened workbook back to Microsoft SharePoint, overwriting the previous file.
 
@@ -19,7 +19,7 @@ Write a locally opened workbook back to Microsoft SharePoint, overwriting the pr
 | Parameter | Type | Description |
 | ------ | ------ | ------ |
 | `handle` | [`Workbook`](Handle.md#workbook) | Reference to the locally opened workbook, must include an itemRef for overwrite. |
-| `options?` | [`WriteOptions`](Options.md#writeoptions) | Options for writing, such as conflict behavior, chunk size, and progress callback. |
+| `options?` | [`SaveWorkbookOptions`](saveWorkbookAs.md#saveworkbookoptions) | Options for writing, such as conflict behavior, chunk size, and progress callback. |
 
 #### Returns
 

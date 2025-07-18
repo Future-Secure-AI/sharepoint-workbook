@@ -1,9 +1,23 @@
+/**
+ * Utilities for writing values and formatting to worksheet cells.
+ * @module cellWriter
+ * @category Services
+ */
 import AsposeCells from "aspose.cells.node";
 import InvalidArgumentError from "microsoft-graph/InvalidArgumentError";
 import type { Cell, CellHorizontalAlignment, CellValue } from "../models/Cell.ts";
+import type { ColumnIndex } from "../models/Column.ts";
 import type { DeepPartial } from "../models/DeepPartial.ts";
-
-export function writeCell(worksheet: AsposeCells.Worksheet, r: number, c: number, cellOrValue: CellValue | DeepPartial<Cell>) {
+import type { RowIndex } from "../models/Row.ts";
+/**
+ * Writes a value or cell configuration to a worksheet cell, including formatting, merging, and comments.
+ *
+ * @param {AsposeCells.Worksheet} worksheet Worksheet instance.
+ * @param {RowIndex} r Row index (0-based).
+ * @param {ColumnIndex} c Column index (0-based).
+ * @param {CellValue | DeepPartial<Cell>} cellOrValue Value or partial cell configuration.
+ */
+export function writeCell(worksheet: AsposeCells.Worksheet, r: RowIndex, c: ColumnIndex, cellOrValue: CellValue | DeepPartial<Cell>) {
 	const cell = worksheet.cells.get(r, c);
 
 	if (isCellValue(cellOrValue)) {

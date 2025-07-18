@@ -8,7 +8,7 @@ Deletes a given set of columns or rows from a worksheet.
 
 ### ColumnOrRowRangeRef
 
-> **ColumnOrRowRangeRef** = \`$\{ColumnRef \| ""\}:$\{ColumnRef \| ""\}\` \| \`$\{RowRef \| ""\}:$\{RowRef \| ""\}\` \| \[[`ColumnRef`](models/Reference.md#columnref) \| `null`, [`ColumnRef`](models/Reference.md#columnref) \| `null`\] \| \[[`RowRef`](models/Reference.md#rowref) \| `null`, [`RowRef`](models/Reference.md#rowref) \| `null`\]
+> **ColumnOrRowRangeRef** = \`$\{ColumnRef \| ""\}:$\{ColumnRef \| ""\}\` \| \`$\{RowRef \| ""\}:$\{RowRef \| ""\}\` \| \[[`ColumnRef`](Reference-1.md#columnref) \| `null`, [`ColumnRef`](Reference-1.md#columnref) \| `null`\] \| \[[`RowRef`](Reference-1.md#rowref) \| `null`, [`RowRef`](Reference-1.md#rowref) \| `null`\]
 
 Defined in: [src/tasks/deleteCells.ts:12](https://github.com/Future-Secure-AI/sharepoint-workbook/blob/main/src/tasks/deleteCells.ts#L12)
 

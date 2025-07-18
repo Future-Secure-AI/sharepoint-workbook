@@ -5,8 +5,10 @@
  */
 import type { Worksheet } from "aspose.cells.node";
 import type { Cell, CellValue } from "../models/Cell.ts";
+import type { ColumnIndex } from "../models/Column.ts";
 import type { DeepPartial } from "../models/DeepPartial.ts";
 import type { CellRef } from "../models/Reference.ts";
+import type { RowIndex } from "../models/Row.ts";
 import { writeCell } from "../services/cellWriter.ts";
 import { parseCellRef } from "../services/reference.ts";
 
@@ -24,7 +26,7 @@ export function updateCells(worksheet: Worksheet, origin: CellRef, cells: (CellV
 		for (let cx = 0; cx < row.length; cx++) {
 			const value = row[cx];
 			if (value === undefined) continue;
-			writeCell(worksheet, r + rx, c + cx, value);
+			writeCell(worksheet, (r + rx) as RowIndex, (c + cx) as ColumnIndex, value);
 		}
 	}
 }

@@ -9,18 +9,17 @@ import type { DriveItemPath, DriveItemRef } from "microsoft-graph/dist/cjs/model
 import { getDriveItemParent } from "microsoft-graph/driveItem";
 import InvalidArgumentError from "microsoft-graph/InvalidArgumentError";
 import MissingPathError from "../errors/MissingPathError.ts";
-import type { WriteOptions } from "../models/Options.ts";
 import type { Workbook } from "../models/Workbook.ts";
-import saveWorkbookAs from "./saveWorkbookAs.ts";
+import saveWorkbookAs, { type SaveWorkbookOptions } from "./saveWorkbookAs.ts";
 
 /**
  * Write a locally opened workbook back to Microsoft SharePoint, overwriting the previous file.
  * @param {Workbook} handle Reference to the locally opened workbook, must include an itemRef for overwrite.
- * @param {WriteOptions} [options] Options for writing, such as conflict behavior, chunk size, and progress callback.
+ * @param {SaveWorkbookOptions} [options] Options for writing, such as conflict behavior, chunk size, and progress callback.
  * @returns {Promise<void>} Resolves when the upload is complete.
  * @throws {Error} If the workbook cannot be overwritten or required metadata is missing.
  */
-export default async function saveWorkbook(handle: Workbook, options: WriteOptions = {}): Promise<DriveItemRef & DriveItem> {
+export default async function saveWorkbook(handle: Workbook, options: SaveWorkbookOptions = {}): Promise<DriveItemRef & DriveItem> {
 	const { ifExists = "replace", maxChunkSize, progress } = options;
 
 	const remoteItem = handle.remoteItem;

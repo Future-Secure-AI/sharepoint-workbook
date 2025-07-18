@@ -19,8 +19,8 @@ Updates every cell in the specified rectangular range to the given value or part
 | Parameter | Type | Description |
 | ------ | ------ | ------ |
 | `worksheet` | `Worksheet` | The worksheet to update. |
-| `range` | [`Ref`](models/Reference.md#ref) | The range reference (e.g., "A1:B2") specifying the block to update. |
-| `write` | [`CellValue`](models/Cell.md#cellvalue-1) \| [`DeepPartial`](models/DeepPartial.md#deeppartial)\<[`Cell`](models/Cell.md#cell)\> | The value or partial cell object to write to each cell in the range. |
+| `range` | [`Ref`](Reference-1.md#ref) | The range reference (e.g., "A1:B2") specifying the block to update. |
+| `write` | [`CellValue`](Cell.md#cellvalue-1) \| [`DeepPartial`](DeepPartial.md#deeppartial)\<[`Cell`](Cell.md#cell)\> | The value or partial cell object to write to each cell in the range. |
 
 #### Returns
 

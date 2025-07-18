@@ -18,9 +18,17 @@ import { extname } from "node:path";
 import { pipeline } from "node:stream/promises";
 import picomatch from "picomatch";
 import type { LocalFilePath } from "../models/LocalFilePath.ts";
-import type { ReadOptions } from "../models/Options.ts";
 import type { Workbook } from "../models/Workbook.ts";
 import { getTemporaryFilePath } from "../services/temporaryFile.ts";
+
+/**
+ * Options for reading a workbook file.
+ * @property {WorkbookWorksheetName} [defaultWorksheetName] Default worksheet name to use when importing a CSV file.
+ * @property {(bytes: number): void} [progress] Progress callback, receives bytes processed.
+ */
+export type OpenWorkbookOptions = {
+	progress?: (bytes: number) => void;
+};
 
 /**
  * Reads a workbook file from a SharePoint drive by its path, supporting wildcards in the filename.
@@ -29,7 +37,7 @@ import { getTemporaryFilePath } from "../services/temporaryFile.ts";
  * @returns {Promise<Workbook>} Reference to the locally opened workbook.
  * @throws {Error} If the file path is invalid or no matching file is found.
  */
-export default async function openWorkbook(parentRef: DriveRef | DriveItemRef, itemPath: DriveItemPath, options: ReadOptions = {}): Promise<Workbook> {
+export default async function openWorkbook(parentRef: DriveRef | DriveItemRef, itemPath: DriveItemPath, options: OpenWorkbookOptions = {}): Promise<Workbook> {
 	const { progress = () => {} } = options;
 
 	const { folderPath, fileName: filePattern } = decomposePath(itemPath);
