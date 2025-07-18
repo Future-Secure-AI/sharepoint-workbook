@@ -1,12 +1,10 @@
 import { describe, expect, it } from "vitest";
 import createWorkbook from "./createWorkbook";
 import { readCellValues } from "./readCellValues";
-import { updateEachCell } from "./updateEachCell";
-
-// Tests for updateEachCell
+import updateEachCell from "./updateEachCell";
 
 describe("updateEachCell", () => {
-	it("updates every cell in a rectangular range to a value", async () => {
+	it("can update cell range", async () => {
 		const wb = await createWorkbook({
 			Sheet1: [
 				[1, 2, 3],
@@ -24,7 +22,7 @@ describe("updateEachCell", () => {
 		]);
 	});
 
-	it("updates a single cell", async () => {
+	it("can update single cell", async () => {
 		const wb = await createWorkbook({
 			Sheet1: [[1, 2]],
 		});

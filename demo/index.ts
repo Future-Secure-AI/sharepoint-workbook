@@ -5,61 +5,44 @@ import type { DriveItemPath } from "microsoft-graph/DriveItem";
 import { driveItemPath } from "microsoft-graph/driveItem";
 import { generateTempFileName } from "microsoft-graph/temporaryFiles";
 import console from "node:console";
-import { stat } from "node:fs/promises";
-import readWorkbookByPath from "../src/tasks/readWorkbookByPath";
-import writeWorkbookByPath from "../src/tasks/writeWorkbookByPath";
+import findWorksheet from "../src/tasks/findWorksheet.ts";
+import openWorkbook from "../src/tasks/openWorkbook.ts";
+import saveWorkbookAs from "../src/tasks/saveWorkbookAs.ts";
+import updateEachCell from "../src/tasks/updateEachCell.ts";
 
 const readFile = "/700MB.csv" as DriveItemPath;
-const writeFile = driveItemPath(generateTempFileName("xlsx")) as DriveItemPath;
+const writeFile = driveItemPath(generateTempFileName("xls")) as DriveItemPath;
 
 const start = Date.now();
 const driveRef = getDefaultDriveRef();
 
 /*
- * Read an input file from Sharepoint. It could the CSV or XLSX, and it could be any size up to 250GB. This sample is about 730MB.
+ * Read an input file from Sharepoint. It could be any file that is:
+ * - No more than 250GB
+ * - No more than 4x amount of available server memory
+ * - No more than the configured Node memory limit (default 4GB) less what's already used
+ * - Is a supported file type https://docs.aspose.com/cells/cpp/supported-file-formats/
  */
-console.info(`Reading input CSV '${readFile}' from SharePoint...`);
-const handle = await readWorkbookByPath(driveRef, readFile, {
+console.info(`Reading input '${readFile}' from SharePoint...`);
+const workbook = await openWorkbook(driveRef, readFile, {
 	progress: (bytes) => {
 		console.info(`  Read ${formatBytes(bytes)}...`);
 	},
 });
 
-const { size } = await stat(handle.localFilePath);
-console.info(handle.localFilePath, formatBytes(size));
-console.info(`Input read and optimized down to ${formatBytes(size)}.`);
+/*
+ * Apply some formatting. In this case I'm making the header bold
+ */
+const worksheet = findWorksheet(workbook, "*"); // First worksheet
+updateEachCell(worksheet, "1", {
+	fontBold: true,
+});
 
 /*
- * Optionally filter out some columns or rows.
+ * Write the workbook back to SharePoint in a location of your choosing.
  */
-// console.info(`Filtering workbook...`);
-// await filterWorkbook(handle, {
-// 	skipRows: 0,
-// 	columnFilter: (header, index) => header === "tpep_dropoff_datetime" || header === "tolls_amount",
-// 	rowFilter: (cells) => true,
-// 	progress: (rows) => {
-// 		console.info(`  Processed ${rows.toLocaleString()} rows...`);
-// 	},
-// });
-
-/*
- * Do some work on the workbook. This sample just formats the header rows, but you can do anything you want here, like adding
- * formulas, formatting, etc. Just remember that up until this point the file hasn't needed to be in memory. `transact` requires
- * sufficient memory to hold the whole workbook.
- */
-// console.info(`Formatting workbook...`);
-// await transactWorkbook(handle, async ({ findWorksheet, updateEachCell }) => {
-// 	const sheet = findWorksheet("*");
-// 	updateEachCell([sheet, 1, 1], {
-// 		fontBold: true,
-// 	});
-// });
-
-/*
- * Write the workbook back to SharePoint in a location of your choosing. Only writing XLSX is supported.
- */
-console.info(`Writing output XLSX '${writeFile}' to SharePoint...`);
-await writeWorkbookByPath(handle, driveRef, writeFile, {
+console.info(`Writing output '${writeFile}' to SharePoint...`); // XLSX - ~100MB
+await saveWorkbookAs(workbook, driveRef, writeFile, {
 	ifExists: "replace",
 	maxChunkSize: 30 * 1024 * 1024, // Best speed with 60MB chunks (max), but for this demo I'm using a smaller value to get more frequent progress updates.
 	progress: (bytes) => {

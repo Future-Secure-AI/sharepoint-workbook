@@ -35,6 +35,11 @@ export type SaveWorkbookOptions = {
  * @param {DriveItemPath} path Path where the workbook will be written in SharePoint.
  * @param {SaveWorkbookOptions} [options] Options for writing, such as progress callback.
  * @returns {Promise<void>} Resolves when the workbook has been written.
+ * @remarks See https://docs.aspose.com/cells/cpp/supported-file-formats/ for supported file formats. It cannot exceed SharePoint's file size limit of 250GB.
+ * For size indication, a particular 700MB CSV file compresses down to about:
+ *  - ~100MB XLSX
+ *  - ~30MB XLSB
+ *  - ~12MB XLS
  */
 export default async function saveWorkbookAs(workbook: Workbook, parentRef: DriveRef | DriveItemRef, path: DriveItemPath, options: SaveWorkbookOptions = {}): Promise<DriveItem & DriveItemRef> {
 	const extension = extname(path).toLowerCase();
