@@ -9,7 +9,7 @@ import type { RowNumber } from "../models/Row.ts";
 // Matches cell refs like A1, Z99, etc.
 const cellPattern = /^(?<col>[A-Z]{1,3})(?<row>\d{1,7})$/;
 // Matches range refs like A1:C3
-const rangePattern = /^(?<startCol>[A-Z]+)(?<startRow>\d+):(?<endCol>[A-Z]+)(?<endRow>\d+)$/;
+const rangePattern = /^(?<startCol>[A-Z]+)?(?<startRow>\d+)?:(?<endCol>[A-Z]+)?(?<endRow>\d+)?$/;
 
 /**
  * Parses a cell reference (e.g., "A1") into [col, row] numbers.
@@ -26,25 +26,7 @@ export function parseCellReference(cell: CellRef): [ColumnNumber, RowNumber] {
  * @returns [startCol, startRow, endCol, endRow]
  */
 export function parseRangeReference(range: RangeRef): [number | null, number | null, number | null, number | null] {
-	if (Array.isArray(range)) {
-		if (range.length !== 2) throw new Error(`Invalid range reference array: ${range}`);
-		const [start, end] = range;
-		const parse = (ref: Ref | null) => {
-			if (ref == null) return [null, null];
-			try {
-				return parseCellReference(ref as CellRef);
-			} catch {
-				return [null, null];
-			}
-		};
-		const [startCol, startRow] = parse(start);
-		const [endCol, endRow] = parse(end);
-		if ((startCol !== null && endCol !== null && endCol < startCol) || (startRow !== null && endRow !== null && endRow < startRow)) {
-			throw new InvalidArgumentError(`Range ends before it starts: [${startCol}, ${startRow}, ${endCol}, ${endRow}]`);
-		}
-		return [startCol, startRow, endCol, endRow];
-	}
-	if (typeof range === "string") {
+	if (!Array.isArray(range)) {
 		const match = range.match(rangePattern)?.groups;
 		if (!match) throw new Error(`Invalid range reference format: ${range}`);
 		const startCol = match["startCol"] ? columnComponentToNumber(match["startCol"] as ColumnRef) : null;
@@ -56,8 +38,57 @@ export function parseRangeReference(range: RangeRef): [number | null, number | n
 		}
 		return [startCol, startRow, endCol, endRow];
 	}
-	throw new Error(`Invalid range reference: ${range}`);
+
+	if (range.length !== 2) throw new Error(`Invalid range reference array: ${range}`);
+	const [start, end] = range;
+
+	// Row-only range: [number, number] or [string, string] with both numeric
+	const isRowOnly = (v: unknown) => typeof v === "number" || (typeof v === "string" && /^\d+$/.test(v));
+	// Column-only range: [string, string] with both single uppercase letters
+	const isColOnly = (v: unknown) => typeof v === "string" && /^[A-Z]$/.test(v);
+
+	if (isRowOnly(start) && isRowOnly(end)) {
+		const startRow = rowComponentToNumber(start as RowRef);
+		const endRow = rowComponentToNumber(end as RowRef);
+		if (endRow < startRow) throw new InvalidArgumentError(`Range ends before it starts: [null, ${startRow}, null, ${endRow}]`);
+		return [null, startRow, null, endRow];
+	}
+	if (isColOnly(start) && isColOnly(end)) {
+		const startCol = columnComponentToNumber(start as ColumnRef);
+		const endCol = columnComponentToNumber(end as ColumnRef);
+		if (endCol < startCol) throw new InvalidArgumentError(`Range ends before it starts: [${startCol}, null, ${endCol}, null]`);
+		return [startCol, null, endCol, null];
+	}
+	// Column-row range: [col, row] (e.g., ["A", 3] or ["A", "3"])
+	if (isColOnly(start) && isRowOnly(end)) {
+		const startCol = columnComponentToNumber(start as ColumnRef);
+		const endRow = rowComponentToNumber(end as RowRef);
+		return [startCol, null, null, endRow];
+	}
+	// Row-column range: [row, col] (e.g., [1, "C"] or ["1", "C"])
+	if (isRowOnly(start) && isColOnly(end)) {
+		const startRow = rowComponentToNumber(start as RowRef);
+		const endCol = columnComponentToNumber(end as ColumnRef);
+		return [null, startRow, endCol, null];
+	}
+
+	// Otherwise, treat as cell references
+	const parseCell = (ref: Ref | null) => {
+		if (ref == null) return [null, null];
+		try {
+			return parseCellReference(ref as CellRef);
+		} catch {
+			return [null, null];
+		}
+	};
+	const [startCol, startRow] = parseCell(start);
+	const [endCol, endRow] = parseCell(end);
+	if ((startCol !== null && endCol !== null && endCol < startCol) || (startRow !== null && endRow !== null && endRow < startRow)) {
+		throw new InvalidArgumentError(`Range ends before it starts: [${startCol}, ${startRow}, ${endCol}, ${endRow}]`);
+	}
+	return [startCol, startRow, endCol, endRow];
 }
+
 export function parseRangeReferenceExact(range: RangeRef, worksheet: Worksheet): [number, number, number, number] {
 	let [ac, ar, bc, br] = parseRangeReference(range);
 

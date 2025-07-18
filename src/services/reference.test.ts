@@ -23,7 +23,15 @@ describe("parseCellReference", () => {
 });
 
 describe("parseRangeReference", () => {
-	it("parses array range ref", () => {
+	it("can parse cell range", () => {
+		const [colStart, rowStart, colEnd, rowEnd] = parseRangeReference("A1:C3");
+		expect(colStart).toBe(1);
+		expect(rowStart).toBe(1);
+		expect(colEnd).toBe(3);
+		expect(rowEnd).toBe(3);
+	});
+
+	it("can parse cell range array", () => {
 		const [colStart, rowStart, colEnd, rowEnd] = parseRangeReference(["A1", "C3"]);
 		expect(colStart).toBe(1);
 		expect(rowStart).toBe(1);
@@ -31,12 +39,92 @@ describe("parseRangeReference", () => {
 		expect(rowEnd).toBe(3);
 	});
 
-	it("parses string range ref", () => {
-		const [colStart, rowStart, colEnd, rowEnd] = parseRangeReference("A1:C3");
+	it("can parse row range", () => {
+		const [colStart, rowStart, colEnd, rowEnd] = parseRangeReference("1:5");
+		expect(colStart).toBe(null);
+		expect(rowStart).toBe(1);
+		expect(colEnd).toBe(null);
+		expect(rowEnd).toBe(5);
+	});
+
+	it("can parse row range numeric array", () => {
+		const [colStart, rowStart, colEnd, rowEnd] = parseRangeReference([1, 5]);
+		expect(colStart).toBe(null);
+		expect(rowStart).toBe(1);
+		expect(colEnd).toBe(null);
+		expect(rowEnd).toBe(5);
+	});
+
+	it("can parse row range string array", () => {
+		const [colStart, rowStart, colEnd, rowEnd] = parseRangeReference(["1", "5"]);
+		expect(colStart).toBe(null);
+		expect(rowStart).toBe(1);
+		expect(colEnd).toBe(null);
+		expect(rowEnd).toBe(5);
+	});
+
+	it("can parse column range", () => {
+		const [colStart, rowStart, colEnd, rowEnd] = parseRangeReference("A:C");
 		expect(colStart).toBe(1);
+		expect(rowStart).toBe(null);
+		expect(colEnd).toBe(3);
+		expect(rowEnd).toBe(null);
+	});
+
+	it("can parse column range array", () => {
+		const [colStart, rowStart, colEnd, rowEnd] = parseRangeReference(["A", "C"]);
+		expect(colStart).toBe(1);
+		expect(rowStart).toBe(null);
+		expect(colEnd).toBe(3);
+		expect(rowEnd).toBe(null);
+	});
+
+	it("can parse column-row range", () => {
+		const [colStart, rowStart, colEnd, rowEnd] = parseRangeReference("A:3");
+		expect(colStart).toBe(1);
+		expect(rowStart).toBe(null);
+		expect(colEnd).toBe(null);
+		expect(rowEnd).toBe(3);
+	});
+
+	it("can parse column-row range numeric array", () => {
+		const [colStart, rowStart, colEnd, rowEnd] = parseRangeReference(["A", 3]);
+		expect(colStart).toBe(1);
+		expect(rowStart).toBe(null);
+		expect(colEnd).toBe(null);
+		expect(rowEnd).toBe(3);
+	});
+
+	it("can parse column-row range string array", () => {
+		const [colStart, rowStart, colEnd, rowEnd] = parseRangeReference(["A", "3"]);
+		expect(colStart).toBe(1);
+		expect(rowStart).toBe(null);
+		expect(colEnd).toBe(null);
+		expect(rowEnd).toBe(3);
+	});
+
+	it("can parse row-column range", () => {
+		const [colStart, rowStart, colEnd, rowEnd] = parseRangeReference("1:C");
+		expect(colStart).toBe(null);
 		expect(rowStart).toBe(1);
 		expect(colEnd).toBe(3);
-		expect(rowEnd).toBe(3);
+		expect(rowEnd).toBe(null);
+	});
+
+	it("can parse row-column range numeric array", () => {
+		const [colStart, rowStart, colEnd, rowEnd] = parseRangeReference([1, "C"]);
+		expect(colStart).toBe(null);
+		expect(rowStart).toBe(1);
+		expect(colEnd).toBe(3);
+		expect(rowEnd).toBe(null);
+	});
+
+	it("can parse row-column range string array", () => {
+		const [colStart, rowStart, colEnd, rowEnd] = parseRangeReference(["1", "C"]);
+		expect(colStart).toBe(null);
+		expect(rowStart).toBe(1);
+		expect(colEnd).toBe(3);
+		expect(rowEnd).toBe(null);
 	});
 
 	it("throws on invalid array", () => {
