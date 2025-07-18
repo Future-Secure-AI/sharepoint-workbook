@@ -19,7 +19,7 @@ Reads a rectangular block of cells from the worksheet.
 | Parameter | Type | Description |
 | ------ | ------ | ------ |
 | `worksheet` | `Worksheet` | The worksheet to read from. |
-| `range` | [`RangeRef`](models/Reference.md#rangeref) | The range reference (e.g., "A1:B2") specifying the block to read. |
+| `range` | [`Ref`](models/Reference.md#ref) | The range reference (e.g., "A1:B2") specifying the block to read. |
 
 #### Returns
 

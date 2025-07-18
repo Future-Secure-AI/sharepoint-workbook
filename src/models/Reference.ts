@@ -7,7 +7,7 @@ export type Letter = "A" | "B" | "C" | "D" | "E" | "F" | "G" | "H" | "I" | "J" |
 export type ColumnRef = `${Letter}`; // | `${Letter}${Letter}` | `${Letter}${Letter}${Letter}`;
 export type RowRef = `${number}` | number;
 export type CellRef = `${ColumnRef}${RowRef}`;
-export type Ref = ColumnRef | RowRef | CellRef;
+type ColumnRowOrCell = ColumnRef | RowRef | CellRef;
 
-export type RangeRef = CellRef | `${Ref | ""}:${Ref | ""}` | [start: Ref | null, end: Ref | null];
-export type ExplicitRangeRef = `${CellRef}:${CellRef}` | [start: CellRef, end: CellRef];
+export type Ref = ColumnRowOrCell | `${ColumnRowOrCell | ""}:${ColumnRowOrCell | ""}` | [start: ColumnRowOrCell | null, end: ColumnRowOrCell | null];
+export type ExplicitRef = `${CellRef}:${CellRef}` | [start: CellRef, end: CellRef];

@@ -2,25 +2,32 @@
 
 # deleteCells
 
-Delete a rectangular block of cells from a worksheet, shifting remaining cells up or left.
+Deletes a given set of columns or rows from a worksheet.
+
+## Type Aliases
+
+### ColumnOrRowRangeRef
+
+> **ColumnOrRowRangeRef** = \`$\{ColumnRef \| ""\}:$\{ColumnRef \| ""\}\` \| \`$\{RowRef \| ""\}:$\{RowRef \| ""\}\` \| \[[`ColumnRef`](models/Reference.md#columnref) \| `null`, [`ColumnRef`](models/Reference.md#columnref) \| `null`\] \| \[[`RowRef`](models/Reference.md#rowref) \| `null`, [`RowRef`](models/Reference.md#rowref) \| `null`\]
+
+Defined in: [src/tasks/deleteCells.ts:12](https://github.com/Future-Secure-AI/sharepoint-workbook/blob/main/src/tasks/deleteCells.ts#L12)
 
 ## Functions
 
 ### deleteCells()
 
-> **deleteCells**(`worksheet`, `range`, `shift`): `void`
+> **deleteCells**(`worksheet`, `range`): `void`
 
 Defined in: [src/tasks/deleteCells.ts:21](https://github.com/Future-Secure-AI/sharepoint-workbook/blob/main/src/tasks/deleteCells.ts#L21)
 
-Deletes a rectangular block of cells from the worksheet, shifting remaining cells up or left.
+Deletes a given set of columns or rows from a worksheet. Adjacent cells will be shifted up or left.
 
 #### Parameters
 
 | Parameter | Type | Description |
 | ------ | ------ | ------ |
 | `worksheet` | `Worksheet` | The worksheet to modify. |
-| `range` | [`RangeRef`](models/Reference.md#rangeref) | The range reference (e.g., "A1:B2") specifying the block to delete. |
-| `shift` | [`DeleteShift`](models/Shift.md#deleteshift) | The direction to shift remaining cells: "Up" or "Left". |
+| `range` | [`ColumnOrRowRangeRef`](#columnorrowrangeref) | The range reference (e.g., "A:C" or "1:5") specifying the range to delete. |
 
 #### Returns
 

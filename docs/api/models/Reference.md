@@ -26,9 +26,9 @@ Only the first columns are covered by TypeScript type checking due to TypeScript
 
 ***
 
-### ExplicitRangeRef
+### ExplicitRef
 
-> **ExplicitRangeRef** = `` `${CellRef}:${CellRef}` `` \| \[[`CellRef`](#cellref), [`CellRef`](#cellref)\]
+> **ExplicitRef** = `` `${CellRef}:${CellRef}` `` \| \[[`CellRef`](#cellref), [`CellRef`](#cellref)\]
 
 Defined in: [src/models/Reference.ts:13](https://github.com/Future-Secure-AI/sharepoint-workbook/blob/main/src/models/Reference.ts#L13)
 
@@ -42,19 +42,11 @@ Defined in: [src/models/Reference.ts:1](https://github.com/Future-Secure-AI/shar
 
 ***
 
-### RangeRef
-
-> **RangeRef** = \`$\{Ref \| ""\}:$\{Ref \| ""\}\` \| \[[`Ref`](#ref) \| `null`, [`Ref`](#ref) \| `null`\]
-
-Defined in: [src/models/Reference.ts:12](https://github.com/Future-Secure-AI/sharepoint-workbook/blob/main/src/models/Reference.ts#L12)
-
-***
-
 ### Ref
 
-> **Ref** = [`ColumnRef`](#columnref) \| [`RowRef`](#rowref) \| [`CellRef`](#cellref)
+> **Ref** = `ColumnRowOrCell` \| \`$\{ColumnRowOrCell \| ""\}:$\{ColumnRowOrCell \| ""\}\` \| \[`ColumnRowOrCell` \| `null`, `ColumnRowOrCell` \| `null`\]
 
-Defined in: [src/models/Reference.ts:10](https://github.com/Future-Secure-AI/sharepoint-workbook/blob/main/src/models/Reference.ts#L10)
+Defined in: [src/models/Reference.ts:12](https://github.com/Future-Secure-AI/sharepoint-workbook/blob/main/src/models/Reference.ts#L12)
 
 ***
 

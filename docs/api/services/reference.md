@@ -4,33 +4,13 @@
 
 ## Functions
 
-### columnComponentToNumber()
+### parseCellRef()
 
-> **columnComponentToNumber**(`column`): `number`
-
-Defined in: [src/services/reference.ts:75](https://github.com/Future-Secure-AI/sharepoint-workbook/blob/main/src/services/reference.ts#L75)
-
-Converts a column reference (e.g., "A", "Z") to its number (1-based).
-
-#### Parameters
-
-| Parameter | Type |
-| ------ | ------ |
-| `column` | [`Letter`](../models/Reference.md#letter) |
-
-#### Returns
-
-`number`
-
-***
-
-### parseCellReference()
-
-> **parseCellReference**(`cell`): \[`number`, `number`\]
+> **parseCellRef**(`cell`): \[[`ColumnIndex`](../models/Column.md#columnindex), [`RowIndex`](../models/Row.md#rowindex)\]
 
 Defined in: [src/services/reference.ts:17](https://github.com/Future-Secure-AI/sharepoint-workbook/blob/main/src/services/reference.ts#L17)
 
-Parses a cell reference (e.g., "A1") into [col, row] numbers.
+Parses a cell reference (e.g., "A1") into [col, row] numbers (0-based).
 
 #### Parameters
 
@@ -40,23 +20,23 @@ Parses a cell reference (e.g., "A1") into [col, row] numbers.
 
 #### Returns
 
-\[`number`, `number`\]
+\[[`ColumnIndex`](../models/Column.md#columnindex), [`RowIndex`](../models/Row.md#rowindex)\]
 
 ***
 
-### parseRangeReference()
+### parseRef()
 
-> **parseRangeReference**(`range`): \[`null` \| `number`, `null` \| `number`, `null` \| `number`, `null` \| `number`\]
+> **parseRef**(`range`): \[`null` \| `number`, `null` \| `number`, `null` \| `number`, `null` \| `number`\]
 
 Defined in: [src/services/reference.ts:28](https://github.com/Future-Secure-AI/sharepoint-workbook/blob/main/src/services/reference.ts#L28)
 
-Converts a RangeRef to an array: [startCol, startRow, endCol, endRow].
+Converts a RangeRef to an array: [startCol, startRow, endCol, endRow] (0-based).
 
 #### Parameters
 
 | Parameter | Type | Description |
 | ------ | ------ | ------ |
-| `range` | [`RangeRef`](../models/Reference.md#rangeref) | RangeRef (array or string) |
+| `range` | [`Ref`](../models/Reference.md#ref) | RangeRef (array or string) |
 
 #### Returns
 
@@ -66,17 +46,17 @@ Converts a RangeRef to an array: [startCol, startRow, endCol, endRow].
 
 ***
 
-### parseRangeReferenceExact()
+### parseRefResolved()
 
-> **parseRangeReferenceExact**(`range`, `worksheet`): \[`number`, `number`, `number`, `number`\]
+> **parseRefResolved**(`range`, `worksheet`): \[`number`, `number`, `number`, `number`\]
 
-Defined in: [src/services/reference.ts:61](https://github.com/Future-Secure-AI/sharepoint-workbook/blob/main/src/services/reference.ts#L61)
+Defined in: [src/services/reference.ts:114](https://github.com/Future-Secure-AI/sharepoint-workbook/blob/main/src/services/reference.ts#L114)
 
 #### Parameters
 
 | Parameter | Type |
 | ------ | ------ |
-| `range` | [`RangeRef`](../models/Reference.md#rangeref) |
+| `range` | [`Ref`](../models/Reference.md#ref) |
 | `worksheet` | `Worksheet` |
 
 #### Returns
@@ -85,13 +65,33 @@ Defined in: [src/services/reference.ts:61](https://github.com/Future-Secure-AI/s
 
 ***
 
-### rowComponentToNumber()
+### resolveColumnIndex()
 
-> **rowComponentToNumber**(`row`): `number`
+> **resolveColumnIndex**(`column`): [`ColumnIndex`](../models/Column.md#columnindex)
 
-Defined in: [src/services/reference.ts:86](https://github.com/Future-Secure-AI/sharepoint-workbook/blob/main/src/services/reference.ts#L86)
+Defined in: [src/services/reference.ts:128](https://github.com/Future-Secure-AI/sharepoint-workbook/blob/main/src/services/reference.ts#L128)
 
-Converts a row reference (string or number) to a number.
+Converts a column reference (e.g., "A", "Z") to its number (0-based).
+
+#### Parameters
+
+| Parameter | Type |
+| ------ | ------ |
+| `column` | [`Letter`](../models/Reference.md#letter) |
+
+#### Returns
+
+[`ColumnIndex`](../models/Column.md#columnindex)
+
+***
+
+### resolveRowIndex()
+
+> **resolveRowIndex**(`row`): [`RowIndex`](../models/Row.md#rowindex)
+
+Defined in: [src/services/reference.ts:139](https://github.com/Future-Secure-AI/sharepoint-workbook/blob/main/src/services/reference.ts#L139)
+
+Converts a row reference (string or number) to a number (0-based).
 
 #### Parameters
 
@@ -101,4 +101,4 @@ Converts a row reference (string or number) to a number.
 
 #### Returns
 
-`number`
+[`RowIndex`](../models/Row.md#rowindex)

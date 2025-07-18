@@ -37,8 +37,9 @@
 
 | Module | Description |
 | ------ | ------ |
+| [clearCells](clearCells.md) | Clear all values and formatting in a specified range of cells in a worksheet. |
 | [createWorkbook](createWorkbook.md) | Create a new workbook, optionally with specified worksheets. |
-| [deleteCells](deleteCells.md) | Delete a rectangular block of cells from a worksheet, shifting remaining cells up or left. |
+| [deleteCells](deleteCells.md) | Deletes a given set of columns or rows from a worksheet. |
 | [filterWorkbookColumns](filterWorkbookColumns.md) | Filter out unwanted columns from a workbook. |
 | [filterWorkbookRows](filterWorkbookRows.md) | Filter out unwanted rows from a workbook. |
 | [findWorksheet](findWorksheet.md) | Find a worksheet in a workbook by name. |

@@ -10,7 +10,7 @@ Filter out unwanted columns from a workbook.
 
 > **filterWorkbookColumns**(`workbook`, `columnFilter`): [`Promise`](https://developer.mozilla.org/docs/Web/JavaScript/Reference/Global_Objects/Promise)\<`void`\>
 
-Defined in: src/tasks/filterWorkbookColumns.ts:15
+Defined in: [src/tasks/filterWorkbookColumns.ts:15](https://github.com/Future-Secure-AI/sharepoint-workbook/blob/main/src/tasks/filterWorkbookColumns.ts#L15)
 
 Filter out unwanted columns from a workbook.
 

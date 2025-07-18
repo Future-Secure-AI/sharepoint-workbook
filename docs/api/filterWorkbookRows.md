@@ -10,7 +10,7 @@ Filter out unwanted rows from a workbook.
 
 > **FilterWorkbookRowsOptions** = `object`
 
-Defined in: src/tasks/filterWorkbookRows.ts:15
+Defined in: [src/tasks/filterWorkbookRows.ts:15](https://github.com/Future-Secure-AI/sharepoint-workbook/blob/main/src/tasks/filterWorkbookRows.ts#L15)
 
 Options for filtering workbook rows.
 
@@ -18,8 +18,8 @@ Options for filtering workbook rows.
 
 | Property | Type | Description | Defined in |
 | ------ | ------ | ------ | ------ |
-| <a id="progress"></a> `progress?` | (`rows`) => `void` | Optional callback to report progress, called with the number of processed rows. | src/tasks/filterWorkbookRows.ts:17 |
-| <a id="skiprows"></a> `skipRows?` | `number` | Number of rows to skip from the top of each worksheet before filtering. | src/tasks/filterWorkbookRows.ts:16 |
+| <a id="progress"></a> `progress?` | (`rows`) => `void` | Optional callback to report progress, called with the number of processed rows. | [src/tasks/filterWorkbookRows.ts:17](https://github.com/Future-Secure-AI/sharepoint-workbook/blob/main/src/tasks/filterWorkbookRows.ts#L17) |
+| <a id="skiprows"></a> `skipRows?` | `number` | Number of rows to skip from the top of each worksheet before filtering. | [src/tasks/filterWorkbookRows.ts:16](https://github.com/Future-Secure-AI/sharepoint-workbook/blob/main/src/tasks/filterWorkbookRows.ts#L16) |
 
 ## Functions
 
@@ -27,7 +27,7 @@ Options for filtering workbook rows.
 
 > **filterWorkbookRows**(`workbook`, `rowFilter`, `options`): [`Promise`](https://developer.mozilla.org/docs/Web/JavaScript/Reference/Global_Objects/Promise)\<`void`\>
 
-Defined in: src/tasks/filterWorkbookRows.ts:27
+Defined in: [src/tasks/filterWorkbookRows.ts:27](https://github.com/Future-Secure-AI/sharepoint-workbook/blob/main/src/tasks/filterWorkbookRows.ts#L27)
 
 Filter out unwanted rows from a workbook.
 

@@ -11,7 +11,7 @@ import type { DeepPartial } from "../models/DeepPartial.ts";
 import type { CellRef } from "../models/Reference.ts";
 import type { InsertShift } from "../models/Shift.ts";
 import { ensureRectangularArray } from "../services/rectangularArray.ts";
-import { parseCellReference } from "../services/reference.ts";
+import { parseCellRef } from "../services/reference.ts";
 import { updateCells } from "./updateCells.ts";
 
 /**
@@ -23,7 +23,7 @@ import { updateCells } from "./updateCells.ts";
  * @throws {InvalidArgumentError} If rows in `cells` have different lengths, or if `shift` is not "Down" or "Right".
  */
 export function insertCells(worksheet: Worksheet, origin: CellRef, shift: InsertShift, cells: (CellValue | DeepPartial<Cell>)[][]): void {
-	const [c, r] = parseCellReference(origin);
+	const [c, r] = parseCellRef(origin);
 
 	ensureRectangularArray(cells);
 

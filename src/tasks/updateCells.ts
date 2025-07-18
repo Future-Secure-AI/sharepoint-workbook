@@ -9,7 +9,7 @@ import type { DeepPartial } from "../models/DeepPartial.ts";
 import type { CellRef } from "../models/Reference.ts";
 import { writeCell } from "../services/cellWriter.ts";
 import { ensureRectangularArray } from "../services/rectangularArray.ts";
-import { parseCellReference } from "../services/reference.ts";
+import { parseCellRef } from "../services/reference.ts";
 
 /**
  * Updates a rectangular block of cells in the worksheet, starting at the given origin.
@@ -18,7 +18,7 @@ import { parseCellReference } from "../services/reference.ts";
  * @param {(CellValue | DeepPartial<Cell>)[][]} cells A 2D array of cell values or partial cell objects to write. All rows must have the same length.
  */
 export function updateCells(worksheet: Worksheet, origin: CellRef, cells: (CellValue | DeepPartial<Cell>)[][]): void {
-	const [c, r] = parseCellReference(origin);
+	const [c, r] = parseCellRef(origin);
 
 	ensureRectangularArray(cells);
 

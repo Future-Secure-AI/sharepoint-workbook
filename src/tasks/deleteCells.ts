@@ -1,31 +1,31 @@
 /**
- * Delete a rectangular block of cells from a worksheet, shifting remaining cells up or left.
+ * Deletes a given set of columns or rows from a worksheet.
  * @module deleteCells
  * @category Tasks
  */
 
 import { type Worksheet, ShiftType } from "aspose.cells.node";
 import InvalidArgumentError from "microsoft-graph/InvalidArgumentError";
-import type { RangeRef } from "../models/Reference.ts";
-import type { DeleteShift } from "../models/Shift.ts";
-import { parseRangeReferenceExact } from "../services/reference.ts";
+import type { ColumnRef, RowRef } from "../models/Reference.ts";
+import { parseRef } from "../services/reference.ts";
+
+export type ColumnOrRowRangeRef = `${ColumnRef | ""}:${ColumnRef | ""}` | `${RowRef | ""}:${RowRef | ""}` | [start: ColumnRef | null, end: ColumnRef | null] | [start: RowRef | null, end: RowRef | null];
 
 /**
- * Deletes a rectangular block of cells from the worksheet, shifting remaining cells up or left.
+ * Deletes a given set of columns or rows from a worksheet. Adjacent cells will be shifted up or left.
  * @param worksheet The worksheet to modify.
- * @param range The range reference (e.g., "A1:B2") specifying the block to delete.
- * @param shift The direction to shift remaining cells: "Up" or "Left".
+ * @param range The range reference (e.g., "A:C" or "1:5") specifying the range to delete.
  * @throws {InvalidArgumentError} If shift is not "Up" or "Left".
  */
 
-export function deleteCells(worksheet: Worksheet, range: RangeRef, shift: DeleteShift): void {
-	const [ac, ar, bc, br] = parseRangeReferenceExact(range, worksheet);
+export function deleteCells(worksheet: Worksheet, range: ColumnOrRowRangeRef): void {
+	const [ac, ar, bc, br] = parseRef(range);
 
-	if (shift === "Up") {
-		worksheet.cells.deleteRange(ac, ar, bc, br, ShiftType.Up); // 0 = ShiftUp
-	} else if (shift === "Left") {
-		worksheet.cells.deleteRange(ac, ar, bc, br, ShiftType.Left); // 1 = ShiftLeft
+	if (ac === null && bc === null && ar !== null && br !== null) {
+		worksheet.cells.deleteRange(ar, 0, br, worksheet.cells.maxDataColumn, ShiftType.Up);
+	} else if (ar === null && br === null && ac !== null && bc !== null) {
+		worksheet.cells.deleteRange(0, ac, worksheet.cells.maxDataRow, bc, ShiftType.Left);
 	} else {
-		throw new InvalidArgumentError(`Unsupported shift: ${shift}`);
+		throw new InvalidArgumentError("Invalid range for deleteCells: must specify either a row or column range.");
 	}
 }
