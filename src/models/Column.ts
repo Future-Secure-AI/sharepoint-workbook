@@ -9,3 +9,5 @@
  * @typedef {number} ColumnIndex
  */
 export type ColumnIndex = number & { readonly __brand: unique symbol };
+
+export type ColumnName = string & { readonly __brand: unique symbol };

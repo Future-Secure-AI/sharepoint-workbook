@@ -46,5 +46,6 @@ jobs:
             git tag v${{ steps.version.outputs.version }}
             git push origin v${{ steps.version.outputs.version }}
         
-      - name: Run release
-        run: npm run release
+        # TODO: Release to a private location?
+      # - name: Run release
+        # run: npm run release 
