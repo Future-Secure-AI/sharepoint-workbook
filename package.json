@@ -64,6 +64,16 @@
 			"require": "./dist/cjs/index.js",
 			"types": "./dist/esm/index.d.ts"
 		},
+		"./MissingPathError": {
+			"import": "./dist/esm/errors/MissingPathError.js",
+			"require": "./dist/cjs/errors/MissingPathError.js",
+			"types": "./dist/esm/errors/MissingPathError.d.ts"
+		},
+		"./dist/cjs/errors/MissingPathError": {
+			"import": "./dist/esm/errors/MissingPathError.js",
+			"require": "./dist/cjs/errors/MissingPathError.js",
+			"types": "./dist/esm/errors/MissingPathError.d.ts"
+		},
 		"./Cell": {
 			"import": "./dist/esm/models/Cell.js",
 			"require": "./dist/cjs/models/Cell.js",
@@ -74,25 +84,25 @@
 			"require": "./dist/cjs/models/Cell.js",
 			"types": "./dist/esm/models/Cell.d.ts"
 		},
-		"./Direction": {
-			"import": "./dist/esm/models/Direction.js",
-			"require": "./dist/cjs/models/Direction.js",
-			"types": "./dist/esm/models/Direction.d.ts"
+		"./Column": {
+			"import": "./dist/esm/models/Column.js",
+			"require": "./dist/cjs/models/Column.js",
+			"types": "./dist/esm/models/Column.d.ts"
 		},
-		"./dist/cjs/models/Direction": {
-			"import": "./dist/esm/models/Direction.js",
-			"require": "./dist/cjs/models/Direction.js",
-			"types": "./dist/esm/models/Direction.d.ts"
+		"./dist/cjs/models/Column": {
+			"import": "./dist/esm/models/Column.js",
+			"require": "./dist/cjs/models/Column.js",
+			"types": "./dist/esm/models/Column.d.ts"
 		},
-		"./Handle": {
-			"import": "./dist/esm/models/Handle.js",
-			"require": "./dist/cjs/models/Handle.js",
-			"types": "./dist/esm/models/Handle.d.ts"
+		"./DeepPartial": {
+			"import": "./dist/esm/models/DeepPartial.js",
+			"require": "./dist/cjs/models/DeepPartial.js",
+			"types": "./dist/esm/models/DeepPartial.d.ts"
 		},
-		"./dist/cjs/models/Handle": {
-			"import": "./dist/esm/models/Handle.js",
-			"require": "./dist/cjs/models/Handle.js",
-			"types": "./dist/esm/models/Handle.d.ts"
+		"./dist/cjs/models/DeepPartial": {
+			"import": "./dist/esm/models/DeepPartial.js",
+			"require": "./dist/cjs/models/DeepPartial.js",
+			"types": "./dist/esm/models/DeepPartial.d.ts"
 		},
 		"./LocalFilePath": {
 			"import": "./dist/esm/models/LocalFilePath.js",
@@ -104,35 +114,15 @@
 			"require": "./dist/cjs/models/LocalFilePath.js",
 			"types": "./dist/esm/models/LocalFilePath.d.ts"
 		},
-		"./OptimizeOptions": {
-			"import": "./dist/esm/models/OptimizeOptions.js",
-			"require": "./dist/cjs/models/OptimizeOptions.js",
-			"types": "./dist/esm/models/OptimizeOptions.d.ts"
+		"./Reference": {
+			"import": "./dist/esm/models/Reference.js",
+			"require": "./dist/cjs/models/Reference.js",
+			"types": "./dist/esm/models/Reference.d.ts"
 		},
-		"./dist/cjs/models/OptimizeOptions": {
-			"import": "./dist/esm/models/OptimizeOptions.js",
-			"require": "./dist/cjs/models/OptimizeOptions.js",
-			"types": "./dist/esm/models/OptimizeOptions.d.ts"
-		},
-		"./Options": {
-			"import": "./dist/esm/models/Options.js",
-			"require": "./dist/cjs/models/Options.js",
-			"types": "./dist/esm/models/Options.d.ts"
-		},
-		"./dist/cjs/models/Options": {
-			"import": "./dist/esm/models/Options.js",
-			"require": "./dist/cjs/models/Options.js",
-			"types": "./dist/esm/models/Options.d.ts"
-		},
-		"./Ref": {
-			"import": "./dist/esm/models/Ref.js",
-			"require": "./dist/cjs/models/Ref.js",
-			"types": "./dist/esm/models/Ref.d.ts"
-		},
-		"./dist/cjs/models/Ref": {
-			"import": "./dist/esm/models/Ref.js",
-			"require": "./dist/cjs/models/Ref.js",
-			"types": "./dist/esm/models/Ref.d.ts"
+		"./dist/cjs/models/Reference": {
+			"import": "./dist/esm/models/Reference.js",
+			"require": "./dist/cjs/models/Reference.js",
+			"types": "./dist/esm/models/Reference.d.ts"
 		},
 		"./Row": {
 			"import": "./dist/esm/models/Row.js",
@@ -164,25 +154,35 @@
 			"require": "./dist/cjs/models/Worksheet.js",
 			"types": "./dist/esm/models/Worksheet.d.ts"
 		},
-		"./excelJs": {
-			"import": "./dist/esm/services/excelJs.js",
-			"require": "./dist/cjs/services/excelJs.js",
-			"types": "./dist/esm/services/excelJs.d.ts"
+		"./cellReader": {
+			"import": "./dist/esm/services/cellReader.js",
+			"require": "./dist/cjs/services/cellReader.js",
+			"types": "./dist/esm/services/cellReader.d.ts"
 		},
-		"./dist/cjs/services/excelJs": {
-			"import": "./dist/esm/services/excelJs.js",
-			"require": "./dist/cjs/services/excelJs.js",
-			"types": "./dist/esm/services/excelJs.d.ts"
+		"./dist/cjs/services/cellReader": {
+			"import": "./dist/esm/services/cellReader.js",
+			"require": "./dist/cjs/services/cellReader.js",
+			"types": "./dist/esm/services/cellReader.d.ts"
 		},
-		"./rows": {
-			"import": "./dist/esm/services/rows.js",
-			"require": "./dist/cjs/services/rows.js",
-			"types": "./dist/esm/services/rows.d.ts"
+		"./cellWriter": {
+			"import": "./dist/esm/services/cellWriter.js",
+			"require": "./dist/cjs/services/cellWriter.js",
+			"types": "./dist/esm/services/cellWriter.d.ts"
 		},
-		"./dist/cjs/services/rows": {
-			"import": "./dist/esm/services/rows.js",
-			"require": "./dist/cjs/services/rows.js",
-			"types": "./dist/esm/services/rows.d.ts"
+		"./dist/cjs/services/cellWriter": {
+			"import": "./dist/esm/services/cellWriter.js",
+			"require": "./dist/cjs/services/cellWriter.js",
+			"types": "./dist/esm/services/cellWriter.d.ts"
+		},
+		"./reference": {
+			"import": "./dist/esm/services/reference.js",
+			"require": "./dist/cjs/services/reference.js",
+			"types": "./dist/esm/services/reference.d.ts"
+		},
+		"./dist/cjs/services/reference": {
+			"import": "./dist/esm/services/reference.js",
+			"require": "./dist/cjs/services/reference.js",
+			"types": "./dist/esm/services/reference.d.ts"
 		},
 		"./streamParameters": {
 			"import": "./dist/esm/services/streamParameters.js",
@@ -194,75 +194,165 @@
 			"require": "./dist/cjs/services/streamParameters.js",
 			"types": "./dist/esm/services/streamParameters.d.ts"
 		},
-		"./workingFolder": {
-			"import": "./dist/esm/services/workingFolder.js",
-			"require": "./dist/cjs/services/workingFolder.js",
-			"types": "./dist/esm/services/workingFolder.d.ts"
+		"./temporaryFile": {
+			"import": "./dist/esm/services/temporaryFile.js",
+			"require": "./dist/cjs/services/temporaryFile.js",
+			"types": "./dist/esm/services/temporaryFile.d.ts"
 		},
-		"./dist/cjs/services/workingFolder": {
-			"import": "./dist/esm/services/workingFolder.js",
-			"require": "./dist/cjs/services/workingFolder.js",
-			"types": "./dist/esm/services/workingFolder.d.ts"
+		"./dist/cjs/services/temporaryFile": {
+			"import": "./dist/esm/services/temporaryFile.js",
+			"require": "./dist/cjs/services/temporaryFile.js",
+			"types": "./dist/esm/services/temporaryFile.d.ts"
 		},
-		"./importWorkbook": {
-			"import": "./dist/esm/tasks/importWorkbook.js",
-			"require": "./dist/cjs/tasks/importWorkbook.js",
-			"types": "./dist/esm/tasks/importWorkbook.d.ts"
+		"./clearCells": {
+			"import": "./dist/esm/tasks/clearCells.js",
+			"require": "./dist/cjs/tasks/clearCells.js",
+			"types": "./dist/esm/tasks/clearCells.d.ts"
 		},
-		"./dist/cjs/tasks/importWorkbook": {
-			"import": "./dist/esm/tasks/importWorkbook.js",
-			"require": "./dist/cjs/tasks/importWorkbook.js",
-			"types": "./dist/esm/tasks/importWorkbook.d.ts"
+		"./dist/cjs/tasks/clearCells": {
+			"import": "./dist/esm/tasks/clearCells.js",
+			"require": "./dist/cjs/tasks/clearCells.js",
+			"types": "./dist/esm/tasks/clearCells.d.ts"
 		},
-		"./optimizeWorkbook": {
-			"import": "./dist/esm/tasks/optimizeWorkbook.js",
-			"require": "./dist/cjs/tasks/optimizeWorkbook.js",
-			"types": "./dist/esm/tasks/optimizeWorkbook.d.ts"
+		"./createWorkbook": {
+			"import": "./dist/esm/tasks/createWorkbook.js",
+			"require": "./dist/cjs/tasks/createWorkbook.js",
+			"types": "./dist/esm/tasks/createWorkbook.d.ts"
 		},
-		"./dist/cjs/tasks/optimizeWorkbook": {
-			"import": "./dist/esm/tasks/optimizeWorkbook.js",
-			"require": "./dist/cjs/tasks/optimizeWorkbook.js",
-			"types": "./dist/esm/tasks/optimizeWorkbook.d.ts"
+		"./dist/cjs/tasks/createWorkbook": {
+			"import": "./dist/esm/tasks/createWorkbook.js",
+			"require": "./dist/cjs/tasks/createWorkbook.js",
+			"types": "./dist/esm/tasks/createWorkbook.d.ts"
 		},
-		"./readWorkbook": {
-			"import": "./dist/esm/tasks/readWorkbook.js",
-			"require": "./dist/cjs/tasks/readWorkbook.js",
-			"types": "./dist/esm/tasks/readWorkbook.d.ts"
+		"./deleteCells": {
+			"import": "./dist/esm/tasks/deleteCells.js",
+			"require": "./dist/cjs/tasks/deleteCells.js",
+			"types": "./dist/esm/tasks/deleteCells.d.ts"
 		},
-		"./dist/cjs/tasks/readWorkbook": {
-			"import": "./dist/esm/tasks/readWorkbook.js",
-			"require": "./dist/cjs/tasks/readWorkbook.js",
-			"types": "./dist/esm/tasks/readWorkbook.d.ts"
+		"./dist/cjs/tasks/deleteCells": {
+			"import": "./dist/esm/tasks/deleteCells.js",
+			"require": "./dist/cjs/tasks/deleteCells.js",
+			"types": "./dist/esm/tasks/deleteCells.d.ts"
 		},
-		"./readWorkbookByPath": {
-			"import": "./dist/esm/tasks/readWorkbookByPath.js",
-			"require": "./dist/cjs/tasks/readWorkbookByPath.js",
-			"types": "./dist/esm/tasks/readWorkbookByPath.d.ts"
+		"./filterWorkbookColumns": {
+			"import": "./dist/esm/tasks/filterWorkbookColumns.js",
+			"require": "./dist/cjs/tasks/filterWorkbookColumns.js",
+			"types": "./dist/esm/tasks/filterWorkbookColumns.d.ts"
 		},
-		"./dist/cjs/tasks/readWorkbookByPath": {
-			"import": "./dist/esm/tasks/readWorkbookByPath.js",
-			"require": "./dist/cjs/tasks/readWorkbookByPath.js",
-			"types": "./dist/esm/tasks/readWorkbookByPath.d.ts"
+		"./dist/cjs/tasks/filterWorkbookColumns": {
+			"import": "./dist/esm/tasks/filterWorkbookColumns.js",
+			"require": "./dist/cjs/tasks/filterWorkbookColumns.js",
+			"types": "./dist/esm/tasks/filterWorkbookColumns.d.ts"
 		},
-		"./writeWorkbook": {
-			"import": "./dist/esm/tasks/writeWorkbook.js",
-			"require": "./dist/cjs/tasks/writeWorkbook.js",
-			"types": "./dist/esm/tasks/writeWorkbook.d.ts"
+		"./filterWorkbookRows": {
+			"import": "./dist/esm/tasks/filterWorkbookRows.js",
+			"require": "./dist/cjs/tasks/filterWorkbookRows.js",
+			"types": "./dist/esm/tasks/filterWorkbookRows.d.ts"
 		},
-		"./dist/cjs/tasks/writeWorkbook": {
-			"import": "./dist/esm/tasks/writeWorkbook.js",
-			"require": "./dist/cjs/tasks/writeWorkbook.js",
-			"types": "./dist/esm/tasks/writeWorkbook.d.ts"
+		"./dist/cjs/tasks/filterWorkbookRows": {
+			"import": "./dist/esm/tasks/filterWorkbookRows.js",
+			"require": "./dist/cjs/tasks/filterWorkbookRows.js",
+			"types": "./dist/esm/tasks/filterWorkbookRows.d.ts"
 		},
-		"./writeWorkbookByPath": {
-			"import": "./dist/esm/tasks/writeWorkbookByPath.js",
-			"require": "./dist/cjs/tasks/writeWorkbookByPath.js",
-			"types": "./dist/esm/tasks/writeWorkbookByPath.d.ts"
+		"./findWorksheet": {
+			"import": "./dist/esm/tasks/findWorksheet.js",
+			"require": "./dist/cjs/tasks/findWorksheet.js",
+			"types": "./dist/esm/tasks/findWorksheet.d.ts"
 		},
-		"./dist/cjs/tasks/writeWorkbookByPath": {
-			"import": "./dist/esm/tasks/writeWorkbookByPath.js",
-			"require": "./dist/cjs/tasks/writeWorkbookByPath.js",
-			"types": "./dist/esm/tasks/writeWorkbookByPath.d.ts"
+		"./dist/cjs/tasks/findWorksheet": {
+			"import": "./dist/esm/tasks/findWorksheet.js",
+			"require": "./dist/cjs/tasks/findWorksheet.js",
+			"types": "./dist/esm/tasks/findWorksheet.d.ts"
+		},
+		"./getWorksheet": {
+			"import": "./dist/esm/tasks/getWorksheet.js",
+			"require": "./dist/cjs/tasks/getWorksheet.js",
+			"types": "./dist/esm/tasks/getWorksheet.d.ts"
+		},
+		"./dist/cjs/tasks/getWorksheet": {
+			"import": "./dist/esm/tasks/getWorksheet.js",
+			"require": "./dist/cjs/tasks/getWorksheet.js",
+			"types": "./dist/esm/tasks/getWorksheet.d.ts"
+		},
+		"./insertCells": {
+			"import": "./dist/esm/tasks/insertCells.js",
+			"require": "./dist/cjs/tasks/insertCells.js",
+			"types": "./dist/esm/tasks/insertCells.d.ts"
+		},
+		"./dist/cjs/tasks/insertCells": {
+			"import": "./dist/esm/tasks/insertCells.js",
+			"require": "./dist/cjs/tasks/insertCells.js",
+			"types": "./dist/esm/tasks/insertCells.d.ts"
+		},
+		"./openWorkbook": {
+			"import": "./dist/esm/tasks/openWorkbook.js",
+			"require": "./dist/cjs/tasks/openWorkbook.js",
+			"types": "./dist/esm/tasks/openWorkbook.d.ts"
+		},
+		"./dist/cjs/tasks/openWorkbook": {
+			"import": "./dist/esm/tasks/openWorkbook.js",
+			"require": "./dist/cjs/tasks/openWorkbook.js",
+			"types": "./dist/esm/tasks/openWorkbook.d.ts"
+		},
+		"./readCellValues": {
+			"import": "./dist/esm/tasks/readCellValues.js",
+			"require": "./dist/cjs/tasks/readCellValues.js",
+			"types": "./dist/esm/tasks/readCellValues.d.ts"
+		},
+		"./dist/cjs/tasks/readCellValues": {
+			"import": "./dist/esm/tasks/readCellValues.js",
+			"require": "./dist/cjs/tasks/readCellValues.js",
+			"types": "./dist/esm/tasks/readCellValues.d.ts"
+		},
+		"./readCells": {
+			"import": "./dist/esm/tasks/readCells.js",
+			"require": "./dist/cjs/tasks/readCells.js",
+			"types": "./dist/esm/tasks/readCells.d.ts"
+		},
+		"./dist/cjs/tasks/readCells": {
+			"import": "./dist/esm/tasks/readCells.js",
+			"require": "./dist/cjs/tasks/readCells.js",
+			"types": "./dist/esm/tasks/readCells.d.ts"
+		},
+		"./saveWorkbook": {
+			"import": "./dist/esm/tasks/saveWorkbook.js",
+			"require": "./dist/cjs/tasks/saveWorkbook.js",
+			"types": "./dist/esm/tasks/saveWorkbook.d.ts"
+		},
+		"./dist/cjs/tasks/saveWorkbook": {
+			"import": "./dist/esm/tasks/saveWorkbook.js",
+			"require": "./dist/cjs/tasks/saveWorkbook.js",
+			"types": "./dist/esm/tasks/saveWorkbook.d.ts"
+		},
+		"./saveWorkbookAs": {
+			"import": "./dist/esm/tasks/saveWorkbookAs.js",
+			"require": "./dist/cjs/tasks/saveWorkbookAs.js",
+			"types": "./dist/esm/tasks/saveWorkbookAs.d.ts"
+		},
+		"./dist/cjs/tasks/saveWorkbookAs": {
+			"import": "./dist/esm/tasks/saveWorkbookAs.js",
+			"require": "./dist/cjs/tasks/saveWorkbookAs.js",
+			"types": "./dist/esm/tasks/saveWorkbookAs.d.ts"
+		},
+		"./updateCells": {
+			"import": "./dist/esm/tasks/updateCells.js",
+			"require": "./dist/cjs/tasks/updateCells.js",
+			"types": "./dist/esm/tasks/updateCells.d.ts"
+		},
+		"./dist/cjs/tasks/updateCells": {
+			"import": "./dist/esm/tasks/updateCells.js",
+			"require": "./dist/cjs/tasks/updateCells.js",
+			"types": "./dist/esm/tasks/updateCells.d.ts"
+		},
+		"./updateEachCell": {
+			"import": "./dist/esm/tasks/updateEachCell.js",
+			"require": "./dist/cjs/tasks/updateEachCell.js",
+			"types": "./dist/esm/tasks/updateEachCell.d.ts"
+		},
+		"./dist/cjs/tasks/updateEachCell": {
+			"import": "./dist/esm/tasks/updateEachCell.js",
+			"require": "./dist/cjs/tasks/updateEachCell.js",
+			"types": "./dist/esm/tasks/updateEachCell.d.ts"
 		}
 	}
 }

@@ -6,7 +6,7 @@
 /** biome-ignore-all lint/complexity/useLiteralKeys: Impossible to avoid with RegEx */
 
 import type { Worksheet } from "aspose.cells.node";
-import InvalidArgumentError from "microsoft-graph/InvalidArgumentError";
+import InvalidArgumentError from "microsoft-graph/dist/cjs/errors/InvalidArgumentError";
 import type { ColumnIndex } from "../models/Column.ts";
 import type { CellRef, ColumnRef, Ref, RowRef } from "../models/Reference.ts";
 import type { RowIndex } from "../models/Row.ts";

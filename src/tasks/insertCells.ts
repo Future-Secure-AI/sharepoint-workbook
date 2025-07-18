@@ -5,7 +5,7 @@
  */
 
 import type { Worksheet } from "aspose.cells.node";
-import InvalidArgumentError from "microsoft-graph/InvalidArgumentError";
+import InvalidArgumentError from "microsoft-graph/dist/cjs/errors/InvalidArgumentError";
 import type { Cell, CellValue } from "../models/Cell.ts";
 import type { DeepPartial } from "../models/DeepPartial.ts";
 import type { CellRef } from "../models/Reference.ts";

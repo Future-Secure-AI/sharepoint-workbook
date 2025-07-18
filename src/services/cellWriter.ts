@@ -4,7 +4,7 @@
  * @category Services
  */
 import AsposeCells from "aspose.cells.node";
-import InvalidArgumentError from "microsoft-graph/InvalidArgumentError";
+import InvalidArgumentError from "microsoft-graph/dist/cjs/errors/InvalidArgumentError";
 import type { Cell, CellHorizontalAlignment, CellValue } from "../models/Cell.ts";
 import type { ColumnIndex } from "../models/Column.ts";
 import type { DeepPartial } from "../models/DeepPartial.ts";

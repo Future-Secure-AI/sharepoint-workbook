@@ -4,7 +4,7 @@
  * @category Tasks
  */
 import type AsposeCells from "aspose.cells.node";
-import InvalidArgumentError from "microsoft-graph/InvalidArgumentError";
+import InvalidArgumentError from "microsoft-graph/dist/cjs/errors/InvalidArgumentError";
 import type { Workbook } from "../models/Workbook.ts";
 import type { WorksheetName } from "../models/Worksheet.ts";
 

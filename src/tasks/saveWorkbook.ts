@@ -5,9 +5,9 @@
  */
 
 import type { DriveItem } from "@microsoft/microsoft-graph-types";
+import { getDriveItemParent } from "microsoft-graph/dist/cjs/services/driveItem";
+import InvalidArgumentError from "microsoft-graph/dist/cjs/errors/InvalidArgumentError";
 import type { DriveItemPath, DriveItemRef } from "microsoft-graph/dist/cjs/models/DriveItem";
-import { getDriveItemParent } from "microsoft-graph/driveItem";
-import InvalidArgumentError from "microsoft-graph/InvalidArgumentError";
 import MissingPathError from "../errors/MissingPathError.ts";
 import type { Workbook } from "../models/Workbook.ts";
 import saveWorkbookAs, { type SaveWorkbookOptions } from "./saveWorkbookAs.ts";

@@ -4,7 +4,7 @@
  * @category Tasks
  */
 import type { Worksheet } from "aspose.cells.node";
-import NotFoundError from "microsoft-graph/NotFoundError";
+import NotFoundError from "microsoft-graph/dist/cjs/errors/NotFoundError";
 import picomatch from "picomatch/lib/picomatch.js";
 import type { Workbook } from "../models/Workbook.ts";
 

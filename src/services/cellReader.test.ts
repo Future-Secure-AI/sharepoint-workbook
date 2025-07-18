@@ -1,5 +1,7 @@
 import AsposeCells from "aspose.cells.node";
 import { beforeEach, describe, expect, it } from "vitest";
+import type { ColumnIndex } from "../models/Column";
+import type { RowIndex } from "../models/Row";
 import { readCell, readCellValue } from "./cellReader";
 
 describe("readCellValue", () => {
@@ -13,23 +15,23 @@ describe("readCellValue", () => {
 
 	it("should return a string value", () => {
 		worksheet.cells.get(0, 0).putValue("Hello");
-		expect(readCellValue(worksheet, 0, 0)).toBe("Hello");
+		expect(readCellValue(worksheet, 0 as RowIndex, 0 as ColumnIndex)).toBe("Hello");
 	});
 
 	it("should return a number value", () => {
 		worksheet.cells.get(1, 1).putValue(123.45);
-		expect(readCellValue(worksheet, 1, 1)).toBe(123.45);
+		expect(readCellValue(worksheet, 1 as RowIndex, 1 as ColumnIndex)).toBe(123.45);
 	});
 
 	it("should return a boolean value", () => {
 		worksheet.cells.get(2, 2).putValue(true);
-		expect(readCellValue(worksheet, 2, 2)).toBe(true);
+		expect(readCellValue(worksheet, 2 as RowIndex, 2 as ColumnIndex)).toBe(true);
 	});
 
 	it("should return a Date value", () => {
 		const date = new Date("2023-01-01T00:00:00Z");
 		worksheet.cells.get(3, 3).putValue(date);
-		const result = readCellValue(worksheet, 3, 3);
+		const result = readCellValue(worksheet, 3 as RowIndex, 3 as ColumnIndex);
 		// Accept both Date and string (Excel may store as string or number)
 		if (result instanceof Date) {
 			expect(result.toISOString()).toBe(date.toISOString());
@@ -43,12 +45,12 @@ describe("readCellValue", () => {
 			const parsed = new Date(result);
 			expect(parsed.toISOString().slice(0, 10)).toBe(date.toISOString().slice(0, 10));
 		} else {
-			throw new Error("Unexpected result type for date cell: " + typeof result);
+			throw new Error(`Unexpected result type for date cell: ${typeof result}`);
 		}
 	});
 
 	it("should return an empty string for empty cell", () => {
-		expect(readCellValue(worksheet, 4, 4)).toBe("");
+		expect(readCellValue(worksheet, 4 as RowIndex, 4 as ColumnIndex)).toBe("");
 	});
 });
 
@@ -63,14 +65,14 @@ describe("readCell", () => {
 
 	it("should return correct value for a string cell", () => {
 		worksheet.cells.get(0, 0).putValue("Test");
-		const cell = readCell(worksheet, 0, 0);
+		const cell = readCell(worksheet, 0 as RowIndex, 0 as ColumnIndex);
 		expect(cell.value).toBe("Test");
 		expect(cell.formula).toBe("");
 	});
 
 	it("should return all default cell attributes for a new cell", () => {
 		worksheet.cells.get(0, 0).putValue("Test");
-		const cell = readCell(worksheet, 0, 0);
+		const cell = readCell(worksheet, 0 as RowIndex, 0 as ColumnIndex);
 		expect(cell.value).toBe("Test");
 		expect(cell.formula).toBe("");
 		expect(cell.fontName).toBe("Arial");
@@ -127,7 +129,7 @@ describe("readCell", () => {
 		style.shrinkToFit = true;
 		cellObj.setStyle(style);
 
-		const cell = readCell(worksheet, 1, 1);
+		const cell = readCell(worksheet, 1 as RowIndex, 1 as ColumnIndex);
 		expect(cell.value).toBe("Styled");
 		expect(cell.fontName).toBe("Calibri");
 		expect(cell.fontSize).toBe(14);
@@ -154,20 +156,20 @@ describe("readCell", () => {
 	});
 
 	it("should return empty string for empty cell", () => {
-		const cell = readCell(worksheet, 4, 4);
+		const cell = readCell(worksheet, 4 as RowIndex, 4 as ColumnIndex);
 		expect(cell.value).toBe("");
 	});
 
 	it("should return correct value for a number cell", () => {
 		worksheet.cells.get(1, 0).putValue(123.45);
-		const cell = readCell(worksheet, 1, 0);
+		const cell = readCell(worksheet, 1 as RowIndex, 0 as ColumnIndex);
 		expect(cell.value).toBe(123.45);
 		expect(cell.formula).toBe("");
 	});
 
 	it("should return correct value for a boolean cell", () => {
 		worksheet.cells.get(2, 0).putValue(true);
-		const cell = readCell(worksheet, 2, 0);
+		const cell = readCell(worksheet, 2 as RowIndex, 0 as ColumnIndex);
 		expect(cell.value).toBe(true);
 		expect(cell.formula).toBe("");
 	});
@@ -175,17 +177,17 @@ describe("readCell", () => {
 	it("should return correct value for a date cell", () => {
 		const date = new Date("2023-01-01T00:00:00Z");
 		worksheet.cells.get(3, 0).putValue(date);
-		const cell = readCell(worksheet, 3, 0);
+		const cell = readCell(worksheet, 3 as RowIndex, 0 as ColumnIndex);
 		expect(cell.value).toBeCloseTo(44927.416666666664, 10); // TODO: Shouldn't this be a Date?
 		expect(cell.formula).toBe("");
 	});
 
 	it("should detect merged cells and set merge property", () => {
 		worksheet.cells.merge(5, 5, 2, 2); // Merge 5,5 to 6,6
-		const topLeft = readCell(worksheet, 5, 5);
-		const down = readCell(worksheet, 6, 5);
-		const right = readCell(worksheet, 5, 6);
-		const downRight = readCell(worksheet, 6, 6);
+		const topLeft = readCell(worksheet, 5 as RowIndex, 5 as ColumnIndex);
+		const down = readCell(worksheet, 6 as RowIndex, 5 as ColumnIndex);
+		const right = readCell(worksheet, 5 as RowIndex, 6 as ColumnIndex);
+		const downRight = readCell(worksheet, 6 as RowIndex, 6 as ColumnIndex);
 		expect(topLeft.merge).toBe(null);
 		expect(down.merge).toBe("up");
 		expect(right.merge).toBe("left");
@@ -195,7 +197,7 @@ describe("readCell", () => {
 	it("should return comment if present", () => {
 		worksheet.comments.add(7, 7);
 		worksheet.comments.get(7, 7).note = "This is a comment";
-		const cell = readCell(worksheet, 7, 7);
+		const cell = readCell(worksheet, 7 as RowIndex, 7 as ColumnIndex);
 		expect(cell.comment).toBe("This is a comment");
 	});
 });

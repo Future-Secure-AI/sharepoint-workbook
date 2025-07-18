@@ -5,7 +5,7 @@
  */
 
 import { type Worksheet, ShiftType } from "aspose.cells.node";
-import InvalidArgumentError from "microsoft-graph/InvalidArgumentError";
+import InvalidArgumentError from "microsoft-graph/dist/cjs/errors/InvalidArgumentError";
 import type { ColumnRef, RowRef } from "../models/Reference.ts";
 import { parseRef } from "../services/reference.ts";
 
