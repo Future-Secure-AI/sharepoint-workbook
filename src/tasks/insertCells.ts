@@ -9,7 +9,6 @@ import InvalidArgumentError from "microsoft-graph/InvalidArgumentError";
 import type { Cell, CellValue } from "../models/Cell.ts";
 import type { DeepPartial } from "../models/DeepPartial.ts";
 import type { CellRef } from "../models/Reference.ts";
-import { ensureRectangularArray } from "../services/rectangularArray.ts";
 import { parseCellRef } from "../services/reference.ts";
 import { updateCells } from "./updateCells.ts";
 
@@ -23,8 +22,6 @@ import { updateCells } from "./updateCells.ts";
  */
 export default function insertCells(worksheet: Worksheet, origin: CellRef, shift: "down" | "right", cells: (CellValue | DeepPartial<Cell>)[][]): void {
 	const [c, r] = parseCellRef(origin);
-
-	ensureRectangularArray(cells);
 
 	if (shift === "down") {
 		const count = cells.length;
